@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Loom &amp; You — Pocket Dream Archipelago</title>
+<meta name="description" content="A co-pilot sandbox: you + Loom the fox-spirit dream an open world together. Phone/tablet 3D.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦊</text></svg>">
+<style>
+  :root{
+    --ink:#0b1026; --paper:#fff7e8; --dream:#a78bfa; --dream2:#22d3ee;
+    --peach:#ffb86b; --berry:#ff6b9d; --lime:#a3e635;
+    --glass:rgba(12,16,38,.62); --glass2:rgba(255,255,255,.14);
+    --radius:18px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;background:#070b22;color:#fff;
+    font-family:ui-rounded,system-ui,-apple-system,"SF Pro Rounded",Segoe UI,Roboto,sans-serif;
+    overscroll-behavior:none;touch-action:none;user-select:none;-webkit-user-select:none}
+  #scene{position:fixed;inset:0}
+  #scene canvas{display:block;width:100%;height:100%}
+  /* vignette + grain dream feel */
+  #vignette{position:fixed;inset:0;pointer-events:none;z-index:3;
+    background:radial-gradient(ellipse at center,transparent 55%,rgba(5,6,20,.55) 100%);}
+  /* Top HUD */
+  #topbar{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:8px;right:8px;z-index:20;
+    display:flex;gap:8px;align-items:stretch;pointer-events:none;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  #topbar::-webkit-scrollbar{display:none}
+  .pill{pointer-events:auto;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:8px 12px;
+    display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,.35);white-space:nowrap;flex:0 0 auto}
+  @media (max-width:760px){
+    #logo b{display:none} #logo::after{content:"LOOM & YOU";font-weight:900;
+      background:linear-gradient(90deg,#c4b5fd,#67e8f9,#f9a8d4);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .pill{padding:7px 10px;font-size:12px} .iconBtn{width:38px;height:38px;font-size:17px;flex:0 0 auto}
+    #leftPanel{width:150px} #dreamLog{max-height:76px;font-size:11px}
+    #dreamBtn{padding:10px 13px;font-size:13.5px} #prompt{font-size:14px}
+  }
+  #logo{font-size:15px;letter-spacing:.2px;white-space:nowrap}
+  #logo b{background:linear-gradient(90deg,#c4b5fd,#67e8f9,#f9a8d4);-webkit-background-clip:text;background-clip:text;color:transparent}
+  #inkWrap{min-width:132px;flex:0 1 auto}
+  #inkBar{width:86px;height:10px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}
+  #inkFill{height:100%;width:100%;border-radius:99px;background:linear-gradient(90deg,var(--dream),var(--dream2));transition:width .4s}
+  #inkNum{font-variant-numeric:tabular-nums;min-width:28px;text-align:right}
+  .spacer{flex:1;pointer-events:none}
+  .iconBtn{pointer-events:auto;width:42px;height:42px;border-radius:999px;border:1px solid rgba(255,255,255,.2);
+    background:var(--glass);backdrop-filter:blur(14px);color:#fff;font-size:19px;display:grid;place-items:center;cursor:pointer}
+  .iconBtn:active{transform:scale(.93)}
+  /* Loom bubble */
+  #loomBubble{position:fixed;z-index:19;left:50%;top:64px;transform:translateX(-50%);max-width:min(92vw,520px);
+    background:rgba(255,247,232,.96);color:#1b1440;border-radius:16px 16px 16px 4px;padding:10px 12px 10px 42px;
+    font-size:14px;line-height:1.35;box-shadow:0 12px 40px rgba(167,139,250,.45);border:2px solid #fff;
+    transition:opacity .4s, transform .4s;pointer-events:none}
+  #loomBubble::before{content:"🦊";position:absolute;left:8px;top:7px;font-size:22px}
+  #loomBubble small{display:block;color:#6d5bd0;font-weight:800;font-size:11px;letter-spacing:.6px;text-transform:uppercase}
+  #loomBubble.hidden{opacity:0;transform:translateX(-50%) translateY(-8px)}
+  /* Quest + log */
+  #leftPanel{position:fixed;z-index:15;left:8px;top:128px;width:196px;display:flex;flex-direction:column;gap:8px}
+  @media (max-width:760px){#leftPanel{width:158px;top:124px} #questCard{display:none} #questCard.open{display:block}}
+  .card{background:var(--glass);border:1px solid rgba(255,255,255,.16);border-radius:var(--radius);
+    padding:10px 11px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .card h3{margin:0 0 6px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#c4b5fd}
+  #quests{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:12px}
+  #quests li{display:flex;gap:7px;align-items:flex-start;background:rgba(255,255,255,.07);border-radius:10px;padding:6px 7px;line-height:1.25}
+  #quests li.done{opacity:.75;text-decoration:line-through}
+  #dreamLog{max-height:132px;overflow:hidden;font-size:12px;display:flex;flex-direction:column;gap:4px}
+  #dreamLog div{background:rgba(255,255,255,.08);border-radius:9px;padding:5px 7px;line-height:1.3}
+  /* Dream bar bottom */
+  #dreamBar{position:fixed;z-index:22;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);
+    display:flex;flex-direction:column;gap:8px}
+  #chips{display:flex;gap:6px;overflow-x:auto;padding:2px;scrollbar-width:none}
+  #chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;border:1px solid rgba(255,255,255,.22);background:rgba(20,16,60,.72);color:#fff;
+    border-radius:999px;padding:7px 11px;font-size:12.5px;font-weight:700;cursor:pointer;backdrop-filter:blur(10px)}
+  .chip:active{transform:scale(.95)}
+  #promptRow{display:flex;gap:8px;align-items:center;min-width:0}
+  #promptWrap{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;background:rgba(10,14,36,.78);
+    border:2px solid rgba(167,139,250,.65);border-radius:999px;padding:6px 6px 6px 14px;
+    box-shadow:0 0 0 4px rgba(167,139,250,.15),0 12px 40px rgba(0,0,0,.5);backdrop-filter:blur(16px)}
+  #prompt{flex:1;background:transparent;border:0;outline:0;color:#fff;font-size:16px;min-width:0}
+  #prompt::placeholder{color:rgba(255,255,255,.55)}
+  #dreamBtn{border:0;cursor:pointer;font-weight:900;font-size:15px;color:#1a1240;border-radius:999px;flex:0 0 auto;
+    padding:11px 18px;background:linear-gradient(135deg,#c4b5fd,#67e8f9 55%,#f9a8d4);box-shadow:0 6px 22px rgba(167,139,250,.6)}
+  #dreamBtn:active{transform:scale(.95)}
+  #dreamBtn:disabled{opacity:.5;filter:grayscale(.4)}
+  .miniBtn{width:42px;height:42px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);
+    color:#fff;font-size:18px;display:grid;place-items:center;cursor:pointer;flex:0 0 auto}
+  /* Touch controls */
+  #touchUI{position:fixed;inset:0;z-index:12;pointer-events:none;display:none}
+  body.touch #touchUI{display:block}
+  #joyL{position:absolute;left:14px;bottom:118px;width:124px;height:124px;border-radius:50%;
+    background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.25);pointer-events:auto}
+  #joyKnob{position:absolute;left:50%;top:50%;width:56px;height:56px;border-radius:50%;transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 30% 30%,#fff,#a78bfa);box-shadow:0 6px 20px rgba(167,139,250,.7)}
+  #lookHint{position:absolute;right:14px;bottom:118px;width:124px;height:124px;border-radius:50%;
+    border:1.5px dashed rgba(255,255,255,.3);display:grid;place-items:center;font-size:11px;color:rgba(255,255,255,.7);pointer-events:auto}
+  #actionBtns{position:absolute;right:12px;bottom:252px;display:flex;flex-direction:column;gap:8px;pointer-events:auto}
+  .actBtn{width:56px;height:56px;border-radius:50%;border:1px solid rgba(255,255,255,.3);font-weight:900;font-size:12px;
+    background:rgba(20,16,60,.7);color:#fff;backdrop-filter:blur(10px)}
+  .actBtn.on{background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#0b1026}
+  /* Edit panel */
+  #editPanel{position:fixed;z-index:23;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 132px);transform:translateX(-50%);
+    display:none;gap:6px;background:var(--glass);border:1px solid rgba(255,255,255,.2);border-radius:999px;
+    padding:7px;backdrop-filter:blur(14px);max-width:94vw;overflow-x:auto}
+  #editPanel.show{display:flex}
+  #editPanel button{border:0;border-radius:999px;padding:9px 12px;font-weight:800;font-size:13px;white-space:nowrap;cursor:pointer}
+  /* Intro overlay */
+  #intro{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,#2a1e6b 0%,#0b1026 60%,#05071a 100%);padding:18px;transition:opacity .6s}
+  #intro.hide{opacity:0;pointer-events:none}
+  #introCard{max-width:560px;width:100%;background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.06));
+    border:1px solid rgba(255,255,255,.22);border-radius:24px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.6);text-align:center}
+  #introCard h1{margin:.2em 0;font-size:clamp(28px,6vw,44px);line-height:1.02}
+  #introCard h1 span{background:linear-gradient(90deg,#c4b5fd,#67e8f9,#fbcfe8);-webkit-background-clip:text;background-clip:text;color:transparent}
+  #introCard p{color:#d8d3ff;font-size:14.5px;line-height:1.55}
+  .featureGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0;text-align:left}
+  .featureGrid div{background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:9px 10px;font-size:12.5px;line-height:1.4}
+  #startBtn{font-size:18px;font-weight:900;border:0;border-radius:999px;padding:14px 30px;cursor:pointer;
+    background:linear-gradient(135deg,#c4b5fd,#22d3ee,#f9a8d4);box-shadow:0 12px 40px rgba(167,139,250,.55)}
+  #startBtn:active{transform:scale(.96)}
+  .tiny{font-size:11.5px;color:rgba(255,255,255,.65)}
+  kbd{background:rgba(255,255,255,.15);border-radius:6px;padding:1px 6px;font-size:11px}
+  /* Toast */
+  #toast{position:fixed;z-index:40;left:50%;top:46%;transform:translate(-50%,-50%) scale(.9);opacity:0;
+    background:rgba(10,10,30,.85);border:1px solid rgba(255,255,255,.25);padding:12px 18px;border-radius:16px;
+    font-weight:800;font-size:15px;pointer-events:none;transition:all .3s;text-align:center;max-width:86vw}
+  #toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  #photoFlash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:60;transition:opacity .25s}
+  canvas{touch-action:none}
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<div id="scene"></div>
+<div id="vignette"></div>
+
+<div id="topbar">
+  <div class="pill" id="logo">🦊 <b>LOOM &amp; YOU</b></div>
+  <div class="pill" id="inkWrap">✨ <div id="inkBar"><div id="inkFill"></div></div> <span id="inkNum">100</span></div>
+  <div class="spacer"></div>
+  <button class="iconBtn" id="questToggle" title="Quests">🗺️</button>
+  <button class="iconBtn" id="flyBtn" title="Fly">🕊️</button>
+  <button class="iconBtn" id="dayBtn" title="Day/Night">🌙</button>
+  <button class="iconBtn" id="photoBtn" title="Photo">📸</button>
+  <button class="iconBtn" id="soundBtn" title="Sound">🔊</button>
+  <button class="iconBtn" id="helpBtn" title="Help">❓</button>
+</div>
+
+<div id="loomBubble" class="hidden"><small>🦊 Loom · your dream partner</small><span id="loomText">…</span></div>
+
+<div id="leftPanel">
+  <div class="card" id="questCard">
+    <h3>✨ Co-Dream Quests</h3>
+    <ul id="quests"></ul>
+  </div>
+  <div class="card">
+    <h3>🌙 Dream log</h3>
+    <div id="dreamLog"></div>
+  </div>
+</div>
+
+<div id="editPanel">
+  <button id="eGrow" style="background:#a3e635">＋ Grow</button>
+  <button id="eShrink" style="background:#fef08a">－ Shrink</button>
+  <button id="eCandy" style="background:#f9a8d4">🍬 Candy-fy</button>
+  <button id="eCopy" style="background:#67e8f9">⧉ Duplicate</button>
+  <button id="eBanish" style="background:#ff6b9d;color:#fff">☁ Banish</button>
+  <button id="eClose" style="background:rgba(255,255,255,.2);color:#fff">✕</button>
+</div>
+
+<div id="touchUI">
+  <div id="joyL"><div id="joyKnob"></div></div>
+  <div id="lookHint">drag to<br>look 👀</div>
+  <div id="actionBtns">
+    <button class="actBtn" id="mJump">JUMP</button>
+    <button class="actBtn" id="mFly">FLY</button>
+  </div>
+</div>
+
+<div id="dreamBar">
+  <div id="chips"></div>
+  <div id="promptRow">
+    <div id="promptWrap">
+      <span style="font-size:19px">💭</span>
+      <input id="prompt" placeholder='Dream aloud — try "mushroom forest" or "floating jellyfish"…' autocomplete="off" enterkeyhint="go">
+      <button class="miniBtn" id="micBtn" title="Voice">🎤</button>
+    </div>
+    <button id="dreamBtn">Dream ✨</button>
+  </div>
+</div>
+
+<div id="intro">
+  <div id="introCard">
+    <div style="font-size:13px;letter-spacing:2px;color:#a78bfa;font-weight:900">✨ A CO-PILOT SANDBOX · PHONE + TABLET 3D ✨</div>
+    <h1>Dream an open world <span>together.</span></h1>
+    <p>You are not alone here. <b>🦊 Loom</b> — a curious fox-spirit — dreams <b>with</b> you. Type what you imagine, and it blooms in 3D in front of you. Leave Loom alone for a while and it will dream <i>on its own</i>. Tap anything to remix it. No winning. Just co-creating a pocket archipelago.</p>
+    <div class="featureGrid">
+      <div>💭 <b>Prompt-to-world:</b> volcano, village, crystal field, rainbow bridge, UFO…</div>
+      <div>🦊 <b>Living partner:</b> moods, memories, suggestions, auto-dreams</div>
+      <div>📱 <b>Tablet-first:</b> twin sticks, tap-to-edit, voice dreaming</div>
+      <div>🧪 <b>Experimental:</b> dream-ink economy, daydream/nightmare skies, photo quests</div>
+    </div>
+    <button id="startBtn">Wake up together 🌅</button>
+    <p class="tiny"><kbd>WASD</kbd> move · drag look · <kbd>Space</kbd> jump · <kbd>F</kbd> fly · tap objects to edit · every dream costs ✨ ink</p>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="photoFlash"></div>
+
+<script type="module">
+import * as THREE from 'three';
+
+/* ============ utils ============ */
+const $=s=>document.querySelector(s);
+const rand=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+if(('ontouchstart' in window)||navigator.maxTouchPoints>0) document.body.classList.add('touch');
+function toast(msg,ms=1800){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),ms);}
+function say(text,ms=5200){$('#loomText').textContent=text;const b=$('#loomBubble');b.classList.remove('hidden');clearTimeout(b._h);b._h=setTimeout(()=>b.classList.add('hidden'),ms);}
+function logDream(html){const d=document.createElement('div');d.innerHTML=html;const box=$('#dreamLog');box.prepend(d);while(box.children.length>5)box.lastChild.remove();}
+
+/* ============ audio (tiny synth, no assets) ============ */
+let AC=null, soundOn=true;
+function ac(){if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();}if(AC.state==='suspended')AC.resume();return AC;}
+function blip(f=520,d=.18,type='sine',g=.16){if(!soundOn)return;try{const c=ac(),o=c.createOscillator(),v=c.createGain();o.type=type;o.frequency.setValueAtTime(f,c.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(60,f*.5),c.currentTime+d);v.gain.setValueAtTime(g,c.currentTime);v.gain.exponentialRampToValueAtTime(.0001,c.currentTime+d);o.connect(v).connect(c.destination);o.start();o.stop(c.currentTime+d);}catch(e){}}
+function dreamChord(){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>blip(f,.35,'sine',.12),i*90));}
+function popSnd(){blip(rand(300,700),.12,'triangle',.14);}
+$('#soundBtn').onclick=()=>{soundOn=!soundOn;$('#soundBtn').textContent=soundOn?'🔊':'🔇';};
+
+/* ============ three setup ============ */
+const container=$('#scene');
+const renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x0b1026);
+scene.fog=new THREE.FogExp2(0x1a2456,0.0075);
+
+const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.1,900);
+camera.position.set(0,6,14);
+
+const hemi=new THREE.HemisphereLight(0xc4b5fd,0x1e2a5a,1.05); scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff1c9,1.9);
+sun.position.set(40,60,20); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048);
+sun.shadow.camera.left=-90;sun.shadow.camera.right=90;sun.shadow.camera.top=90;sun.shadow.camera.bottom=-90;
+sun.shadow.camera.far=250; scene.add(sun);
+const moon=new THREE.DirectionalLight(0x8ea2ff,.0); moon.position.set(-40,50,-30); scene.add(moon);
+// sparkles
+function makeStars(n=700){const g=new THREE.BufferGeometry(),p=new Float32Array(n*3);
+  for(let i=0;i<n;i++){const r=rand(260,420),th=rand(0,Math.PI*2),ph=rand(.05,1.4);
+    p[i*3]=r*Math.sin(ph)*Math.cos(th);p[i*3+1]=r*Math.cos(ph)*.9+10;p[i*3+2]=r*Math.sin(ph)*Math.sin(th);}
+  g.setAttribute('position',new THREE.BufferAttribute(p,3));
+  const m=new THREE.PointsMaterial({color:0xffffff,size:1.6,sizeAttenuation:false,transparent:true,opacity:.85});
+  const pts=new THREE.Points(g,m);scene.add(pts);return pts;}
+const stars=makeStars();
+// sun/moon sprite
+const glowTex=(()=>{const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');
+  const g=x.createRadialGradient(64,64,4,64,64,64);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.35,'rgba(255,240,200,.85)');g.addColorStop(1,'rgba(255,240,200,0)');
+  x.fillStyle=g;x.fillRect(0,0,128,128);const t=new THREE.CanvasTexture(c);return t;})();
+const sunSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xffe9a8,transparent:true,depthWrite:false}));
+sunSpr.scale.set(60,60,1);sunSpr.position.set(180,140,60);scene.add(sunSpr);
+
+// ocean
+const oceanGeo=new THREE.PlaneGeometry(800,800,48,48);
+const oceanMat=new THREE.MeshStandardMaterial({color:0x164e7a,roughness:.35,metalness:.55,transparent:true,opacity:.94});
+const ocean=new THREE.Mesh(oceanGeo,oceanMat);
+ocean.rotation.x=-Math.PI/2;ocean.position.y=-1.2;ocean.receiveShadow=true;scene.add(ocean);
+// animated waves via vertex sin in tick (cheap: move material normal-ish by position.y handled in shader? do CPU small)
+// glowing dream grid rings
+const rings=[];
+for(let i=0;i<3;i++){const rg=new THREE.RingGeometry(30+i*28,30.6+i*28,96);
+  const rm=new THREE.MeshBasicMaterial({color:i===1?0x22d3ee:0xa78bfa,transparent:true,opacity:.22,side:THREE.DoubleSide});
+  const ring=new THREE.Mesh(rg,rm);ring.rotation.x=-Math.PI/2;ring.position.y=-.9+i*.04;scene.add(ring);rings.push(ring);}
+
+/* ============ islands ============ */
+const dreamGroup=new THREE.Group(); scene.add(dreamGroup); // all player/loom creations
+const islands=[];
+function noiseH(x,z){return Math.sin(x*.35)*Math.cos(z*.3)*1.2+Math.sin(x*.12+z*.21)*1.8;}
+function makeIsland(x,z,r,colorTop=0x7ddf8e,colorSide=0x8a6a4f){
+  const geo=new THREE.CylinderGeometry(r,r*1.18,7,28,3);
+  const pos=geo.attributes.position;
+  for(let i=0;i<pos.count;i++){const vx=pos.getX(i),vz=pos.getZ(i);
+    if(pos.getY(i)>0){pos.setY(i, pos.getY(i)+noiseH(vx+x,vz+z)*.55);}}
+  geo.computeVertexNormals();
+  const mat=new THREE.MeshStandardMaterial({color:colorSide,roughness:.9});
+  const m=new THREE.Mesh(geo,mat);m.position.set(x,-2.4,z);m.receiveShadow=true;m.castShadow=true;scene.add(m);
+  const topGeo=new THREE.CircleGeometry(r*.99,28);
+  const tp=topGeo.attributes.position;
+  for(let i=0;i<tp.count;i++){tp.setZ(i, tp.getZ(i)+0); }
+  const top=new THREE.Mesh(topGeo,new THREE.MeshStandardMaterial({color:colorTop,roughness:.85}));
+  top.rotation.x=-Math.PI/2;top.position.set(x,1.35,z);top.receiveShadow=true;scene.add(top);
+  // beach rim
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(r*.99, .55, 10, 40),
+    new THREE.MeshStandardMaterial({color:0xfde68a,roughness:.8}));
+  rim.rotation.x=Math.PI/2;rim.position.set(x,.55,z);scene.add(rim);
+  islands.push({x,z,r,topY:1.35});
+  return {base:m,top};
+}
+makeIsland(0,0,22,0x86efac);
+makeIsland(44,-18,14,0xf9a8d4);
+makeIsland(-42,-24,15,0x93c5fd);
+makeIsland(-8,-58,17,0xfde68a);
+makeIsland(30,42,13,0xc4b5fd);
+makeIsland(-36,38,12,0x6ee7b7);
+// starter decor: a few trees + lanterns so first frame is alive
+function groundY(x,z){
+  // find island
+  let best=null,bd=1e9;
+  for(const isl of islands){const d=Math.hypot(x-isl.x,z-isl.z);if(d<bd){bd=d;best=isl;}}
+  if(best&&bd<best.r) return best.topY+Math.max(0,noiseH(x,z)*.12);
+  return -1.2;
+}
+
+/* ============ builders (prompt -> world) ============ */
+const candyPalette=[0xff6b9d,0xa78bfa,0x22d3ee,0xa3e635,0xffb86b,0xf9a8d4];
+const selectable=[]; // meshes/groups user can tap
+function tagSelectable(group,label){group.userData.label=label;group.userData.selectable=true;
+  group.traverse(o=>{o.userData.rootLabel=label;o.userData.rootRef=group;});selectable.push(group);dreamGroup.add(group);return group;}
+function shadowify(o){o.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=true;}});}
+function trunk(h=2.2,r=.28,c=0x8a5a3b){const m=new THREE.Mesh(new THREE.CylinderGeometry(r*.7,r, h,8),new THREE.MeshStandardMaterial({color:c,roughness:.9}));m.position.y=h/2;return m;}
+function leafBall(s=1.4,c=0x34d399,y=3){const m=new THREE.Mesh(new THREE.IcosahedronGeometry(s,1),new THREE.MeshStandardMaterial({color:c,roughness:.7,flatShading:true}));m.position.y=y;return m;}
+
+const Builders={
+  tree(p){const g=new THREE.Group();g.add(trunk(rand(1.8,2.8)));g.add(leafBall(rand(1.2,1.8),pick([0x34d399,0x4ade80,0x86efac]),3.1));
+    const l2=leafBall(.9,0x6ee7b7,3.9);l2.position.x=.6;g.add(l2);g.position.copy(p);shadowify(g);return tagSelectable(g,'tree');},
+  forest(p){const g=new THREE.Group();for(let i=0;i<9;i++){const t=new THREE.Group();t.add(trunk(rand(1.6,3)));t.add(leafBall(rand(1,1.9),pick([0x22c55e,0x4ade80,0xa3e635,0x2dd4bf]),rand(2.6,3.6)));
+    t.position.set(rand(-9,9),0,rand(-9,9));t.rotation.y=rand(0,6);const s=rand(.8,1.4);t.scale.set(s,s,s);g.add(t);}g.position.copy(p);shadowify(g);return tagSelectable(g,'forest');},
+  mushroom(p){const g=new THREE.Group();for(let i=0;i<7;i++){const h=rand(.8,2.2);
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(.18,.26,h,8),new THREE.MeshStandardMaterial({color:0xfff7e8,roughness:.6}));stem.position.set(rand(-6,6),h/2,rand(-6,6));
+    const cap=new THREE.Mesh(new THREE.SphereGeometry(rand(.5,1.1),12,8,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:pick([0xff6b9d,0xf43f5e,0xa78bfa,0x22d3ee]),roughness:.5}));
+    cap.position.copy(stem.position);cap.position.y+=h/2;g.add(stem,cap);
+    for(let k=0;k<4;k++){const dot=new THREE.Mesh(new THREE.SphereGeometry(.09,6,6),new THREE.MeshBasicMaterial({color:0xffffff}));dot.position.set(cap.position.x+rand(-.5,.5),cap.position.y+rand(.1,.5),cap.position.z+rand(-.5,.5));g.add(dot);}}
+    // glow spores
+    for(let i=0;i<14;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(.07,6,6),new THREE.MeshBasicMaterial({color:0xa5f3fc}));s.position.set(rand(-7,7),rand(.5,3.5),rand(-7,7));s.userData.float=true;g.add(s);}
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'mushroom forest');},
+  crystal(p){const g=new THREE.Group();for(let i=0;i<9;i++){const h=rand(1.5,4.5);
+    const c=new THREE.Mesh(new THREE.OctahedronGeometry(rand(.5,1.1),0),new THREE.MeshStandardMaterial({color:pick([0x67e8f9,0xa78bfa,0xf0abfc,0x93c5fd]),roughness:.15,metalness:.3,emissive:pick([0x0e7490,0x6d28d9]),emissiveIntensity:.45,transparent:true,opacity:.95}));
+    c.scale.y=h;c.position.set(rand(-7,7),h*.45,rand(-7,7));c.rotation.set(rand(-.3,.3),rand(0,6),rand(-.3,.3));g.add(c);}
+    const light=new THREE.PointLight(0xa78bfa,12,22);light.position.y=3;g.add(light);
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'crystal field');},
+  house(p){const g=new THREE.Group();
+    const base=new THREE.Mesh(new THREE.BoxGeometry(3,2.2,2.6),new THREE.MeshStandardMaterial({color:pick([0xfff7e8,0xfde68a,0xfbcfe8]),roughness:.8}));base.position.y=1.1;g.add(base);
+    const roof=new THREE.Mesh(new THREE.ConeGeometry(2.5,1.6,4),new THREE.MeshStandardMaterial({color:pick([0xf43f5e,0x8b5cf6,0x0ea5e9]),roughness:.7,flatShading:true}));roof.position.y=3;roof.rotation.y=Math.PI/4;g.add(roof);
+    const door=new THREE.Mesh(new THREE.BoxGeometry(.8,1.3,.1),new THREE.MeshStandardMaterial({color:0x5b3a29}));door.position.set(0,.65,1.32);g.add(door);
+    const win=new THREE.Mesh(new THREE.BoxGeometry(.7,.7,.1),new THREE.MeshBasicMaterial({color:0xfef9c3}));win.position.set(-.8,1.4,1.32);g.add(win);
+    const win2=win.clone();win2.position.x=.8;g.add(win2);
+    const glow=new THREE.PointLight(0xffd27a,6,10);glow.position.set(0,2,2);g.add(glow);
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'cozy house');},
+  village(p){const g=new THREE.Group();for(let i=0;i<5;i++){const h=Builders.house(new THREE.Vector3(rand(-10,10),0,rand(-10,10)));g.add(h.clone?h:h);} 
+    // NOTE: Builders.house already adds to dreamGroup; reparent: move children
+    // simpler: build 5 houses inline
+    g.clear();for(let i=0;i<5;i++){const bx=rand(-10,10),bz=rand(-10,10);
+      const base=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.9,2.2),new THREE.MeshStandardMaterial({color:pick([0xfff7e8,0xfde68a,0xe0e7ff]),roughness:.8}));base.position.set(bx,.95,bz);
+      const roof=new THREE.Mesh(new THREE.ConeGeometry(2,1.3,4),new THREE.MeshStandardMaterial({color:pick([0xf43f5e,0x8b5cf6,0x0ea5e9,0x10b981]),flatShading:true}));roof.position.set(bx,2.5,bz);roof.rotation.y=Math.PI/4;
+      g.add(base,roof);}
+    // remove the accidentally added houses from dreamGroup/selectable
+    for(let i=selectable.length-1;i>=0;i--){if(selectable[i].userData.label==='cozy house'&&selectable[i].position.distanceTo(p)<1){dreamGroup.remove(selectable[i]);selectable.splice(i,1);}}
+    const lamp=new THREE.PointLight(0xffd27a,20,30);lamp.position.y=4;g.add(lamp);
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'village');},
+  castle(p){const g=new THREE.Group();const stone=new THREE.MeshStandardMaterial({color:0xe2e8f0,roughness:.85});
+    for(let i=0;i<4;i++){const a=i/4*Math.PI*2;const tw=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.3,6,8),stone);tw.position.set(Math.cos(a)*3.4,3,Math.sin(a)*3.4);g.add(tw);
+      const cap=new THREE.Mesh(new THREE.ConeGeometry(1.4,1.8,8),new THREE.MeshStandardMaterial({color:pick([0x8b5cf6,0xf43f5e]),flatShading:true}));cap.position.set(tw.position.x,6.8,tw.position.z);g.add(cap);}
+    const keep=new THREE.Mesh(new THREE.BoxGeometry(5,5,5),stone);keep.position.y=2.5;g.add(keep);
+    const flag=new THREE.Mesh(new THREE.BoxGeometry(1.4,.9,.05),new THREE.MeshBasicMaterial({color:0xfacc15,side:THREE.DoubleSide}));flag.position.set(0,7.6,0);flag.userData.wave=true;g.add(flag);
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,3,6),new THREE.MeshStandardMaterial({color:0x44403c}));pole.position.y=6.5;g.add(pole);
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'castle');},
+  volcano(p){const g=new THREE.Group();
+    const cone=new THREE.Mesh(new THREE.CylinderGeometry(2,5.5,5,12,1,true),new THREE.MeshStandardMaterial({color:0x57534e,roughness:.95,side:THREE.DoubleSide}));cone.position.y=2.5;g.add(cone);
+    const lava=new THREE.Mesh(new THREE.CircleGeometry(1.9,16),new THREE.MeshBasicMaterial({color:0xff6b1a}));lava.rotation.x=-Math.PI/2;lava.position.y=5.02;g.add(lava);
+    const glow=new THREE.PointLight(0xff5a00,30,34);glow.position.y=6;g.add(glow);
+    // lava rocks
+    for(let i=0;i<8;i++){const r=new THREE.Mesh(new THREE.DodecahedronGeometry(rand(.3,.7)),new THREE.MeshStandardMaterial({color:0x1c1917,roughness:1}));const a=rand(0,6.3),rr=rand(4,7);r.position.set(Math.cos(a)*rr,.4,Math.sin(a)*rr);g.add(r);}
+    g.userData.lava=lava;g.userData.glow=glow;
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'volcano');},
+  lake(p){const g=new THREE.Group();
+    const w=new THREE.Mesh(new THREE.CircleGeometry(6,28),new THREE.MeshStandardMaterial({color:0x38bdf8,roughness:.2,metalness:.4,transparent:true,opacity:.92}));w.rotation.x=-Math.PI/2;w.position.y=.25;g.add(w);
+    const sand=new THREE.Mesh(new THREE.RingGeometry(6,7.4,28),new THREE.MeshStandardMaterial({color:0xfde68a,roughness:.9}));sand.rotation.x=-Math.PI/2;sand.position.y=.22;g.add(sand);
+    for(let i=0;i<5;i++){const lily=new THREE.Mesh(new THREE.CircleGeometry(rand(.3,.6),10),new THREE.MeshStandardMaterial({color:0x4ade80}));lily.rotation.x=-Math.PI/2;lily.position.set(rand(-4,4),.3,rand(-4,4));g.add(lily);}
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'lake');},
+  rainbow(p){const g=new THREE.Group();const cols=[0xef4444,0xf97316,0xfacc15,0x22c55e,0x3b82f6,0x8b5cf6];
+    cols.forEach((c,i)=>{const t=new THREE.Mesh(new THREE.TorusGeometry(9-i*.9,.42,10,40,Math.PI),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.9}));t.position.y=1;g.add(t);});
+    const c1=new THREE.Mesh(new THREE.SphereGeometry(1.2,10,10),new THREE.MeshStandardMaterial({color:0xffffff,roughness:1}));c1.position.set(-9,1,0);g.add(c1);
+    const c2=c1.clone();c2.position.x=9;g.add(c2);
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'rainbow');},
+  jellyfish(p){const g=new THREE.Group();for(let i=0;i<5;i++){
+      const j=new THREE.Group();
+      const bell=new THREE.Mesh(new THREE.SphereGeometry(.9,14,10,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:pick([0xf0abfc,0x67e8f9,0xf9a8d4]),transparent:true,opacity:.85,roughness:.3,emissive:0x8b5cf6,emissiveIntensity:.35}));
+      j.add(bell);
+      for(let k=0;k<6;k++){const t=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,rand(1,1.8),5),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.7}));t.position.set(rand(-.5,.5),-1,rand(-.5,.5));j.add(t);}
+      j.position.set(rand(-8,8),rand(4,9),rand(-8,8));j.userData.float=true;j.userData.phase=rand(0,6);g.add(j);}
+    const l=new THREE.PointLight(0xf0abfc,10,26);l.position.y=5;g.add(l);
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'jellyfish drift');},
+  lanterns(p){const g=new THREE.Group();for(let i=0;i<10;i++){
+      const lan=new THREE.Group();
+      const paper=new THREE.Mesh(new THREE.SphereGeometry(.45,10,10),new THREE.MeshBasicMaterial({color:pick([0xffd27a,0xffb86b,0xf9a8d4,0xa5f3fc])}));lan.add(paper);
+      const cap=new THREE.Mesh(new THREE.CylinderGeometry(.16,.16,.12,8),new THREE.MeshStandardMaterial({color:0x44403c}));cap.position.y=.5;lan.add(cap);
+      lan.position.set(rand(-10,10),rand(2.5,7),rand(-10,10));lan.userData.float=true;lan.userData.phase=rand(0,6);g.add(lan);}
+    const l=new THREE.PointLight(0xffd27a,18,32);l.position.y=5;g.add(l);
+    g.position.copy(p);return tagSelectable(g,'lanterns');},
+  windmill(p){const g=new THREE.Group();
+    const tw=new THREE.Mesh(new THREE.CylinderGeometry(.6,1,6,8),new THREE.MeshStandardMaterial({color:0xfff7e8,roughness:.8}));tw.position.y=3;g.add(tw);
+    const hub=new THREE.Group();hub.position.set(0,5.6,1.05);
+    for(let i=0;i<4;i++){const bl=new THREE.Mesh(new THREE.BoxGeometry(.5,3.2,.08),new THREE.MeshStandardMaterial({color:pick([0xf43f5e,0xfff7e8]),roughness:.6}));bl.position.y=1.6;const piv=new THREE.Group();piv.rotation.z=i*Math.PI/2;piv.add(bl);hub.add(piv);}
+    g.add(hub);g.userData.spin=hub;
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'windmill');},
+  cactus(p){const g=new THREE.Group();for(let i=0;i<6;i++){const h=rand(1.5,3.5);
+      const c=new THREE.Mesh(new THREE.CapsuleGeometry(.4,h/2,4,8),new THREE.MeshStandardMaterial({color:0x22c55e,roughness:.8}));c.position.set(rand(-7,7),h/2,rand(-7,7));g.add(c);}
+    const sand=new THREE.Mesh(new THREE.CircleGeometry(8,20),new THREE.MeshStandardMaterial({color:0xfde68a,roughness:1}));sand.rotation.x=-Math.PI/2;sand.position.y=.05;g.add(sand);
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'desert');},
+  garden(p){const g=new THREE.Group();for(let i=0;i<18;i++){
+      const st=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.7,5),new THREE.MeshStandardMaterial({color:0x16a34a}));st.position.set(rand(-7,7),.35,rand(-7,7));g.add(st);
+      const fl=new THREE.Mesh(new THREE.IcosahedronGeometry(.22,0),new THREE.MeshStandardMaterial({color:pick(candyPalette),roughness:.5}));fl.position.set(st.position.x,.8,st.position.z);g.add(fl);}
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'flower garden');},
+  ufo(p){const g=new THREE.Group();
+    const disc=new THREE.Mesh(new THREE.CylinderGeometry(2.4,2.8,.8,18),new THREE.MeshStandardMaterial({color:0xcbd5e1,metalness:.7,roughness:.3}));disc.position.y=5;g.add(disc);
+    const dome=new THREE.Mesh(new THREE.SphereGeometry(1,14,10,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0x67e8f9,transparent:true,opacity:.85,roughness:.1}));dome.position.y=5.4;g.add(dome);
+    for(let i=0;i<8;i++){const a=i/8*Math.PI*2;const li=new THREE.Mesh(new THREE.SphereGeometry(.14,8,8),new THREE.MeshBasicMaterial({color:pick([0xff0000,0x00ff88,0xffff00])}));li.position.set(Math.cos(a)*2.4,4.8,Math.sin(a)*2.4);li.userData.blink=true;g.add(li);}
+    const beam=new THREE.Mesh(new THREE.CylinderGeometry(1.8,.6,5,12,1,true),new THREE.MeshBasicMaterial({color:0x67e8f9,transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false}));beam.position.y=2.2;g.add(beam);
+    const l=new THREE.PointLight(0x67e8f9,16,26);l.position.y=5;g.add(l);
+    g.userData.ufo=true;g.userData.phase=rand(0,6);
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'UFO');},
+  golem(p){const g=new THREE.Group();const rockM=new THREE.MeshStandardMaterial({color:0xa8a29e,roughness:.95,flatShading:true});
+    const body=new THREE.Mesh(new THREE.DodecahedronGeometry(1.2),rockM);body.position.y=1.6;g.add(body);
+    const head=new THREE.Mesh(new THREE.DodecahedronGeometry(.6),rockM);head.position.y=3;g.add(head);
+    const e1=new THREE.Mesh(new THREE.SphereGeometry(.11,8,8),new THREE.MeshBasicMaterial({color:0x22d3ee}));e1.position.set(-.2,3.1,.5);g.add(e1);
+    const e2=e1.clone();e2.position.x=.2;g.add(e2);
+    const armL=new THREE.Mesh(new THREE.BoxGeometry(.5,1.6,.5),rockM);armL.position.set(-1.4,1.6,0);armL.rotation.z=.3;g.add(armL);
+    const armR=armL.clone();armR.position.x=1.4;armR.rotation.z=-.3;g.add(armR);
+    g.userData.golem=true;
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'moss golem');},
+  bridge(p){const g=new THREE.Group();
+    // light bridge extending forward 26m
+    for(let i=0;i<13;i++){const plank=new THREE.Mesh(new THREE.BoxGeometry(3.2,.22,1.5),new THREE.MeshStandardMaterial({color:i%2?0xa78bfa:0x67e8f9,emissive:i%2?0x6d28d9:0x0e7490,emissiveIntensity:.55,roughness:.4}));plank.position.set(0,.4,-i*2);g.add(plank);}
+    for(const sx of [-1.7,1.7]){const rail=new THREE.Mesh(new THREE.BoxGeometry(.14,.9,26),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.55}));rail.position.set(sx,1.1,-12);g.add(rail);}
+    const l=new THREE.PointLight(0x67e8f9,10,24);l.position.set(0,2,-8);g.add(l);
+    g.position.copy(p);return tagSelectable(g,'light bridge');},
+  orb(p,label='dream orb'){const g=new THREE.Group();
+    const s=new THREE.Mesh(new THREE.IcosahedronGeometry(1.1,1),new THREE.MeshStandardMaterial({color:pick(candyPalette),roughness:.25,metalness:.2,emissive:pick(candyPalette),emissiveIntensity:.3,flatShading:true}));s.position.y=1.6;s.userData.float=true;g.add(s);
+    const halo=new THREE.Mesh(new THREE.TorusGeometry(1.7,.07,8,32),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.7}));halo.position.y=1.6;halo.rotation.x=1.1;g.add(halo);
+    const l=new THREE.PointLight(0xffffff,6,14);l.position.y=2.5;g.add(l);
+    g.position.copy(p);return tagSelectable(g,label);},
+};
+
+/* keyword parser — the "co-pilot brain" frontend */
+function parseDream(text){
+  const t=text.toLowerCase();
+  const has=(...ws)=>ws.some(w=>t.includes(w));
+  if(has('forest','woods','jungle','trees')) return {fn:'forest',ink:14,blurb:'a whispering forest'};
+  if(has('mushroom','shroom','fungi','toadstool')) return {fn:'mushroom',ink:14,blurb:'a glowing mushroom grove'};
+  if(has('crystal','gem','diamond','amethyst')) return {fn:'crystal',ink:15,blurb:'a singing crystal field'};
+  if(has('village','town','houses','hamlet')) return {fn:'village',ink:18,blurb:'a cozy village'};
+  if(has('castle','fort','tower','palace','kingdom')) return {fn:'castle',ink:18,blurb:'a storybook castle'};
+  if(has('house','cabin','cottage','hut','home')) return {fn:'house',ink:10,blurb:'a cozy house'};
+  if(has('volcano','lava','magma','erupt')) return {fn:'volcano',ink:16,blurb:'a grumbly volcano'};
+  if(has('lake','pond','pool','oasis','water')) return {fn:'lake',ink:10,blurb:'a glassy lake'};
+  if(has('rainbow')) return {fn:'rainbow',ink:12,blurb:'a rainbow arch'};
+  if(has('jelly','jellyfish','float','sky whale','balloon')) return {fn:'jellyfish',ink:14,blurb:'a drift of dream jellyfish'};
+  if(has('lantern','light','firefly','star lamp')) return {fn:'lanterns',ink:12,blurb:'floating lanterns'};
+  if(has('windmill','wind мельница'.toLowerCase(),'mill')) return {fn:'windmill',ink:12,blurb:'a sleepy windmill'};
+  if(has('desert','cactus','sand','dune')) return {fn:'cactus',ink:11,blurb:'a tiny desert'};
+  if(has('flower','garden','meadow','blossom','rose','tulip')) return {fn:'garden',ink:11,blurb:'a flower garden'};
+  if(has('ufo','alien','spaceship','saucer','airship')) return {fn:'ufo',ink:16,blurb:'a curious UFO'};
+  if(has('golem','rock friend','monster friend','creature','dragon','fox friend')) return {fn:'golem',ink:14,blurb:'a friendly moss golem'};
+  if(has('bridge','path','cross','connect')) return {fn:'bridge',ink:13,blurb:'a light bridge'};
+  if(has('tree')) return {fn:'tree',ink:8,blurb:'a dream tree'};
+  if(has('snow','winter','snowman','ice')) return {fn:'crystal',ink:14,blurb:'a frost-crystal grove (snow dream!)'};
+  if(has('beach','umbrella','party','picnic')) return {fn:'garden',ink:11,blurb:'a beach picnic garden'};
+  return {fn:'orb',ink:7,blurb:'a wild dream orb'};
+}
+
+/* ============ player avatar ============ */
+const player=new THREE.Group();
+{
+  const body=new THREE.Mesh(new THREE.CapsuleGeometry(.45,1,4,10),new THREE.MeshStandardMaterial({color:0xfff7e8,roughness:.6}));
+  body.position.y=1.15;body.castShadow=true;player.add(body);
+  const scarf=new THREE.Mesh(new THREE.TorusGeometry(.32,.11,8,16),new THREE.MeshStandardMaterial({color:0xa78bfa,roughness:.5}));scarf.position.y=1.85;scarf.rotation.x=Math.PI/2;player.add(scarf);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.42,16,16),new THREE.MeshStandardMaterial({color:0xffe4c7,roughness:.6}));head.position.y=2.25;head.castShadow=true;player.add(head);
+  const eL=new THREE.Mesh(new THREE.SphereGeometry(.06,8,8),new THREE.MeshBasicMaterial({color:0x1e1b4b}));eL.position.set(-.14,2.32,.36);player.add(eL);
+  const eR=eL.clone();eR.position.x=.14;player.add(eR);
+  const hat=new THREE.Mesh(new THREE.ConeGeometry(.34,.6,10),new THREE.MeshStandardMaterial({color:0x22d3ee,roughness:.5}));hat.position.y=2.75;player.add(hat);
+  const glow=new THREE.PointLight(0xc4b5fd,4,9);glow.position.y=2.5;player.add(glow);
+}
+player.position.set(0,1.35,8); player.rotation.y=Math.PI; scene.add(player);
+
+/* ============ Loom fox-spirit ============ */
+const loom=new THREE.Group();
+let loomTail, loomEarL, loomEarR, loomGlow;
+{
+  const fur=new THREE.MeshStandardMaterial({color:0xff9d5c,roughness:.7});
+  const cream=new THREE.MeshStandardMaterial({color:0xfff7e8,roughness:.7});
+  const body=new THREE.Mesh(new THREE.SphereGeometry(.55,14,14),fur);body.scale.set(1, .85, 1.35);body.position.y=.65;body.castShadow=true;loom.add(body);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.42,14,14),fur);head.position.set(0,1.15,.55);head.castShadow=true;loom.add(head);
+  const snout=new THREE.Mesh(new THREE.SphereGeometry(.2,10,10),cream);snout.position.set(0,1.05,.92);loom.add(snout);
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(.06,8,8),new THREE.MeshBasicMaterial({color:0x1e1b4b}));nose.position.set(0,1.1,1.1);loom.add(nose);
+  for(const sx of [-1,1]){
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(.07,8,8),new THREE.MeshBasicMaterial({color:0x1e1b4b}));eye.position.set(sx*.17,1.24,.88);loom.add(eye);
+    const ear=new THREE.Mesh(new THREE.ConeGeometry(.16,.42,6),fur);ear.position.set(sx*.26,1.55,.45);loom.add(ear);
+    if(sx<0)loomEarL=ear;else loomEarR=ear;
+    for(let i=0;i<2;i++){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.5,6),fur);leg.position.set(sx*.28,.25,(i? .35:-.35));loom.add(leg);}
+  }
+  loomTail=new THREE.Mesh(new THREE.ConeGeometry(.3,1.1,8),new THREE.MeshStandardMaterial({color:0xc4b5fd,emissive:0x8b5cf6,emissiveIntensity:.7,roughness:.5}));
+  loomTail.position.set(0,.8,-.85);loomTail.rotation.x=-1.1;loom.add(loomTail);
+  const tip=new THREE.Mesh(new THREE.SphereGeometry(.16,8,8),new THREE.MeshBasicMaterial({color:0xffffff}));tip.position.set(0,1.25,-1.25);loom.add(tip);
+  loomGlow=new THREE.PointLight(0xc4b5fd,7,12);loomGlow.position.y=1.5;loom.add(loomGlow);
+  // dream ribbon
+  const rib=new THREE.Mesh(new THREE.TorusGeometry(.8,.03,6,24),new THREE.MeshBasicMaterial({color:0x67e8f9,transparent:true,opacity:.8}));
+  rib.position.y=.4;rib.rotation.x=Math.PI/2;rib.userData.ribbon=true;loom.add(rib);
+}
+loom.position.set(2.5,1.35,6); loom.scale.setScalar(1.25); scene.add(loom);
+
+/* ============ movement / camera ============ */
+const keys={};
+addEventListener('keydown',e=>{keys[e.code]=true;
+  if(e.code==='Space')e.preventDefault();
+  if(e.code==='KeyF')toggleFly();
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
+  if(e.code==='Enter'&&document.activeElement===$('#prompt'))dreamFromInput();
+});
+addEventListener('keyup',e=>keys[e.code]=false);
+let yaw=Math.PI, pitch=-.32, dist=9.5;
+let flying=false, vy=0, grounded=true;
+function toggleFly(){flying=!flying;$('#flyBtn').textContent=flying?'🦅':'🕊️';$('#mFly').classList.toggle('on',flying);
+  toast(flying?'🕊️ Dream-flight ON — swim through sky':'🚶 Walking again');blip(flying?700:400,.2,'sine',.15); loomMood(flying?'amazed':'calm');}
+// drag look (mouse + touch right half)
+let dragging=false,lx=0,ly=0;
+renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lx=e.clientX;ly=e.clientY;});
+addEventListener('pointerup',()=>dragging=false);
+addEventListener('pointermove',e=>{if(!dragging)return;if(e.target.closest&&e.target.closest('#dreamBar,#topbar,#leftPanel,#editPanel,#touchUI,#intro'))return;
+  const dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;
+  yaw-=dx*.0052;pitch=clamp(pitch-dy*.004,-1.15,.5);});
+addEventListener('wheel',e=>{dist=clamp(dist+e.deltaY*.01,4,22);},{passive:true});
+// joystick
+const joy={x:0,y:0,active:false,id:null};
+const joyL=$('#joyL'),knob=$('#joyKnob');
+function joySet(dx,dy){const m=44;const len=Math.hypot(dx,dy)||1;const c=Math.min(len,m);
+  joy.x=dx/len*c/m;joy.y=dy/len*c/m;knob.style.transform=`translate(calc(-50% + ${dx/len*c}px),calc(-50% + ${dy/len*c}px))`;}
+joyL.addEventListener('pointerdown',e=>{joy.active=true;joy.id=e.pointerId;joyL.setPointerCapture(e.pointerId);});
+joyL.addEventListener('pointermove',e=>{if(!joy.active||e.pointerId!==joy.id)return;
+  const r=joyL.getBoundingClientRect();joySet(e.clientX-(r.left+r.width/2),e.clientY-(r.top+r.height/2));});
+function joyEnd(e){if(e&&e.pointerId!==joy.id)return;joy.active=false;joy.x=joy.y=0;knob.style.transform='translate(-50%,-50%)';}
+joyL.addEventListener('pointerup',joyEnd);joyL.addEventListener('pointercancel',joyEnd);
+// look drag on right pad
+const lookPad=$('#lookHint');let lookId=null,llx=0,lly=0;
+lookPad.addEventListener('pointerdown',e=>{lookId=e.pointerId;llx=e.clientX;lly=e.clientY;lookPad.setPointerCapture(e.pointerId);});
+lookPad.addEventListener('pointermove',e=>{if(e.pointerId!==lookId)return;yaw-=(e.clientX-llx)*.008;pitch=clamp(pitch-(e.clientY-lly)*.006,-1.15,.5);llx=e.clientX;lly=e.clientY;});
+lookPad.addEventListener('pointerup',()=>lookId=null);
+$('#mJump').onclick=()=>{if(grounded||flying){vy=flying?4:7;grounded=false;popSnd();}};
+$('#mFly').onclick=()=>toggleFly();
+
+/* ============ dream ink / quests ============ */
+let ink=100; const maxInk=100;
+function setInk(v){ink=clamp(v,0,maxInk);$('#inkFill').style.width=(ink/maxInk*100)+'%';$('#inkNum').textContent=Math.floor(ink);
+  $('#dreamBtn').disabled=ink<7;}
+setInk(100);
+const questDefs=[
+  {id:'first', t:'🌱 Dream your first creation', done:false, check:s=>s.dreams>=1},
+  {id:'together', t:'🦊 Let Loom auto-dream once', done:false, check:s=>s.loomDreams>=1},
+  {id:'three', t:'🏝️ Raise 5 dreams across 2 islands', done:false, check:s=>s.dreams>=5},
+  {id:'remix', t:'🍬 Remix one dream (tap → Candy-fy)', done:false, check:s=>s.remixes>=1},
+  {id:'night', t:'🌙 Visit nightmare-night sky', done:false, check:s=>s.sawNight},
+  {id:'photo', t:'📸 Take a dream photo', done:false, check:s=>s.photos>=1},
+];
+const stats={dreams:0,loomDreams:0,remixes:0,sawNight:false,photos:0};
+function renderQuests(){const ul=$('#quests');ul.innerHTML='';
+  questDefs.forEach(q=>{if(q.check(stats))q.done=true;
+    const li=document.createElement('li');li.className=q.done?'done':'';li.textContent=(q.done?'✅ ':'○ ')+q.t;ul.appendChild(li);});
+  if(questDefs.every(q=>q.done)) toast('🏆 All Co-Dream Quests complete! You + Loom are legendary.');
+}
+renderQuests();
+$('#questToggle').onclick=()=>$('#questCard').classList.toggle('open');
+
+/* ============ loom mind (moods / memory / autonomy) ============ */
+const loomLines={
+  greet:["Eep! I'm Loom! Type a dream and watch it *bloom*!","Sniff sniff… this void smells like *possibility*. Dream something!","I brushed my tails today. Ready to co-dream? Try “mushroom forest”!"],
+  happy:["OooOOO! That one's my favorite now. No — THAT one!","My tails are wagging at lightspeed!","You dream so loud the stars can hear!"],
+  amazed:["WHOA. The sky tastes like sparkles up here!","I can see the whole archipelago! Dream a rainbow so I can slide down!"],
+  calm:["Padded paws, steady heart. The islands hum when you're near.","I'll keep watch while you wander."],
+  auto:["Psst — I dreamed while you blinked!","I couldn't resist… I planted a little dream over here!","The void whispered to me. So I whispered back — with TREES."],
+  idle:["If you leave me bored, I WILL decorate. Fair warning. 🦊","Dream-ink refills when we wander… let's explore?","Tap any dream to remix it. I dare you to Candy-fy the volcano."],
+  night:["Shhh… nightmare-night. The crystals sing louder. Don't be scared — I'm glowing."],
+};
+let loomMoodState='happy', lastAuto=performance.now(), lastIdleLine=performance.now();
+function loomMood(m){loomMoodState=m;}
+const loomMemories=[];
+function loomSay(kind){const line=pick(loomLines[kind]||loomLines.happy);say(line);return line;}
+
+/* ============ dreaming ============ */
+function dreamSpot(byLoom=false){
+  // forward from camera yaw: (sin yaw, cos yaw) is where player faces / camera looks
+  const a=yaw+rand(-.35,.35);
+  const d=byLoom?rand(6,12):rand(7,13);
+  const x=clamp(player.position.x+Math.sin(a)*d,-70,70);
+  const z=clamp(player.position.z+Math.cos(a)*d,-80,80);
+  return new THREE.Vector3(x,groundY(x,z),z);
+}
+function doDream(raw,byLoom=false){
+  const parsed=parseDream(raw||'dream orb');
+  if(ink<parsed.ink&&!byLoom){toast(`Need ${parsed.ink} ✨ ink (have ${Math.floor(ink)}) — wander to refill!`);loomSay('idle');return null;}
+  setInk(ink-parsed.ink);
+  const at=dreamSpot(byLoom);
+  const g=(Builders[parsed.fn]||Builders.orb)(at);
+  g.position.y=groundY(at.x,at.z);
+  if(parsed.fn==='bridge'){ // face forward
+    g.rotation.y=yaw; g.position.y+=.4;
+  }
+  // spawn burst
+  burst(g.position.clone().add(new THREE.Vector3(0,2,0)),parsed.fn==='volcano'?0xff5a00:0xc4b5fd);
+  dreamChord();
+  stats.dreams++; if(byLoom)stats.loomDreams++;
+  loomMemories.push({what:parsed.blurb,when:Date.now()});
+  logDream(`${byLoom?'🦊':'💭'} <b>${parsed.blurb}</b> <span style="opacity:.65">“${(raw||'').slice(0,42)}”</span>`);
+  const reactions=byLoom?loomLines.auto:loomLines.happy;
+  say((byLoom?'I dreamed '+parsed.blurb+' for us! ':'Behold — '+parsed.blurb+'! ')+pick(reactions));
+  loomMoodState='happy';
+  renderQuests(); saveDreams();
+  // settle physics: objects on ocean float? keep y
+  return g;
+}
+function dreamFromInput(){const el=$('#prompt');const v=el.value.trim()||pick(['mushroom forest','crystal field','cozy village','rainbow bridge','floating jellyfish','volcano','UFO','flower garden']);
+  doDream(v,false);el.value='';el.blur();}
+$('#dreamBtn').onclick=dreamFromInput;
+$('#prompt').addEventListener('keydown',e=>{if(e.key==='Enter')dreamFromInput();e.stopPropagation();});
+// chips
+const chipIdeas=['🍄 mushroom forest','💎 crystal field','🏠 cozy village','🌋 volcano','🌈 rainbow bridge','🎐 floating jellyfish','🏰 castle','🛸 UFO','🏮 lanterns','🌸 flower garden','🌵 desert','🌀 light bridge'];
+chipIdeas.forEach(c=>{const b=document.createElement('button');b.className='chip';b.textContent=c;
+  b.onclick=()=>{ $('#prompt').value=c.replace(/^[^\s]+\s/,''); dreamFromInput(); };$('#chips').appendChild(b);});
+// voice
+$('#micBtn').onclick=()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){toast('Voice dreaming needs Chrome + mic permission 🎤');return;}
+  try{const r=new SR();r.lang='en-US';r.interimResults=false;toast('🎤 Listening… dream aloud!');
+    r.onresult=e=>{const txt=e.results[0][0].transcript;$('#prompt').value=txt;doDream(txt,false);};
+    r.onerror=()=>toast('Mic blocked — type your dream instead 💭');
+    r.start();}catch(e){toast('Mic unavailable on this device');}
+};
+
+/* ============ selection / remix ============ */
+const ray=new THREE.Raycaster(), ptr=new THREE.Vector2();
+let selected=null; const selRing=new THREE.Mesh(new THREE.TorusGeometry(1.6,.09,8,40),
+  new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.9}));
+selRing.rotation.x=Math.PI/2;selRing.visible=false;scene.add(selRing);
+function findRoot(o){while(o){if(o.userData&&o.userData.selectable)return o;if(o.userData&&o.userData.rootRef)return o.userData.rootRef;o=o.parent;}return null;}
+let downAt=0,downXY=[0,0];
+renderer.domElement.addEventListener('pointerdown',e=>{downAt=performance.now();downXY=[e.clientX,e.clientY];});
+renderer.domElement.addEventListener('pointerup',e=>{
+  if(performance.now()-downAt>350||Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>10)return;
+  if(e.target.closest&&e.target.closest('#dreamBar,#topbar,#leftPanel,#editPanel,#touchUI'))return;
+  ptr.x=(e.clientX/innerWidth)*2-1;ptr.y=-(e.clientY/innerHeight)*2+1;
+  ray.setFromCamera(ptr,camera);
+  const hits=ray.intersectObjects(selectable,true);
+  if(hits.length){select(findRoot(hits[0].object));popSnd();}
+  else deselect();
+});
+function select(g){if(!g)return;selected=g;selRing.visible=true;
+  const box=new THREE.Box3().setFromObject(g);const s=Math.max(box.getSize(new THREE.Vector3()).length()/2,1.4);
+  selRing.scale.set(s/1.6,s/1.6,1);selRing.position.copy(g.position);selRing.position.y+=.35;
+  $('#editPanel').classList.add('show');
+  say(`Ooh, “${g.userData.label}”! Grow it? Candy-fy it? Your paws, your rules.`,3500);}
+function deselect(){selected=null;selRing.visible=false;$('#editPanel').classList.remove('show');}
+$('#eClose').onclick=deselect;
+$('#eGrow').onclick=()=>{if(!selected)return;selected.scale.multiplyScalar(1.25);popSnd();stats.remixes++;renderQuests();saveDreams();};
+$('#eShrink').onclick=()=>{if(!selected)return;selected.scale.multiplyScalar(.8);popSnd();stats.remixes++;renderQuests();saveDreams();};
+$('#eCandy').onclick=()=>{if(!selected)return;candyfy(selected);dreamChord();stats.remixes++;renderQuests();saveDreams();
+  say(pick(["CANDY-FIED! My teeth hurt looking at it. 🍬","Sugar-rush makeover complete!","So shiny! The golems are jealous."]));};
+$('#eCopy').onclick=()=>{if(!selected)return;
+  const c=selected.clone();c.position.x+=3;c.position.z+=3;c.position.y=groundY(c.position.x,c.position.z);
+  c.userData.label=selected.userData.label;c.traverse(o=>{o.userData.rootRef=c;});selectable.push(c);dreamGroup.add(c);
+  burst(c.position.clone().add(new THREE.Vector3(0,2,0)),0x67e8f9);dreamChord();saveDreams();toast('⧉ Duplicated!');};
+$('#eBanish').onclick=()=>{if(!selected)return;burst(selected.position.clone().add(new THREE.Vector3(0,1.5,0)),0xffffff);
+  dreamGroup.remove(selected);selectable.splice(selectable.indexOf(selected),1);
+  say('Poof! Back to stardust. The void thanks you. ☁️');deselect();saveDreams();popSnd();};
+function candyfy(g){g.traverse(o=>{if(o.isMesh&&o.material&&o.material.color){o.material=o.material.clone();
+  o.material.color.set(pick(candyPalette));if('emissive' in o.material){o.material.emissive.set(o.material.color);o.material.emissiveIntensity=.25;}}});}
+
+/* ============ particles ============ */
+const bursts=[];
+function burst(p,color=0xc4b5fd,n=26){
+  const g=new THREE.BufferGeometry(),pos=new Float32Array(n*3),vel=[];
+  for(let i=0;i<n;i++){pos[i*3]=p.x;pos[i*3+1]=p.y;pos[i*3+2]=p.z;
+    vel.push(new THREE.Vector3(rand(-3,3),rand(1,6),rand(-3,3)));}
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const m=new THREE.PointsMaterial({color,size:.28,transparent:true,opacity:1,depthWrite:false});
+  const pts=new THREE.Points(g,m);scene.add(pts);bursts.push({pts,vel,life:1});
+}
+function tickBursts(dt){for(let i=bursts.length-1;i>=0;i--){const b=bursts[i];b.life-=dt*.9;
+  const a=b.pts.geometry.attributes.position;
+  for(let j=0;j<b.vel.length;j++){a.array[j*3]+=b.vel[j].x*dt;a.array[j*3+1]+=b.vel[j].y*dt;a.array[j*3+2]+=b.vel[j].z*dt;b.vel[j].y-=6*dt;}
+  a.needsUpdate=true;b.pts.material.opacity=Math.max(0,b.life);
+  if(b.life<=0){scene.remove(b.pts);b.pts.geometry.dispose();b.pts.material.dispose();bursts.splice(i,1);}}}
+
+/* ============ persistence ============ */
+function saveDreams(){try{
+  const data=selectable.map(g=>({label:g.userData.label,x:+g.position.x.toFixed(2),z:+g.position.z.toFixed(2),s:+g.scale.x.toFixed(3)}));
+  localStorage.setItem('loom-dreams-v1',JSON.stringify(data.slice(-60)));
+}catch(e){}}
+function loadDreams(){try{
+  const raw=localStorage.getItem('loom-dreams-v1');if(!raw)return;
+  const arr=JSON.parse(raw);
+  // map labels back to builder fns roughly
+  const label2fn={'tree':'tree','forest':'forest','mushroom forest':'mushroom','crystal field':'crystal','frost-crystal grove (snow dream!)':'crystal','cozy house':'house','village':'village','castle':'castle','volcano':'volcano','lake':'lake','rainbow':'rainbow','rainbow arch':'rainbow','jellyfish drift':'jellyfish','lanterns':'lanterns','windmill':'windmill','desert':'cactus','flower garden':'garden','UFO':'ufo','moss golem':'golem','light bridge':'bridge','dream orb':'orb'};
+  arr.forEach(d=>{const fn=label2fn[d.label]||'orb';const at=new THREE.Vector3(d.x,groundY(d.x,d.z),d.z);
+    const g=(Builders[fn]||Builders.orb)(at);g.scale.setScalar(clamp(d.s||1,.3,4));stats.dreams++;});
+  if(arr.length)logDream(`🦊 Restored <b>${arr.length} dreams</b> from last visit`);
+  renderQuests();
+}catch(e){}}
+// seed starter dreams (only if empty)
+if(!localStorage.getItem('loom-dreams-v1')){
+  const s1=Builders.forest(new THREE.Vector3(-6,groundY(-6,-4),-4));
+  const s2=Builders.lanterns(new THREE.Vector3(8,groundY(8,2),2));
+  const s3=Builders.house(new THREE.Vector3(5,groundY(5,-8),-8));
+  stats.dreams+=3; logDream('🦊 Loom pre-dreamed a <b>forest</b>, <b>house</b> + <b>lanterns</b>');
+}
+// then load (will add on top if existed)
+if(localStorage.getItem('loom-dreams-v1')){ // clear seeds, load real
+  while(selectable.length){dreamGroup.remove(selectable.pop());}
+  dreamGroup.clear(); stats.dreams=0; loadDreams();
+}
+
+/* ============ day/night ============ */
+let night=false;
+function setNight(v){night=v;stats.sawNight=stats.sawNight||v;renderQuests();
+  $('#dayBtn').textContent=v?'☀️':'🌙';
+  if(v){scene.background.set(0x05071a);scene.fog.color.set(0x0a1030);scene.fog.density=.011;
+    hemi.intensity=.35;sun.intensity=.12;moon.intensity=.9;sunSpr.material.color.set(0xbcd0ff);sunSpr.position.set(-160,130,-40);
+    stars.material.opacity=1; loomGlow.intensity=12;
+    say(pick(loomLines.night));}
+  else{scene.background.set(0x0b1026);scene.fog.color.set(0x1a2456);scene.fog.density=.0075;
+    // actually daydream pastel: lerp background to sky blue
+    scene.background.set(0x87b5e8);scene.fog.color.set(0xa8c8ee);
+    hemi.intensity=1.05;sun.intensity=1.9;moon.intensity=0;sunSpr.material.color.set(0xffe9a8);sunSpr.position.set(180,140,60);
+    stars.material.opacity=.25; loomGlow.intensity=7;}
+  blip(v?300:600,.25,'sine',.14);}
+$('#dayBtn').onclick=()=>setNight(!night);
+setNight(false);
+
+/* ============ photo / help / fly ============ */
+$('#flyBtn').onclick=toggleFly;
+$('#photoBtn').onclick=()=>{
+  $('#photoFlash').style.opacity=1;setTimeout(()=>$('#photoFlash').style.opacity=0,220);
+  blip(880,.2,'sine',.15);
+  renderer.render(scene,camera);
+  const url=renderer.domElement.toDataURL('image/png');
+  const a=document.createElement('a');a.href=url;a.download='loom-dreamworld.png';a.click();
+  stats.photos++;renderQuests();toast('📸 Dream saved to photos!');saveDreams();
+  say('Say starlight! …Perfect. Frame that one. 📸');};
+$('#helpBtn').onclick=()=>{ $('#intro').classList.remove('hide'); };
+$('#startBtn').onclick=()=>{ $('#intro').classList.add('hide'); ac();
+  loomSay('greet'); dreamChord(); toast('💭 Type a dream below to begin!'); };
+$('#questToggle').addEventListener('click',()=>{if(innerWidth<=760)$('#questCard').classList.toggle('open');});
+
+/* ============ main loop ============ */
+const clock=new THREE.Clock();
+let walkPhase=0;
+const camTarget=new THREE.Vector3();
+function tick(){
+  requestAnimationFrame(tick);
+  const dt=Math.min(clock.getDelta(),.05), t=clock.elapsedTime;
+  // movement input
+  let ix=0,iz=0;
+  if(keys.KeyW||keys.ArrowUp)iz-=1; if(keys.KeyS||keys.ArrowDown)iz+=1;
+  if(keys.KeyA||keys.ArrowLeft)ix-=1; if(keys.KeyD||keys.ArrowRight)ix+=1;
+  ix+=joy.x; iz+=joy.y;
+  if(keys.Space&&grounded){vy=7;grounded=false;popSnd();}
+  const sp=flying?14:7;
+  // camera-relative: forward = (sin yaw, cos yaw), right = (sin(yaw-PI/2), cos(yaw-PI/2))
+  const fx=Math.sin(yaw),fz=Math.cos(yaw);
+  const rx=Math.sin(yaw-Math.PI/2),rz=Math.cos(yaw-Math.PI/2);
+  let mx=fx*-iz+rx*ix, mz=fz*-iz+rz*ix;
+  const ml=Math.hypot(mx,mz); if(ml>1){mx/=ml;mz/=ml;}
+  player.position.x=clamp(player.position.x+mx*sp*dt,-75,75);
+  player.position.z=clamp(player.position.z+mz*sp*dt,-85,85);
+  // vertical
+  const gy=groundY(player.position.x,player.position.z);
+  if(flying){
+    if(keys.Space||keys.KeyE)vy=5; else if(keys.ShiftLeft||keys.KeyQ)vy=-5; else vy*=.9;
+    player.position.y=clamp(player.position.y+vy*dt,gy+.6,42);
+  }else{
+    vy-=22*dt; player.position.y+=vy*dt;
+    if(player.position.y<=gy){player.position.y=gy;vy=0;grounded=true;}else grounded=false;
+    // swim: if over ocean, float
+    if(gy<-0.5&&player.position.y<.2){player.position.y=.2;vy=0;grounded=true;}
+  }
+  if(ml>.1){const want=Math.atan2(mx,mz);let d=want-player.rotation.y;
+    while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;player.rotation.y+=d*Math.min(1,dt*10);
+    walkPhase+=dt*10;}
+  player.position.y+=Math.sin(walkPhase)*.008;
+  player.rotation.x=THREE.MathUtils.lerp(player.rotation.x, ml>.1?(flying?-.25:.06):0, dt*6);
+  // camera follow
+  const cx=player.position.x-Math.sin(yaw)*Math.cos(pitch)*dist;
+  const cz=player.position.z-Math.cos(yaw)*Math.cos(pitch)*dist;
+  const cy=player.position.y-Math.sin(pitch)*dist+1.2;
+  camTarget.set(cx,Math.max(cy,groundY(cx,cz)+1.2),cz);
+  camera.position.lerp(camTarget,1-Math.pow(.0001,dt));
+  camera.lookAt(player.position.x,player.position.y+1.6,player.position.z);
+  // loom follow (springy companion) — stays front-left so it's always visible
+  const fwx=Math.sin(player.rotation.y),fwz=Math.cos(player.rotation.y);
+  const rtx=Math.sin(player.rotation.y-Math.PI/2),rtz=Math.cos(player.rotation.y-Math.PI/2);
+  const want2=new THREE.Vector3(
+    player.position.x+fwx*2.2+rtx*1.8,0,
+    player.position.z+fwz*2.2+rtz*1.8);
+  want2.y=groundY(want2.x,want2.z);
+  if(flying)want2.y=player.position.y+.4;
+  // hop
+  const hop=Math.abs(Math.sin(t*6))*.28*(ml>.1?1:.3);
+  loom.position.lerp(new THREE.Vector3(want2.x,want2.y+hop+.1,want2.z),1-Math.pow(.01,dt));
+  loom.lookAt(player.position.x,loom.position.y,player.position.z);
+  loomTail.rotation.z=Math.sin(t*7)*.5; loomTail.material.emissiveIntensity=1+Math.sin(t*3)*.4;
+  loomEarL.rotation.z=Math.sin(t*2.2)*.14;loomEarR.rotation.z=-Math.sin(t*2.2)*.14;
+  loomGlow.intensity=(night?12:6)+Math.sin(t*4)*1.2;
+  // idle anims for dreams
+  dreamGroup.children.forEach(g=>{
+    if(g.userData.spin)g.userData.spin.rotation.z+=dt*1.4;
+    if(g.userData.ufo){g.position.y+=Math.sin(t*1.5+g.userData.phase)*dt*.6;g.rotation.y+=dt*.4;}
+    if(g.userData.lava){g.userData.lava.material.color.setHSL(.03+Math.sin(t*3)*.02,1,.5);g.userData.glow.intensity=26+Math.sin(t*5)*8;}
+    g.traverse(o=>{if(o.userData&&o.userData.float){o.position.y+=Math.sin(t*2+o.position.x)*dt*.5;}
+      if(o.userData&&o.userData.blink){o.visible=Math.sin(t*6+o.position.x*3)>-.2;}
+      if(o.userData&&o.userData.wave){o.position.x=Math.sin(t*4)*.4;o.rotation.y=Math.sin(t*3)*.3;}
+      if(o.userData&&o.userData.ribbon){o.rotation.z+=dt*.8;}});
+  });
+  // selection ring follows
+  if(selected){selRing.position.copy(selected.position);selRing.position.y+=.35;selRing.rotation.z+=dt*.6;}
+  // ocean + rings shimmer
+  ocean.position.y=-1.2+Math.sin(t*.8)*.12;
+  rings.forEach((r,i)=>{r.scale.setScalar(1+Math.sin(t*.7+i*2)*.02);r.material.opacity=.16+Math.sin(t*1.2+i)*.06;});
+  sunSpr.material.opacity=night?.5:.95;
+  // ink regen by wandering
+  setInk(ink+dt*(ml>.1?1.6:.7));
+  // loom autonomy: auto-dream every ~26s if ink allows
+  if(t*1000-(lastAuto)>26000&&ink>34&&$('#intro').classList.contains('hide')){
+    lastAuto=performance.now();
+    const ideas=['mushroom forest','crystal field','flower garden','lanterns','rainbow bridge','cozy house','windmill','floating jellyfish','tree','lake'];
+    const idea=pick(ideas);
+    say(pick(loomLines.auto)+` (dreaming “${idea}”…)`);
+    setTimeout(()=>doDream(idea,true),1400);
+  }
+  // idle chatter
+  if(performance.now()-lastIdleLine>45000&&$('#intro').classList.contains('hide')){
+    lastIdleLine=performance.now();loomSay('idle');}
+  tickBursts(dt);
+  renderer.render(scene,camera);
+}
+tick();
+
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+// prevent page scroll/zoom gestures on game
+document.addEventListener('touchmove',e=>{if(e.target===renderer.domElement)e.preventDefault();},{passive:false});
+document.addEventListener('gesturestart',e=>e.preventDefault());
+setTimeout(()=>{if(!$('#intro').classList.contains('hide'))say('Wake us up when ready… 🦊',6000);},1000);
+</script>
+</body>
+</html>
