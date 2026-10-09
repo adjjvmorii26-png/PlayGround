@@ -125,6 +125,30 @@
     font-weight:800;font-size:15px;pointer-events:none;transition:all .3s;text-align:center;max-width:86vw}
   #toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
   #photoFlash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:60;transition:opacity .25s}
+  /* Loom skills */
+  #loomPill{cursor:pointer;border-color:rgba(163,230,53,.55)}
+  #loomLvl{font-weight:900;background:linear-gradient(90deg,#a3e635,#67e8f9);color:#0b1026;border-radius:999px;padding:1px 8px;font-size:12px}
+  #xpBar{width:56px;height:8px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}
+  #xpFill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#a3e635,#22d3ee);transition:width .4s}
+  #skillPanel{position:fixed;z-index:45;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);opacity:0;pointer-events:none;
+    width:min(92vw,430px);max-height:82vh;overflow:auto;background:rgba(12,14,36,.94);border:1px solid rgba(167,139,250,.5);
+    border-radius:20px;padding:16px;box-shadow:0 30px 80px rgba(0,0,0,.6);transition:all .25s;backdrop-filter:blur(16px)}
+  #skillPanel.show{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto}
+  #skillPanel h2{margin:0 0 2px;font-size:18px}
+  #skillPanel .sub{font-size:12.5px;color:#c4b5fd;margin-bottom:10px}
+  .skillRow{display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;padding:9px 10px;margin-bottom:8px}
+  .skillRow.locked{opacity:.55;filter:grayscale(.6)}
+  .skillRow .ic{font-size:24px;flex:0 0 auto}
+  .skillRow code{display:block;color:#a5f3fc;font-size:12.5px;font-weight:800}
+  .skillRow p{margin:3px 0 0;font-size:12px;line-height:1.4;color:#e2e8f0}
+  .skillRow .tag{margin-left:auto;flex:0 0 auto;font-size:11px;font-weight:900;border-radius:999px;padding:3px 9px}
+  .tag.on{background:#a3e635;color:#0b1026} .tag.off{background:rgba(255,255,255,.15);color:#fff}
+  #skillClose{width:100%;margin-top:4px;border:0;border-radius:999px;padding:11px;font-weight:900;font-size:14px;cursor:pointer;
+    background:linear-gradient(135deg,#c4b5fd,#67e8f9,#f9a8d4)}
+  #lvlFlash{position:fixed;z-index:46;left:50%;top:38%;transform:translate(-50%,-50%) scale(.8);opacity:0;pointer-events:none;
+    text-align:center;background:rgba(10,10,30,.92);border:2px solid #a3e635;border-radius:20px;padding:18px 26px;transition:all .35s;max-width:88vw}
+  #lvlFlash.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
   canvas{touch-action:none}
 </style>
 <script type="importmap">
@@ -138,6 +162,7 @@
 <div id="topbar">
   <div class="pill" id="logo">🦊 <b>LOOM &amp; YOU</b></div>
   <div class="pill" id="inkWrap">✨ <div id="inkBar"><div id="inkFill"></div></div> <span id="inkNum">100</span></div>
+  <div class="pill" id="loomPill" title="Loom skills">🦊 <span id="loomLvl">Lv 1</span> <div id="xpBar"><div id="xpFill"></div></div></div>
   <div class="spacer"></div>
   <button class="iconBtn" id="questToggle" title="Quests">🗺️</button>
   <button class="iconBtn" id="flyBtn" title="Fly">🕊️</button>
@@ -200,6 +225,7 @@
       <div>🦊 <b>Living partner:</b> moods, memories, suggestions, auto-dreams</div>
       <div>📱 <b>Tablet-first:</b> twin sticks, tap-to-edit, voice dreaming</div>
       <div>🧪 <b>Experimental:</b> dream-ink economy, daydream/nightmare skies, photo quests</div>
+      <div>💻 <b>NEW · Code Skills:</b> Loom gains XP, levels 1→6, learns sprout() glow() loop() + earns rewards</div>
     </div>
     <button id="startBtn">Wake up together 🌅</button>
     <p class="tiny"><kbd>WASD</kbd> move · drag look · <kbd>Space</kbd> jump · <kbd>F</kbd> fly · tap objects to edit · every dream costs ✨ ink</p>
@@ -207,6 +233,13 @@
 </div>
 
 <div id="toast"></div>
+<div id="lvlFlash"></div>
+<div id="skillPanel">
+  <h2>🦊 Loom's Code Skills</h2>
+  <div class="sub">Your co-pilot learns <b>dream-code</b> as you create together. Earn XP → level up → unlock skills + rewards. Tap the 🦊 pill to view.</div>
+  <div id="skillList"></div>
+  <button id="skillClose">Keep dreaming ✨</button>
+</div>
 <div id="photoFlash"></div>
 
 <script type="module">
@@ -556,7 +589,7 @@ $('#mJump').onclick=()=>{if(grounded||flying){vy=flying?4:7;grounded=false;popSn
 $('#mFly').onclick=()=>toggleFly();
 
 /* ============ dream ink / quests ============ */
-let ink=100; const maxInk=100;
+let ink=100; let maxInk=100;
 function setInk(v){ink=clamp(v,0,maxInk);$('#inkFill').style.width=(ink/maxInk*100)+'%';$('#inkNum').textContent=Math.floor(ink);
   $('#dreamBtn').disabled=ink<7;}
 setInk(100);
@@ -570,12 +603,65 @@ const questDefs=[
 ];
 const stats={dreams:0,loomDreams:0,remixes:0,sawNight:false,photos:0};
 function renderQuests(){const ul=$('#quests');ul.innerHTML='';
-  questDefs.forEach(q=>{if(q.check(stats))q.done=true;
+  questDefs.forEach(q=>{const was=q.done;if(q.check(stats))q.done=true;
+    if(q.done&&!was&&window._skillsReady){gainXP(20,'quest complete: '+q.t.slice(0,30));toast('🏆 Quest done! +20 XP for Loom');}
     const li=document.createElement('li');li.className=q.done?'done':'';li.textContent=(q.done?'✅ ':'○ ')+q.t;ul.appendChild(li);});
   if(questDefs.every(q=>q.done)) toast('🏆 All Co-Dream Quests complete! You + Loom are legendary.');
 }
 renderQuests();
 $('#questToggle').onclick=()=>$('#questCard').classList.toggle('open');
+
+/* ============ Loom coding skills + rewards ============ */
+const skillDefs=[
+  {id:'sprout', icon:'🌱', code:'sprout()', name:'Sprout', desc:'Bigger Grow button (+25% size), cheaper dreams.', lv:1},
+  {id:'glow', icon:'💡', code:'glow()', name:'Glow', desc:'Candy-fy adds a real light. Lanterns + crystals shine brighter.', lv:2},
+  {id:'loop', icon:'⧉', code:'loop(3)', name:'Loop', desc:'Duplicate leaves an extra mini-copy. Remixes grant bonus XP.', lv:2},
+  {id:'terraform', icon:'🌋', code:'terraform()', name:'Terraform', desc:'Volcano / lake / crystal / desert cost −4 ✨ ink.', lv:3},
+  {id:'levitate', icon:'🎈', code:'levitate()', name:'Levitate', desc:'+40% fly speed, jellyfish & UFO float higher.', lv:4},
+  {id:'skyweave', icon:'🌈', code:'skyweave()', name:'Skyweave', desc:'Rainbow + bridge cost −4 ✨. Loom auto-dreams twice as often.', lv:5},
+];
+const lvlRewards={2:'+20 max ✨ ink',3:'gold crown 👑 + new chips',4:'faster flight 🦅',5:'rapid auto-dreams ⚡',6:'legendary aura 🌟'};
+let loomXP=0, loomLevel=1;
+try{const s=JSON.parse(localStorage.getItem('loom-skills-v1')||'{}');loomXP=s.xp||0;loomLevel=s.lv||1;}catch(e){}
+const xpNeed=()=>loomLevel*40;
+function hasSkill(id){const d=skillDefs.find(s=>s.id===id);return d&&loomLevel>=d.lv;}
+function renderSkills(){
+  if(loomLevel>=2)maxInk=120; if(loomLevel>=5)maxInk=140;
+  $('#loomLvl').textContent=(loomLevel>=3?'👑 ':'')+'Lv '+loomLevel;
+  $('#xpFill').style.width=clamp(loomXP/xpNeed()*100,0,100)+'%';
+  const box=$('#skillList');if(!box)return;box.innerHTML='';
+  skillDefs.forEach(d=>{
+    const un=loomLevel>=d.lv;
+    const row=document.createElement('div');row.className='skillRow'+(un?'':' locked');
+    row.innerHTML=`<div class="ic">${d.icon}</div><div><code>loom.${d.code}</code><p><b>${d.name}</b> · unlocks Lv ${d.lv} — ${d.desc}</p></div><span class="tag ${un?'on':'off'}">${un?'LEARNED':'Lv '+d.lv}</span>`;
+    box.appendChild(row);
+  });
+  const p=document.createElement('div');p.className='sub';
+  p.innerHTML=`XP <b>${loomXP}/${xpNeed()}</b> → next level · Rewards: ${Object.entries(lvlRewards).map(([l,r])=>`Lv${l} ${r}`).join(' · ')}`;
+  box.appendChild(p);
+  try{localStorage.setItem('loom-skills-v1',JSON.stringify({xp:loomXP,lv:loomLevel}));}catch(e){}
+}
+function gainXP(n,reason){
+  if(!n)return;loomXP+=n;
+  let ups=0;
+  while(loomXP>=xpNeed()&&loomLevel<6){loomXP-=xpNeed();loomLevel++;ups++;}
+  renderSkills();
+  if(ups>0){
+    const newly=skillDefs.filter(d=>d.lv===loomLevel);
+    const f=$('#lvlFlash');
+    f.innerHTML=`<div style="font-size:40px">🎉🦊🎉</div><div style="font-size:20px;font-weight:900">LOOM reached Level ${loomLevel}!</div>
+      <div style="font-size:13px;margin-top:6px">Reward: <b>${lvlRewards[loomLevel]||'🌟 legendary aura'}</b>${newly.length?`<br>New skill: <b>${newly.map(s=>`loom.${s.code}`).join(', ')}</b> ${newly.map(s=>s.icon).join(' ')}`:''}<br><span style="opacity:.7">${reason||''}</span></div>`;
+    f.classList.add('show');clearTimeout(f._h);f._h=setTimeout(()=>f.classList.remove('show'),3400);
+    burst(loom.position.clone().add(new THREE.Vector3(0,2,0)),0xa3e635,40);
+    dreamChord();setTimeout(dreamChord,300);
+    say(`I LEVELED UP! I'm Level ${loomLevel} now! I learned ${newly.length?newly.map(s=>s.code).join(' and '):'new tricks'}! ${pick(loomLines.happy)}`);
+    logDream(`🦊 Loom <b>Level ${loomLevel}</b> — learned <b>${newly.length?newly.map(s=>s.code).join(', '):'bonus power'}</b>!`);
+    if(loomLevel>=3)loom.scale.setScalar(1.25+(loomLevel-1)*.08);
+  }
+}
+$('#loomPill').onclick=()=>{renderSkills();$('#skillPanel').classList.add('show');popSnd();};
+$('#skillClose').onclick=()=>$('#skillPanel').classList.remove('show');
+renderSkills();window._skillsReady=true;
 
 /* ============ loom mind (moods / memory / autonomy) ============ */
 const loomLines={
@@ -603,6 +689,10 @@ function dreamSpot(byLoom=false){
 }
 function doDream(raw,byLoom=false){
   const parsed=parseDream(raw||'dream orb');
+  // skill discounts (coding skills pay off)
+  if(hasSkill('terraform')&&['volcano','lake','crystal','cactus'].includes(parsed.fn))parsed.ink=Math.max(4,parsed.ink-4);
+  if(hasSkill('skyweave')&&['rainbow','bridge','jellyfish','lanterns'].includes(parsed.fn))parsed.ink=Math.max(4,parsed.ink-4);
+  if(hasSkill('sprout'))parsed.ink=Math.max(4,parsed.ink-1);
   if(ink<parsed.ink&&!byLoom){toast(`Need ${parsed.ink} ✨ ink (have ${Math.floor(ink)}) — wander to refill!`);loomSay('idle');return null;}
   setInk(ink-parsed.ink);
   const at=dreamSpot(byLoom);
@@ -620,6 +710,7 @@ function doDream(raw,byLoom=false){
   const reactions=byLoom?loomLines.auto:loomLines.happy;
   say((byLoom?'I dreamed '+parsed.blurb+' for us! ':'Behold — '+parsed.blurb+'! ')+pick(reactions));
   loomMoodState='happy';
+  gainXP(byLoom?18:12, byLoom?'auto-dream bonus':'dream bonus');
   renderQuests(); saveDreams();
   // settle physics: objects on ocean float? keep y
   return g;
@@ -666,19 +757,21 @@ function select(g){if(!g)return;selected=g;selRing.visible=true;
   say(`Ooh, “${g.userData.label}”! Grow it? Candy-fy it? Your paws, your rules.`,3500);}
 function deselect(){selected=null;selRing.visible=false;$('#editPanel').classList.remove('show');}
 $('#eClose').onclick=deselect;
-$('#eGrow').onclick=()=>{if(!selected)return;selected.scale.multiplyScalar(1.25);popSnd();stats.remixes++;renderQuests();saveDreams();};
-$('#eShrink').onclick=()=>{if(!selected)return;selected.scale.multiplyScalar(.8);popSnd();stats.remixes++;renderQuests();saveDreams();};
-$('#eCandy').onclick=()=>{if(!selected)return;candyfy(selected);dreamChord();stats.remixes++;renderQuests();saveDreams();
+$('#eGrow').onclick=()=>{if(!selected)return;selected.scale.multiplyScalar(hasSkill('sprout')?1.5:1.25);popSnd();stats.remixes++;gainXP(hasSkill('loop')?12:8,'remix bonus');renderQuests();saveDreams();};
+$('#eShrink').onclick=()=>{if(!selected)return;selected.scale.multiplyScalar(.8);popSnd();stats.remixes++;gainXP(hasSkill('loop')?12:8,'remix bonus');renderQuests();saveDreams();};
+$('#eCandy').onclick=()=>{if(!selected)return;candyfy(selected);dreamChord();stats.remixes++;gainXP(hasSkill('loop')?12:8,'remix bonus');renderQuests();saveDreams();
   say(pick(["CANDY-FIED! My teeth hurt looking at it. 🍬","Sugar-rush makeover complete!","So shiny! The golems are jealous."]));};
 $('#eCopy').onclick=()=>{if(!selected)return;
   const c=selected.clone();c.position.x+=3;c.position.z+=3;c.position.y=groundY(c.position.x,c.position.z);
   c.userData.label=selected.userData.label;c.traverse(o=>{o.userData.rootRef=c;});selectable.push(c);dreamGroup.add(c);
-  burst(c.position.clone().add(new THREE.Vector3(0,2,0)),0x67e8f9);dreamChord();saveDreams();toast('⧉ Duplicated!');};
+  if(hasSkill('loop')){const m=c.clone();m.position.x+=2.5;m.position.z-=2.5;m.scale.multiplyScalar(.55);m.traverse(o=>{o.userData.rootRef=m;});selectable.push(m);dreamGroup.add(m);toast('⧉ loop(3): bonus mini-copy!');}
+  burst(c.position.clone().add(new THREE.Vector3(0,2,0)),0x67e8f9);dreamChord();gainXP(10,'duplicate bonus');saveDreams();toast('⧉ Duplicated!');};
 $('#eBanish').onclick=()=>{if(!selected)return;burst(selected.position.clone().add(new THREE.Vector3(0,1.5,0)),0xffffff);
   dreamGroup.remove(selected);selectable.splice(selectable.indexOf(selected),1);
   say('Poof! Back to stardust. The void thanks you. ☁️');deselect();saveDreams();popSnd();};
 function candyfy(g){g.traverse(o=>{if(o.isMesh&&o.material&&o.material.color){o.material=o.material.clone();
-  o.material.color.set(pick(candyPalette));if('emissive' in o.material){o.material.emissive.set(o.material.color);o.material.emissiveIntensity=.25;}}});}
+  o.material.color.set(pick(candyPalette));if('emissive' in o.material){o.material.emissive.set(o.material.color);o.material.emissiveIntensity=.25;}}});
+  if(hasSkill('glow')&&!g.userData.glowLight){const l=new THREE.PointLight(pick([0xff6b9d,0xa78bfa,0x22d3ee]),8,14);l.position.y=3;g.add(l);g.userData.glowLight=l;toast('💡 glow(): dream now emits light!');}}
 
 /* ============ particles ============ */
 const bursts=[];
@@ -726,7 +819,7 @@ if(localStorage.getItem('loom-dreams-v1')){ // clear seeds, load real
 
 /* ============ day/night ============ */
 let night=false;
-function setNight(v){night=v;stats.sawNight=stats.sawNight||v;renderQuests();
+function setNight(v){night=v;stats.sawNight=stats.sawNight||v;if(v)gainXP(10,'nightmare-night visit');renderQuests();
   $('#dayBtn').textContent=v?'☀️':'🌙';
   if(v){scene.background.set(0x05071a);scene.fog.color.set(0x0a1030);scene.fog.density=.011;
     hemi.intensity=.35;sun.intensity=.12;moon.intensity=.9;sunSpr.material.color.set(0xbcd0ff);sunSpr.position.set(-160,130,-40);
@@ -749,7 +842,7 @@ $('#photoBtn').onclick=()=>{
   renderer.render(scene,camera);
   const url=renderer.domElement.toDataURL('image/png');
   const a=document.createElement('a');a.href=url;a.download='loom-dreamworld.png';a.click();
-  stats.photos++;renderQuests();toast('📸 Dream saved to photos!');saveDreams();
+  stats.photos++;gainXP(10,'photo reward');renderQuests();toast('📸 Dream saved to photos! +10 XP');saveDreams();
   say('Say starlight! …Perfect. Frame that one. 📸');};
 $('#helpBtn').onclick=()=>{ $('#intro').classList.remove('hide'); };
 $('#startBtn').onclick=()=>{ $('#intro').classList.add('hide'); ac();
@@ -769,7 +862,7 @@ function tick(){
   if(keys.KeyA||keys.ArrowLeft)ix-=1; if(keys.KeyD||keys.ArrowRight)ix+=1;
   ix+=joy.x; iz+=joy.y;
   if(keys.Space&&grounded){vy=7;grounded=false;popSnd();}
-  const sp=flying?14:7;
+  const sp=(flying?14:7)*(hasSkill('levitate')&&flying?1.4:1);
   // camera-relative: forward = (sin yaw, cos yaw), right = (sin(yaw-PI/2), cos(yaw-PI/2))
   const fx=Math.sin(yaw),fz=Math.cos(yaw);
   const rx=Math.sin(yaw-Math.PI/2),rz=Math.cos(yaw-Math.PI/2);
@@ -833,8 +926,9 @@ function tick(){
   sunSpr.material.opacity=night?.5:.95;
   // ink regen by wandering
   setInk(ink+dt*(ml>.1?1.6:.7));
-  // loom autonomy: auto-dream every ~26s if ink allows
-  if(t*1000-(lastAuto)>26000&&ink>34&&$('#intro').classList.contains('hide')){
+  // loom autonomy: auto-dream every ~26s if ink allows (skyweave halves it)
+  const autoMs=hasSkill('skyweave')?13000:26000;
+  if(t*1000-(lastAuto)>autoMs&&ink>34&&$('#intro').classList.contains('hide')){
     lastAuto=performance.now();
     const ideas=['mushroom forest','crystal field','flower garden','lanterns','rainbow bridge','cozy house','windmill','floating jellyfish','tree','lake'];
     const idea=pick(ideas);
