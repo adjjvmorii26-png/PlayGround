@@ -126,6 +126,32 @@
   #toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
   #photoFlash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:60;transition:opacity .25s}
   canvas{touch-action:none}
+  /* --- petal-2: bond / breed / lore --- */
+  #bondHearts{letter-spacing:1px}
+  #breedBar{position:fixed;z-index:23;left:50%;top:108px;transform:translateX(-50%);display:none;
+    background:var(--glass);border:1px solid rgba(249,168,212,.6);border-radius:999px;padding:7px 10px;
+    font-size:12.5px;font-weight:800;gap:8px;align-items:center;backdrop-filter:blur(14px);max-width:94vw}
+  #constModal{position:fixed;inset:0;z-index:56;display:none;place-items:center;background:rgba(5,6,20,.72);padding:18px}
+  #constModal.show{display:grid}
+  #constCard{max-width:480px;width:100%;max-height:78vh;overflow:auto;background:#0d1130;color:#fff;border-radius:20px;padding:18px;border:2px solid rgba(167,139,250,.5)}
+  #constCard h2{margin:0 0 6px;font-size:20px;background:linear-gradient(90deg,#c4b5fd,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent}
+  #constList{display:flex;flex-direction:column;gap:6px;margin-top:10px;font-size:13px}
+  #constList div{background:rgba(255,255,255,.08);border-radius:10px;padding:7px 9px;display:flex;gap:7px;align-items:center}
+  .cstar{width:12px;height:12px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 10px currentColor}
+  #breedBar.show{display:flex}
+  #symBar{position:fixed;z-index:23;left:50%;top:158px;transform:translateX(-50%);display:none;
+    background:var(--glass);border:1px solid rgba(103,232,249,.6);border-radius:999px;padding:7px 12px;
+    font-size:12.5px;font-weight:800;gap:9px;align-items:center;backdrop-filter:blur(14px);max-width:94vw}
+  #symBar.show{display:flex}
+  #symTrack{width:112px;height:9px;border-radius:99px;background:rgba(255,255,255,.2);overflow:hidden;flex:0 0 auto}
+  #symFill{height:100%;width:0%;background:linear-gradient(90deg,#67e8f9,#f9a8d4);transition:width .2s}
+  #breedBar button{border:0;border-radius:999px;padding:7px 12px;font-weight:900;cursor:pointer}
+  #loreModal{position:fixed;inset:0;z-index:55;display:none;place-items:center;background:rgba(5,6,20,.7);padding:18px}
+  #loreModal.show{display:grid}
+  #loreCard{max-width:520px;width:100%;max-height:76vh;overflow:auto;background:#fff7e8;color:#1b1440;border-radius:20px;padding:18px;border:3px solid #fff}
+  #loreCard h2{margin:0 0 4px}
+  #loreCard .entry{background:#fff;border:1px solid #e7ddff;border-radius:12px;padding:8px 10px;margin:8px 0;font-size:13.5px;line-height:1.45}
+  #skyMood{font-size:11px;opacity:.85;font-weight:700}
 </style>
 <script type="importmap">
 { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
@@ -137,9 +163,12 @@
 
 <div id="topbar">
   <div class="pill" id="logo">🦊 <b>LOOM &amp; YOU</b></div>
-  <div class="pill" id="inkWrap">✨ <div id="inkBar"><div id="inkFill"></div></div> <span id="inkNum">100</span></div>
+  <div class="pill" id="inkWrap">✨ <div id="inkBar"><div id="inkFill"></div></div> <span id="inkNum">100</span> <span id="bondHearts" title="Loom bond">🤍</span></div>
   <div class="spacer"></div>
   <button class="iconBtn" id="questToggle" title="Quests">🗺️</button>
+  <button class="iconBtn" id="loreBtn" title="Storybook">📖</button>
+  <button class="iconBtn" id="constBtn" title="Constellation">✦</button>
+  <button class="iconBtn" id="echoBtn" title="Memory echo">⏱</button>
   <button class="iconBtn" id="flyBtn" title="Fly">🕊️</button>
   <button class="iconBtn" id="dayBtn" title="Day/Night">🌙</button>
   <button class="iconBtn" id="photoBtn" title="Photo">📸</button>
@@ -148,6 +177,25 @@
 </div>
 
 <div id="loomBubble" class="hidden"><small>🦊 Loom · your dream partner</small><span id="loomText">…</span></div>
+
+<div id="breedBar"><span id="breedLabel">🧬 Breed: pick parent A</span><button id="breedCancel" style="background:rgba(255,255,255,.2);color:#fff">✕</button></div>
+
+<div id="symBar"><span id="symLabel">🤝 Loom is dreaming…</span><div id="symTrack"><div id="symFill"></div></div></div>
+
+<div id="constModal"><div id="constCard">
+  <h2>✦ Your Dream Constellation</h2>
+  <p class="tiny" style="color:#6d5bd0">Every dream you &amp; Loom raise becomes a star. Fly up (🕊️) to read your shared sky.</p>
+  <div id="constStats"></div>
+  <div id="constList"></div>
+  <button id="constClose" style="margin-top:10px;border:0;border-radius:999px;padding:10px 18px;font-weight:900;cursor:pointer;background:#1b1440;color:#fff">Close ✕</button>
+</div></div>
+
+<div id="loreModal"><div id="loreCard">
+  <h2>📖 The Dreambook</h2>
+  <div id="skyMood">dream-weather: calm dawn</div>
+  <div id="loreEntries"><div class="entry">Once upon a nap, a fox-spirit and a friend woke up on the same island…</div></div>
+  <button id="loreClose" style="margin-top:8px;border:0;border-radius:999px;padding:10px 18px;font-weight:900;cursor:pointer;background:#1b1440;color:#fff">Close ✕</button>
+</div></div>
 
 <div id="leftPanel">
   <div class="card" id="questCard">
@@ -164,6 +212,7 @@
   <button id="eGrow" style="background:#a3e635">＋ Grow</button>
   <button id="eShrink" style="background:#fef08a">－ Shrink</button>
   <button id="eCandy" style="background:#f9a8d4">🍬 Candy-fy</button>
+  <button id="eBreed" style="background:#c4b5fd">🧬 Breed</button>
   <button id="eCopy" style="background:#67e8f9">⧉ Duplicate</button>
   <button id="eBanish" style="background:#ff6b9d;color:#fff">☁ Banish</button>
   <button id="eClose" style="background:rgba(255,255,255,.2);color:#fff">✕</button>
@@ -196,10 +245,10 @@
     <h1>Dream an open world <span>together.</span></h1>
     <p>You are not alone here. <b>🦊 Loom</b> — a curious fox-spirit — dreams <b>with</b> you. Type what you imagine, and it blooms in 3D in front of you. Leave Loom alone for a while and it will dream <i>on its own</i>. Tap anything to remix it. No winning. Just co-creating a pocket archipelago.</p>
     <div class="featureGrid">
-      <div>💭 <b>Prompt-to-world:</b> volcano, village, crystal field, rainbow bridge, UFO…</div>
-      <div>🦊 <b>Living partner:</b> moods, memories, suggestions, auto-dreams</div>
-      <div>📱 <b>Tablet-first:</b> twin sticks, tap-to-edit, voice dreaming</div>
-      <div>🧪 <b>Experimental:</b> dream-ink economy, daydream/nightmare skies, photo quests</div>
+      <div>🧬 <b>FUSION dreams:</b> type “volcano + jellyfish” or Breed two dreams into a child</div>
+      <div>🦊 <b>Living partner:</b> bond hearts, pet Loom, “Loom, surprise me” commands</div>
+      <div>✨ <b>Living ink:</b> dreams drop seeds — walk over them to refill; cleanse nightmare vines</div>
+      <div>🐋 <b>Weird &amp; new:</b> sky whales, song stones, portals, inkwells, bounce shrooms, dream-weather</div>
     </div>
     <button id="startBtn">Wake up together 🌅</button>
     <p class="tiny"><kbd>WASD</kbd> move · drag look · <kbd>Space</kbd> jump · <kbd>F</kbd> fly · tap objects to edit · every dream costs ✨ ink</p>
@@ -447,34 +496,156 @@ const Builders={
     const halo=new THREE.Mesh(new THREE.TorusGeometry(1.7,.07,8,32),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.7}));halo.position.y=1.6;halo.rotation.x=1.1;g.add(halo);
     const l=new THREE.PointLight(0xffffff,6,14);l.position.y=2.5;g.add(l);
     g.position.copy(p);return tagSelectable(g,label);},
+  /* --- petal-2: weird builders --- */
+  skywhale(p){const g=new THREE.Group();
+    const bodyM=new THREE.MeshStandardMaterial({color:0x93c5fd,roughness:.6});
+    const body=new THREE.Mesh(new THREE.SphereGeometry(2.2,18,14),bodyM);body.scale.set(1.6,.9,.9);body.position.y=8;g.add(body);
+    const belly=new THREE.Mesh(new THREE.SphereGeometry(1.9,16,12),new THREE.MeshStandardMaterial({color:0xfff7e8,roughness:.7}));belly.scale.set(1.5,.7,.8);belly.position.set(0,7.4,0);g.add(belly);
+    const tail=new THREE.Mesh(new THREE.ConeGeometry(.9,2.2,6),bodyM);tail.position.set(-4,8,0);tail.rotation.z=1.4;g.add(tail);
+    for(const sz of [-1,1]){const fin=new THREE.Mesh(new THREE.ConeGeometry(.5,1.6,5),bodyM);fin.position.set(.4,7.2,sz*1.8);fin.rotation.x=sz*1.1;g.add(fin);
+      const eye=new THREE.Mesh(new THREE.SphereGeometry(.14,8,8),new THREE.MeshBasicMaterial({color:0x1e1b4b}));eye.position.set(2.4,8.2,sz*.9);g.add(eye);}
+    // hanging lanterns from belly
+    for(let i=0;i<4;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(.22,8,8),new THREE.MeshBasicMaterial({color:pick([0xffd27a,0xf9a8d4,0x67e8f9])}));s.position.set(rand(-2,2),rand(4.5,6),rand(-1,1));s.userData.float=true;g.add(s);
+      const str=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,1.6,4),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.5}));str.position.set(s.position.x,6.6,s.position.z);g.add(str);}
+    const l=new THREE.PointLight(0x93c5fd,10,26);l.position.y=8;g.add(l);
+    g.userData.skywhale=true;g.userData.phase=rand(0,6);
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'sky whale');},
+  songstones(p){const g=new THREE.Group();const notes=[523,587,659,784,880,1046,1174];
+    for(let i=0;i<7;i++){const h=1+i*.55;
+      const st=new THREE.Mesh(new THREE.CylinderGeometry(.5,.7,h,7),new THREE.MeshStandardMaterial({color:new THREE.Color().setHSL(i/7,.7,.62),roughness:.4,emissive:new THREE.Color().setHSL(i/7,.7,.4),emissiveIntensity:.35}));
+      st.position.set((i-3)*1.7,h/2,rand(-1,1));st.userData.note=notes[i];st.userData.stone=true;g.add(st);
+      const cap=new THREE.Mesh(new THREE.SphereGeometry(.3,10,10),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.8}));cap.position.set(st.position.x,h+.35,st.position.z);cap.userData.float=true;g.add(cap);}
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'song stones');},
+  portal(p){const g=new THREE.Group();
+    const arch=new THREE.Mesh(new THREE.TorusGeometry(2.2,.45,12,28),new THREE.MeshStandardMaterial({color:0xa78bfa,emissive:0x8b5cf6,emissiveIntensity:.8,roughness:.3}));arch.position.y=2.6;g.add(arch);
+    const veil=new THREE.Mesh(new THREE.CircleGeometry(1.9,28),new THREE.MeshBasicMaterial({color:0x67e8f9,transparent:true,opacity:.45,side:THREE.DoubleSide}));veil.position.y=2.6;veil.userData.portalVeil=true;g.add(veil);
+    for(const sx of [-2.2,2.2]){const pil=new THREE.Mesh(new THREE.CylinderGeometry(.4,.5,2.6,8),new THREE.MeshStandardMaterial({color:0x4c1d95,roughness:.7}));pil.position.set(sx,1.3,0);g.add(pil);}
+    const l=new THREE.PointLight(0xa78bfa,14,24);l.position.y=3;g.add(l);
+    g.userData.portal=true;
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'portal arch');},
+  inkwell(p){const g=new THREE.Group();
+    const well=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.9,1.2,12),new THREE.MeshStandardMaterial({color:0x4c1d95,roughness:.6}));well.position.y=.6;g.add(well);
+    const ink=new THREE.Mesh(new THREE.CircleGeometry(1.4,20),new THREE.MeshBasicMaterial({color:0x22d3ee}));ink.rotation.x=-Math.PI/2;ink.position.y=1.22;ink.userData.inkTop=true;g.add(ink);
+    const jet=new THREE.Mesh(new THREE.CylinderGeometry(.3,.5,3.4,10,1,true),new THREE.MeshBasicMaterial({color:0x67e8f9,transparent:true,opacity:.35,side:THREE.DoubleSide,depthWrite:false}));jet.position.y=3;g.add(jet);
+    for(let i=0;i<5;i++){const o=new THREE.Mesh(new THREE.SphereGeometry(.16,8,8),new THREE.MeshBasicMaterial({color:0xa5f3fc}));o.position.set(rand(-1,1),rand(2,4.4),rand(-1,1));o.userData.float=true;g.add(o);}
+    const l=new THREE.PointLight(0x22d3ee,12,22);l.position.y=3;g.add(l);
+    g.userData.inkwell=true;
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'inkwell spring');},
+  bounce(p){const g=new THREE.Group();
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(.5,.8,1.2,10),new THREE.MeshStandardMaterial({color:0xfff7e8,roughness:.6}));stem.position.y=.6;g.add(stem);
+    const cap=new THREE.Mesh(new THREE.SphereGeometry(2,14,10,0,Math.PI*2,0,Math.PI/2),new THREE.MeshStandardMaterial({color:0xff6b9d,roughness:.45,emissive:0x9d174d,emissiveIntensity:.3}));cap.scale.y=.7;cap.position.y=1.2;cap.userData.bounceTop=true;g.add(cap);
+    for(let k=0;k<6;k++){const dot=new THREE.Mesh(new THREE.SphereGeometry(.14,6,6),new THREE.MeshBasicMaterial({color:0xffffff}));dot.position.set(rand(-1.4,1.4),rand(1.5,2),rand(-1.4,1.4));g.add(dot);}
+    g.userData.bounce=true;
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'bounce shroom');},
+  vine(p){const g=new THREE.Group();
+    for(let i=0;i<6;i++){const v=new THREE.Mesh(new THREE.ConeGeometry(rand(.3,.55),rand(1.6,3),6),new THREE.MeshStandardMaterial({color:0x3b0764,roughness:.9,emissive:0x7e22ce,emissiveIntensity:.5}));v.position.set(rand(-3,3),rand(.8,1.6),rand(-3,3));v.rotation.set(rand(-.4,.4),rand(0,6),rand(-.4,.4));g.add(v);}
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(.4,10,10),new THREE.MeshBasicMaterial({color:0xf0abfc}));eye.position.y=2.2;eye.userData.blink=true;g.add(eye);
+    g.userData.vine=true;
+    g.position.copy(p);shadowify(g);return tagSelectable(g,'nightmare vine');},
 };
 
+/* ✦ DREAM CONSTELLATION: every dream you raise becomes a star in a shared sky.
+   Stars are laid out in a spiral so the map reads as a story arc. */
+const constellation=new THREE.Group(); scene.add(constellation);
+const conStars=[];
+function constLayout(i){
+  const ring=Math.floor(i/8)+1, idx=i%8, a=idx/8*Math.PI*2+ring*0.7;
+  const r=26+ring*17;
+  return new THREE.Vector3(Math.cos(a)*r, 46+ring*13+((idx%2)?5:-5), Math.sin(a)*r);
+}
+const starColors=[0xc4b5fd,0x67e8f9,0xf9a8d4,0xfde68a,0xa3e635,0xfb923c,0x93c5fd,0xf0abfc];
+function addConstellationStar(label,colorHex){
+  const i=conStars.length, p=constLayout(i);
+  const col=new THREE.Color(colorHex!==undefined?colorHex:starColors[i%starColors.length]);
+  const core=new THREE.Mesh(new THREE.SphereGeometry(1.1,10,10),new THREE.MeshBasicMaterial({color:col}));
+  const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:col,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
+  halo.scale.setScalar(9);
+  const g=new THREE.Group(); core.position.copy(p); halo.position.copy(p); g.add(core,halo);
+  const l=new THREE.PointLight(col,9,44); l.position.copy(p); g.add(l);
+  if(i>0){
+    const prev=conStars[i-1];
+    const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints([prev.userData.pos,p]),
+      new THREE.LineBasicMaterial({color:col,transparent:true,opacity:.42}));
+    g.add(line);
+  }
+  g.userData={pos:p,label,color:col,core,halo,born:performance.now()};
+  constellation.add(g); conStars.push(g);
+  return g;
+}
+function openConstellation(){
+  $('#constModal').classList.add('show');
+  $('#constStats').textContent=`${conStars.length} star${conStars.length===1?'':'s'} lit · ${Math.floor(bond)}♥ bond · dream-weather: ${weatherMood.label}`;
+  $('#constList').innerHTML=conStars.map((s,i)=>
+    `<div><span class="cstar" style="background:#${s.userData.color.getHexString()};color:#${s.userData.color.getHexString()}"></span>
+     <span>${i+1}. ${s.userData.label}</span></div>`).join('')||'<div>No stars yet — go dream something! ✨</div>';
+  popSnd();
+}
+$('#constBtn').onclick=openConstellation;
+$('#constClose').onclick=()=>$('#constModal').classList.remove('show');
+$('#constModal').addEventListener('click',e=>{if(e.target.id==='constModal')$('#constModal').classList.remove('show');});
+
 /* keyword parser — the "co-pilot brain" frontend */
-function parseDream(text){
+function keywordToFn(text){
   const t=text.toLowerCase();
   const has=(...ws)=>ws.some(w=>t.includes(w));
-  if(has('forest','woods','jungle','trees')) return {fn:'forest',ink:14,blurb:'a whispering forest'};
-  if(has('mushroom','shroom','fungi','toadstool')) return {fn:'mushroom',ink:14,blurb:'a glowing mushroom grove'};
-  if(has('crystal','gem','diamond','amethyst')) return {fn:'crystal',ink:15,blurb:'a singing crystal field'};
-  if(has('village','town','houses','hamlet')) return {fn:'village',ink:18,blurb:'a cozy village'};
-  if(has('castle','fort','tower','palace','kingdom')) return {fn:'castle',ink:18,blurb:'a storybook castle'};
-  if(has('house','cabin','cottage','hut','home')) return {fn:'house',ink:10,blurb:'a cozy house'};
-  if(has('volcano','lava','magma','erupt')) return {fn:'volcano',ink:16,blurb:'a grumbly volcano'};
-  if(has('lake','pond','pool','oasis','water')) return {fn:'lake',ink:10,blurb:'a glassy lake'};
-  if(has('rainbow')) return {fn:'rainbow',ink:12,blurb:'a rainbow arch'};
-  if(has('jelly','jellyfish','float','sky whale','balloon')) return {fn:'jellyfish',ink:14,blurb:'a drift of dream jellyfish'};
-  if(has('lantern','light','firefly','star lamp')) return {fn:'lanterns',ink:12,blurb:'floating lanterns'};
-  if(has('windmill','wind мельница'.toLowerCase(),'mill')) return {fn:'windmill',ink:12,blurb:'a sleepy windmill'};
-  if(has('desert','cactus','sand','dune')) return {fn:'cactus',ink:11,blurb:'a tiny desert'};
-  if(has('flower','garden','meadow','blossom','rose','tulip')) return {fn:'garden',ink:11,blurb:'a flower garden'};
-  if(has('ufo','alien','spaceship','saucer','airship')) return {fn:'ufo',ink:16,blurb:'a curious UFO'};
-  if(has('golem','rock friend','monster friend','creature','dragon','fox friend')) return {fn:'golem',ink:14,blurb:'a friendly moss golem'};
-  if(has('bridge','path','cross','connect')) return {fn:'bridge',ink:13,blurb:'a light bridge'};
-  if(has('tree')) return {fn:'tree',ink:8,blurb:'a dream tree'};
-  if(has('snow','winter','snowman','ice')) return {fn:'crystal',ink:14,blurb:'a frost-crystal grove (snow dream!)'};
-  if(has('beach','umbrella','party','picnic')) return {fn:'garden',ink:11,blurb:'a beach picnic garden'};
-  return {fn:'orb',ink:7,blurb:'a wild dream orb'};
+  if(has('sky whale','whale')) return 'skywhale';
+  if(has('song','music','stone piano','xylon','melody','drum')) return 'songstones';
+  if(has('portal','teleport','gate','doorway')) return 'portal';
+  if(has('inkwell','ink spring','ink fountain','well')) return 'inkwell';
+  if(has('bounce','trampoline','bouncy','jump pad')) return 'bounce';
+  if(has('vine','nightmare','corrupt','thorn','weed')) return 'vine';
+  if(has('forest','woods','jungle','trees')) return 'forest';
+  if(has('mushroom','shroom','fungi','toadstool')) return 'mushroom';
+  if(has('crystal','gem','diamond','amethyst')) return 'crystal';
+  if(has('village','town','houses','hamlet')) return 'village';
+  if(has('castle','fort','tower','palace','kingdom')) return 'castle';
+  if(has('house','cabin','cottage','hut','home')) return 'house';
+  if(has('volcano','lava','magma','erupt')) return 'volcano';
+  if(has('lake','pond','pool','oasis','water')) return 'lake';
+  if(has('rainbow')) return 'rainbow';
+  if(has('jelly','jellyfish','float','balloon')) return 'jellyfish';
+  if(has('lantern','light','firefly','star lamp')) return 'lanterns';
+  if(has('windmill','mill')) return 'windmill';
+  if(has('desert','cactus','sand','dune')) return 'cactus';
+  if(has('flower','garden','meadow','blossom','rose','tulip')) return 'garden';
+  if(has('ufo','alien','spaceship','saucer','airship')) return 'ufo';
+  if(has('golem','rock friend','monster friend','creature','dragon','fox friend')) return 'golem';
+  if(has('bridge','path','cross','connect')) return 'bridge';
+  if(has('tree')) return 'tree';
+  if(has('snow','winter','snowman','ice')) return 'crystal';
+  if(has('beach','umbrella','party','picnic')) return 'garden';
+  if(has('fairy','pixie','sprite spirit')) return 'lanterns';
+  if(has('dragon','wyrm','serpent')) return 'golem';
+  if(has('robot','android','mech','bot')) return 'golem';
+  if(has('pirate','ship','vessel')) return 'bridge';
+  if(has('ninja','samurai','dojo')) return 'castle';
+  if(has('clockwork','brass','gear','automaton')) return 'windmill';
+  if(has('cathedral','temple','shrine','chapel')) return 'castle';
+  if(has('comet','meteor','shooting star')) return 'orb';
+  if(has('ghost','spirit','phantom','echo')) return 'skywhale';
+  return 'orb';
 }
+function parseDream(text){
+  const t=(text||'').toLowerCase();
+  // FUSION: "volcano + jellyfish", "volcano and jellyfish", "volcano x jellyfish", "mix volcano jellyfish"
+  const fuseSplit=t.split(/\+|&|\bx\b| plus | and | with | mixed with | fused with /).map(s=>s.trim()).filter(Boolean);
+  if(fuseSplit.length>=2){
+    const a=keywordToFn(fuseSplit[0]), b=keywordToFn(fuseSplit[1]);
+    if(a!==b) return {fusion:[a,b], ink:20, blurb:`a ${shortName(a)}–${shortName(b)} FUSION`};
+  }
+  if(t.includes('mix')||t.includes('fuse')||t.includes('breed')||t.includes('hybrid')||t.includes('combo')){
+    // try to find two known keywords inside
+    const fns=['skywhale','songstones','portal','inkwell','bounce','forest','mushroom','crystal','village','castle','house','volcano','lake','rainbow','jellyfish','lanterns','windmill','cactus','garden','ufo','golem','bridge','tree'];
+    const found=fns.filter(fn=>t.includes(fn)||t.includes(shortName(fn)));
+    if(found.length>=2) return {fusion:[found[0],found[1]], ink:20, blurb:`a ${shortName(found[0])}–${shortName(found[1])} FUSION`};
+  }
+  const fn=keywordToFn(t);
+  const blurbs={forest:'a whispering forest',mushroom:'a glowing mushroom grove',crystal:'a singing crystal field',village:'a cozy village',castle:'a storybook castle',house:'a cozy house',volcano:'a grumbly volcano',lake:'a glassy lake',rainbow:'a rainbow arch',jellyfish:'a drift of dream jellyfish',lanterns:'floating lanterns',windmill:'a sleepy windmill',cactus:'a tiny desert',garden:'a flower garden',ufo:'a curious UFO',golem:'a friendly moss golem',bridge:'a light bridge',tree:'a dream tree',orb:'a wild dream orb',skyw:'a sky whale',skywhale:'a sky whale',songstones:'singing song stones',portal:'a portal arch',inkwell:'an inkwell spring',bounce:'a bounce shroom',vine:'a nightmare vine'};
+  const inks={forest:14,mushroom:14,crystal:15,village:18,castle:18,house:10,volcano:16,lake:10,rainbow:12,jellyfish:14,lanterns:12,windmill:12,cactus:11,garden:11,ufo:16,golem:14,bridge:13,tree:8,orb:7,skyw:16,skywhale:16,songstones:13,portal:13,inkwell:11,bounce:10,vine:9};
+  if(fn==='crystal'&&(t.includes('snow')||t.includes('winter')||t.includes('ice'))) return {fn,ink:14,blurb:'a frost-crystal grove (snow dream!)'};
+  return {fn,ink:inks[fn]||10,blurb:blurbs[fn]||'a wild dream'};
+}
+function shortName(fn){return {forest:'forest',mushroom:'mushroom',crystal:'crystal',village:'village',castle:'castle',house:'house',volcano:'volcano',lake:'lake',rainbow:'rainbow',jellyfish:'jellyfish',lanterns:'lantern',windmill:'windmill',cactus:'cactus',garden:'garden',ufo:'ufo',golem:'golem',bridge:'bridge',tree:'tree',orb:'orb',skyw:'whale',skywhale:'whale',songstones:'song',portal:'portal',inkwell:'ink',bounce:'bounce',vine:'vine'}[fn]||fn;}
 
 /* ============ player avatar ============ */
 const player=new THREE.Group();
@@ -515,6 +686,13 @@ let loomTail, loomEarL, loomEarR, loomGlow;
   rib.position.y=.4;rib.rotation.x=Math.PI/2;rib.userData.ribbon=true;loom.add(rib);
 }
 loom.position.set(2.5,1.35,6); loom.scale.setScalar(1.25); scene.add(loom);
+
+/* ghost twin (your echo) */
+const ghost=player.clone();
+const ghostMat=new THREE.MeshBasicMaterial({color:0xa5f3fc,transparent:true,opacity:0,depthWrite:false});
+ghost.traverse(o=>{if(o.isMesh){o.material=ghostMat;o.castShadow=false;}});
+ghost.scale.setScalar(.01); scene.add(ghost);
+let trail=[];
 
 /* ============ movement / camera ============ */
 const keys={};
@@ -564,11 +742,25 @@ const questDefs=[
   {id:'first', t:'🌱 Dream your first creation', done:false, check:s=>s.dreams>=1},
   {id:'together', t:'🦊 Let Loom auto-dream once', done:false, check:s=>s.loomDreams>=1},
   {id:'three', t:'🏝️ Raise 5 dreams across 2 islands', done:false, check:s=>s.dreams>=5},
+  {id:'fusion', t:'🧬 Fuse two dreams (“volcano + jellyfish”)', done:false, check:s=>s.fusions>=1},
   {id:'remix', t:'🍬 Remix one dream (tap → Candy-fy)', done:false, check:s=>s.remixes>=1},
+  {id:'seeds', t:'✨ Collect 5 ink-seeds by walking', done:false, check:s=>s.seeds>=5},
+  {id:'cleanse', t:'🌑 Cleanse a nightmare vine', done:false, check:s=>s.cleansed>=1},
+  {id:'pet', t:'🦊 Pet Loom (tap the fox!)', done:false, check:s=>s.pets>=1},
+  {id:'coop', t:'🤝 Co-build a dream with Loom (hold still nearby)', done:false, check:s=>s.coops>=1},
+  {id:'echo', t:'⏱ Rewind a memory echo', done:false, check:s=>s.echos>=1},
+  {id:'star', t:'✦ Light 8 constellation stars', done:false, check:s=>s.dreams>=8},
+  {id:'words', t:'📖 Teach Loom a new word it has never heard', done:false, check:s=>s.taught>=1},
   {id:'night', t:'🌙 Visit nightmare-night sky', done:false, check:s=>s.sawNight},
   {id:'photo', t:'📸 Take a dream photo', done:false, check:s=>s.photos>=1},
 ];
-const stats={dreams:0,loomDreams:0,remixes:0,sawNight:false,photos:0};
+const stats={dreams:0,loomDreams:0,remixes:0,sawNight:false,photos:0,fusions:0,seeds:0,cleansed:0,pets:0,coops:0,echos:0,taught:0};
+/* Loom's vocabulary — it learns words you invent, then dreams them back */
+const loomVocab=new Set(['mushroom','forest','crystal','village','castle','house','volcano','lake','rainbow',
+ 'jellyfish','lanterns','windmill','cactus','garden','ufo','golem','bridge','tree','skywhale','songstones',
+ 'portal','inkwell','bounce','vine','orb','whale','song','ink','bounce','fairy','dragon','robot','pirate',
+ 'ninja','clockwork','cathedral','comet','ghost']);
+const taughtWords=new Set();
 function renderQuests(){const ul=$('#quests');ul.innerHTML='';
   questDefs.forEach(q=>{if(q.check(stats))q.done=true;
     const li=document.createElement('li');li.className=q.done?'done':'';li.textContent=(q.done?'✅ ':'○ ')+q.t;ul.appendChild(li);});
@@ -579,18 +771,57 @@ $('#questToggle').onclick=()=>$('#questCard').classList.toggle('open');
 
 /* ============ loom mind (moods / memory / autonomy) ============ */
 const loomLines={
-  greet:["Eep! I'm Loom! Type a dream and watch it *bloom*!","Sniff sniff… this void smells like *possibility*. Dream something!","I brushed my tails today. Ready to co-dream? Try “mushroom forest”!"],
+  greet:["Eep! I'm Loom! Type a dream and watch it *bloom*! Try “volcano + jellyfish” for a FUSION!","Sniff sniff… this void smells like *possibility*. Dream something!","I brushed my tails today. Ready to co-dream? Try “sky whale”!"],
   happy:["OooOOO! That one's my favorite now. No — THAT one!","My tails are wagging at lightspeed!","You dream so loud the stars can hear!"],
   amazed:["WHOA. The sky tastes like sparkles up here!","I can see the whole archipelago! Dream a rainbow so I can slide down!"],
   calm:["Padded paws, steady heart. The islands hum when you're near.","I'll keep watch while you wander."],
   auto:["Psst — I dreamed while you blinked!","I couldn't resist… I planted a little dream over here!","The void whispered to me. So I whispered back — with TREES."],
   idle:["If you leave me bored, I WILL decorate. Fair warning. 🦊","Dream-ink refills when we wander… let's explore?","Tap any dream to remix it. I dare you to Candy-fy the volcano."],
   night:["Shhh… nightmare-night. The crystals sing louder. Don't be scared — I'm glowing."],
+  fusion:["FUUUSION! Two dreams holding paws! This is my favorite power.","We didn't just dream — we *braided* dreams!","The archipelago shivers when dreams fuse. In a good way!"],
+  pet:["*happy fox noises* …again? Again!","Purrrrrr. My tail glows brighter when you do that.","Hehe! That tickles my starlight!"],
+  vine:["A nightmare vine! Quick — tap it and Banish it for bonus ink!","Shhh, something prickly grew. Let's cleanse it together."],
+  echo:["Time went sideways! Look — your echo!","I saved your sparkle. Rewinding!","Past-you is moonwalking. Iconic."],
+  coop:["Half-mine half-yours! That's the dream. 🤝","We both held that one up. Beautiful."],
+  word:["I don't know that word yet — but I'll learn it! Tell me again?","NEW WORD! I'm adding it to my paws. Say it once more?"],
 };
-let loomMoodState='happy', lastAuto=performance.now(), lastIdleLine=performance.now();
+let loomMoodState='happy', lastAuto=performance.now(), lastIdleLine=performance.now(), lastVine=performance.now(), lastGhost=performance.now();
 function loomMood(m){loomMoodState=m;}
 const loomMemories=[];
 function loomSay(kind){const line=pick(loomLines[kind]||loomLines.happy);say(line);return line;}
+/* bond hearts */
+let bond=0;
+function addBond(n){bond=clamp(bond+n,0,100);
+  const h=bond>=80?'❤️❤️❤️':bond>=55?'❤️❤️🤍':bond>=30?'❤️🤍🤍':bond>=10?'🤍🤍🤍·+':'🤍';
+  $('#bondHearts').textContent=h;
+  if(loomTail)loomTail.material.emissiveIntensity=1+bond/50+Math.sin(performance.now()*.003)*.3;
+}
+/* lore book */
+const loreEntries=[];
+function addLore(html){loreEntries.unshift(html);
+  const box=$('#loreEntries');if(!box)return;box.innerHTML=loreEntries.slice(0,24).map(e=>`<div class="entry">${e}</div>`).join('');}
+$('#loreBtn').onclick=()=>{$('#loreModal').classList.add('show');popSnd();};
+$('#loreClose').onclick=()=>$('#loreModal').classList.remove('show');
+$('#loreModal').addEventListener('click',e=>{if(e.target.id==='loreModal')$('#loreModal').classList.remove('show');});
+/* dream-weather: sky tint follows recent dream types */
+let weatherMood={ember:0,frost:0,bloom:0,storm:0,label:'calm dawn'};
+function nudgeWeather(fn){
+  if(['volcano','ufo'].includes(fn))weatherMood.ember+=2;
+  if(['crystal','lake'].includes(fn))weatherMood.frost+=2;
+  if(['garden','forest','mushroom'].includes(fn))weatherMood.bloom+=2;
+  if(['vine','castle'].includes(fn))weatherMood.storm+=1.5;
+  if(fn==='rainbow')weatherMood.bloom+=1,weatherMood.frost+=1;
+  for(const k of ['ember','frost','bloom','storm'])weatherMood[k]*=.985;
+  const m=weatherMood;
+  const top=m.ember>=m.frost&&m.ember>=m.bloom&&m.ember>=m.storm&&m.ember>1?'ember dusk':m.frost>=m.bloom&&m.frost>=m.storm&&m.frost>1?'frost aurora':m.bloom>1?'bloom haze':m.storm>1?'prickle static':'calm dawn';
+  m.label=top;const el=$('#skyMood');if(el)el.textContent='dream-weather: '+top;
+  if(!night){
+    if(top==='ember dusk'){scene.background.set(0xe8a06b);scene.fog.color.set(0xeec39a);}
+    else if(top==='frost aurora'){scene.background.set(0x7dd3e0);scene.fog.color.set(0xbde6f2);}
+    else if(top==='bloom haze'){scene.background.set(0xa8e6a0);scene.fog.color.set(0xc9f2d4);}
+    else {scene.background.set(0x87b5e8);scene.fog.color.set(0xa8c8ee);}
+  }
+}
 
 /* ============ dreaming ============ */
 function dreamSpot(byLoom=false){
@@ -601,35 +832,140 @@ function dreamSpot(byLoom=false){
   const z=clamp(player.position.z+Math.cos(a)*d,-80,80);
   return new THREE.Vector3(x,groundY(x,z),z);
 }
+function buildFusion(fnA,fnB,at){
+  const g=new THREE.Group();
+  // build each half offset, then fuse: shrink + tilt toward each other, shared halo + heart light
+  const mk=(fn,dx)=>{const tmp=(Builders[fn]||Builders.orb)(new THREE.Vector3(0,-999,0));
+    // un-register the temp (Builders auto-registered): remove + reuse object
+    dreamGroup.remove(tmp);const i=selectable.indexOf(tmp);if(i>=0)selectable.splice(i,1);
+    tmp.position.set(dx,0,0);tmp.scale.multiplyScalar(.72);tmp.rotation.y=dx>0?-.3:.3;g.add(tmp);return tmp;};
+  mk(fnA,-3.4);mk(fnB,3.4);
+  const halo=new THREE.Mesh(new THREE.TorusGeometry(5.2,.12,8,48),new THREE.MeshBasicMaterial({color:0xf9a8d4,transparent:true,opacity:.85}));
+  halo.position.y=2.2;halo.rotation.x=Math.PI/2.3;halo.userData.ribbon=true;g.add(halo);
+  const heart=new THREE.Mesh(new THREE.OctahedronGeometry(.7,0),new THREE.MeshBasicMaterial({color:0xff6b9d}));heart.position.y=4.6;heart.userData.float=true;g.add(heart);
+  const l=new THREE.PointLight(0xf9a8d4,16,30);l.position.y=4;g.add(l);
+  g.userData.fusionOf=[fnA,fnB];
+  g.position.copy(at);shadowify(g);
+  return tagSelectable(g,`${shortName(fnA)}–${shortName(fnB)} fusion`);
+}
 function doDream(raw,byLoom=false){
-  const parsed=parseDream(raw||'dream orb');
-  if(ink<parsed.ink&&!byLoom){toast(`Need ${parsed.ink} ✨ ink (have ${Math.floor(ink)}) — wander to refill!`);loomSay('idle');return null;}
+  const clean=(raw||'').trim();
+  // LOOM COMMANDS: "loom surprise me" / "loom remember ..." / "loom story" / "loom dance"
+  if(/^loom[,\s]/i.test(clean)){
+    handleLoomCommand(clean);return null;
+  }
+  /* Loom LEARNS words: a word it has never heard gets taught, remembered, and
+     dreamed back to you later as a wild orb wearing that word. */
+  const words=(clean.toLowerCase().match(/[a-z']{2,}/g)||[])
+    .filter(w=>!['dream','make','create','build','please','add','put','the','a','an','of','with','and','some','that','this','i','want','like','give','can','you'].includes(w));
+  const novel=words.filter(w=>!loomVocab.has(w)&&!taughtWords.has(w));
+  const parsed=parseDream(clean||'dream orb');
+  const isFusion=!!parsed.fusion;
+  if(ink<parsed.ink&&!byLoom){toast(`Need ${parsed.ink} ✨ ink (have ${Math.floor(ink)}) — grab glowing seeds!`);loomSay('idle');return null;}
   setInk(ink-parsed.ink);
   const at=dreamSpot(byLoom);
-  const g=(Builders[parsed.fn]||Builders.orb)(at);
+  let g;
+  if(isFusion){g=buildFusion(parsed.fusion[0],parsed.fusion[1],at);}
+  else{g=(Builders[parsed.fn]||Builders.orb)(at);}
   g.position.y=groundY(at.x,at.z);
-  if(parsed.fn==='bridge'){ // face forward
-    g.rotation.y=yaw; g.position.y+=.4;
-  }
-  // spawn burst
-  burst(g.position.clone().add(new THREE.Vector3(0,2,0)),parsed.fn==='volcano'?0xff5a00:0xc4b5fd);
-  dreamChord();
-  stats.dreams++; if(byLoom)stats.loomDreams++;
+  if(!isFusion&&parsed.fn==='bridge'){g.rotation.y=yaw; g.position.y+=.4;}
+  const burstColor=isFusion?0xf9a8d4:parsed.fn==='volcano'?0xff5a00:0xc4b5fd;
+  burst(g.position.clone().add(new THREE.Vector3(0,2,0)),burstColor,isFusion?46:26);
+  if(isFusion){burst(g.position.clone().add(new THREE.Vector3(0,4.5,0)),0xffffff,20);dreamChord();setTimeout(dreamChord,220);}
+  else dreamChord();
+  stats.dreams++; if(byLoom)stats.loomDreams++; if(isFusion)stats.fusions++;
+  addBond(isFusion?12:4);
   loomMemories.push({what:parsed.blurb,when:Date.now()});
-  logDream(`${byLoom?'🦊':'💭'} <b>${parsed.blurb}</b> <span style="opacity:.65">“${(raw||'').slice(0,42)}”</span>`);
-  const reactions=byLoom?loomLines.auto:loomLines.happy;
-  say((byLoom?'I dreamed '+parsed.blurb+' for us! ':'Behold — '+parsed.blurb+'! ')+pick(reactions));
+  logDream(`${byLoom?'🦊':isFusion?'🧬':'💭'} <b>${parsed.blurb}</b> <span style="opacity:.65">“${clean.slice(0,46)}”</span>`);
+  if(isFusion){say(`FUSION! ${parsed.blurb}! `+pick(loomLines.fusion));addLore(`🧬 <b>Fusion day:</b> ${parsed.blurb} bloomed where two wishes collided (“${clean.slice(0,60)}”). Loom cried happy tears.`);}
+  else{
+    // Loom always files a new word in its paw-book; if the word meant nothing,
+    // it becomes a wild orb NAMED after that word.
+    const w=novel[0];
+    if(w){
+      if(!taughtWords.has(w)){taughtWords.add(w);stats.taught=taughtWords.size;addBond(2);}
+      if(parsed.fn==='orb'){
+        parsed.blurb=`a wild ${w} dream`;
+        g.userData.label=`${w} dream`;
+        g.traverse(o=>{o.userData.rootLabel=g.userData.label;});
+      }
+      const loreTail=parsed.fn==='orb'
+        ? ' — Loom did not know it, so it dreamed a '+w+'.'
+        : ' — filed in Loom paw-book.';
+      addLore(`📖 <b>New word taught:</b> “${w}”${loreTail}`);
+      if(!byLoom&&stats.taught>0&&Math.random()<.5)setTimeout(()=>say(pick(loomLines.word),4200),700);
+      renderQuests();
+    }
+    const reactions=byLoom?loomLines.auto:loomLines.happy;
+    say((byLoom?'I dreamed '+parsed.blurb+' for us! ':'Behold — '+parsed.blurb+'! ')+pick(reactions));
+    addLore(`${byLoom?'🦊':'💭'} <b>${parsed.blurb}</b> — “${clean.slice(0,70)}”. Bond ${Math.floor(bond)}♥.`);}
+  renderQuests();
+  // ✦ every dream becomes a constellation star
+  addConstellationStar(parsed.blurb);
+  nudgeWeather(isFusion?parsed.fusion[0]:(parsed.fn||'orb'));
   loomMoodState='happy';
-  renderQuests(); saveDreams();
-  // settle physics: objects on ocean float? keep y
+  spawnSeeds(g.position.clone(),isFusion?4:3);
+  saveDreams();
   return g;
 }
-function dreamFromInput(){const el=$('#prompt');const v=el.value.trim()||pick(['mushroom forest','crystal field','cozy village','rainbow bridge','floating jellyfish','volcano','UFO','flower garden']);
+function handleLoomCommand(clean){
+  const cmd=clean.replace(/^loom[,\s]*/i,'').toLowerCase();
+  if(/coop|together|build with|help me dream/.test(cmd)){
+    if(coop){say('We ARE building it! Come stand near my sketch 🤝');}
+    else startCoop();
+    addBond(3);return;
+  }
+  if(/echo|rewind|memory|rewind time/.test(cmd)){replayEcho();addBond(4);return;}
+  if(/sky|high|up|climb/.test(cmd)&&/fly|sky/.test(cmd)){toggleFly();return;}
+  if(/stars|constellation|sky/.test(cmd)){
+    openConstellation();
+    say(`See? Every dream we raised became a star. ${conStars.length} so far. We're writing a sky! ✦`);addBond(3);return;}
+  if(/teach|word|learn/.test(cmd)){
+    const w=(cmd.match(/([a-z']{3,})/i)||[])[1];
+    if(w&&!loomVocab.has(w.toLowerCase())&&!taughtWords.has(w.toLowerCase())){
+      taughtWords.add(w.toLowerCase());stats.taught=taughtWords.size;
+      say(`Learned: “${w}”. Watch — I'll dream it for you. ✦`);addLore(`📖 <b>Loom learned a word:</b> “${w}”.`);renderQuests();
+    } else say(pick(['Teach me a made-up word — like “quishmallow”!','Tell me a word I don’t know yet!']));
+    return;
+  }
+  if(/surprise/.test(cmd)){
+    const taught=[...taughtWords];
+    const rares=['sky whale','song stones','portal arch','volcano + jellyfish','crystal + rainbow','ufo + garden','castle + lanterns','mushroom + crystal','sky whale + lanterns'];
+    // Loom prefers to surprise you with a word YOU taught it
+    const r=taught.length&&Math.random()<.6?pick(taught):pick(rares);
+    say(taught.length&&r===r&&!rares.includes(r)
+      ?`Ooh — I remembered the word “${r}”! Watch me dream it. ✦`
+      :`Ooh, a surprise? Closing my eyes… dreaming “${r}”!`);
+    setTimeout(()=>doDream(r,true),1100);addBond(6);return;
+  }
+  if(/remember|memory|recall/.test(cmd)){
+    const m=loomMemories.length?pick(loomMemories):null;
+    if(!m){say('Hmm… my memory pocket is empty. Dream something first and I will keep it forever!');}
+    else{const ago=Math.max(1,Math.round((Date.now()-m.when)/1000));say(`I remember ${m.what} — from ${ago}s ago, when you typed so bravely. I'll never forget it.`);}
+    addBond(4);blip(660,.2,'sine',.12);return;
+  }
+  if(/story|tale|book|lore/.test(cmd)){
+    $('#loreModal').classList.add('show');
+    say(`Opening our Dreambook — ${loreEntries.length} memories so far. Every dream writes a line!`);
+    addBond(3);return;
+  }
+  if(/dance|spin|party/.test(cmd)){
+    loomDanceT=2.6;say(pick(['Dance break! Tailスピン!','Wheee! Watch my ribbon!','Boogie with me!']));dreamChord();addBond(5);return;
+  }
+  if(/clean|vine|nightmare/.test(cmd)){
+    const v=selectable.find(s=>s.userData.label==='nightmare vine');
+    if(v){say('Yes! Let us cleanse it — tap the vine, then Banish! I marked it with light.');burst(v.position.clone().add(new THREE.Vector3(0,2,0)),0xf0abfc,20);}
+    else say('No vines right now. The archipelago is clean… suspiciously clean. 👀');
+    return;
+  }
+  say(pick(['“Loom, surprise me”, “Loom, remember”, “Loom, story”, “Loom, dance” — I obey! Mostly.','Did you call? I was napping in a sunbeam. Try “Loom, surprise me”!']));
+}
+function dreamFromInput(){const el=$('#prompt');const v=el.value.trim()||pick(['volcano + jellyfish','sky whale','song stones','portal arch','mushroom forest','crystal field','cozy village','rainbow bridge','floating jellyfish','volcano','UFO','flower garden']);
   doDream(v,false);el.value='';el.blur();}
 $('#dreamBtn').onclick=dreamFromInput;
 $('#prompt').addEventListener('keydown',e=>{if(e.key==='Enter')dreamFromInput();e.stopPropagation();});
 // chips
-const chipIdeas=['🍄 mushroom forest','💎 crystal field','🏠 cozy village','🌋 volcano','🌈 rainbow bridge','🎐 floating jellyfish','🏰 castle','🛸 UFO','🏮 lanterns','🌸 flower garden','🌵 desert','🌀 light bridge'];
+const chipIdeas=['🧬 volcano + jellyfish','🐋 sky whale','🎵 song stones','🌀 portal arch','💧 inkwell spring','🍄 bounce shroom','🍄 mushroom forest','💎 crystal field','🏠 cozy village','🌋 volcano','🌈 rainbow bridge','🎐 floating jellyfish','🏰 castle','🛸 UFO','🏮 lanterns','🌸 flower garden','🌵 desert','🌀 light bridge'];
 chipIdeas.forEach(c=>{const b=document.createElement('button');b.className='chip';b.textContent=c;
   b.onclick=()=>{ $('#prompt').value=c.replace(/^[^\s]+\s/,''); dreamFromInput(); };$('#chips').appendChild(b);});
 // voice
@@ -652,13 +988,71 @@ let downAt=0,downXY=[0,0];
 renderer.domElement.addEventListener('pointerdown',e=>{downAt=performance.now();downXY=[e.clientX,e.clientY];});
 renderer.domElement.addEventListener('pointerup',e=>{
   if(performance.now()-downAt>350||Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>10)return;
-  if(e.target.closest&&e.target.closest('#dreamBar,#topbar,#leftPanel,#editPanel,#touchUI'))return;
+  if(e.target.closest&&e.target.closest('#dreamBar,#topbar,#leftPanel,#editPanel,#touchUI,#breedBar,#loreModal'))return;
   ptr.x=(e.clientX/innerWidth)*2-1;ptr.y=-(e.clientY/innerHeight)*2+1;
   ray.setFromCamera(ptr,camera);
+  // pet Loom first (fox is not in selectable)
+  const petHits=ray.intersectObject(loom,true);
+  if(petHits.length){petLoom();return;}
   const hits=ray.intersectObjects(selectable,true);
-  if(hits.length){select(findRoot(hits[0].object));popSnd();}
+  if(hits.length){
+    const root=findRoot(hits[0].object);
+    // song stones: tapping a stone plays its note (still selects too)
+    const stone=hits[0].object.userData.stone?hits[0].object:(hits[0].object.parent&&hits[0].object.parent.userData.stone?hits[0].object.parent:null);
+    if(hits[0].object.userData.note)blip(hits[0].object.userData.note,.4,'sine',.2);
+    else if(stone&&stone.userData.note)blip(stone.userData.note,.4,'sine',.2);
+    // portal: tap veil = teleport to a random other dream
+    if(hits[0].object.userData.portalVeil||(root&&root.userData.portal)){teleportVia(root||findRoot(hits[0].object));}
+    if(breedParent){finishBreed(root);return;}
+    select(root);popSnd();
+  }
   else deselect();
 });
+function petLoom(){stats.pets++;addBond(6);setInk(ink+3);
+  burst(loom.position.clone().add(new THREE.Vector3(0,1.8,0)),0xf9a8d4,18);
+  blip(740,.18,'sine',.16);setTimeout(()=>blip(988,.22,'sine',.14),120);
+  say(pick(loomLines.pet));renderQuests();}
+function teleportVia(portalRoot){
+  if(!selectable.length||selectable.length<2){toast('🌀 Dream another place first — then portals can leap!');return;}
+  const others=selectable.filter(s=>s!==portalRoot);
+  const dest=pick(others);
+  player.position.set(dest.position.x+2.5,groundY(dest.position.x+2.5,dest.position.z+2.5)+.5,dest.position.z+2.5);
+  vy=0;burst(player.position.clone().add(new THREE.Vector3(0,2,0)),0x67e8f9,30);blip(880,.3,'sine',.16);
+  toast(`🌀 Portal leap → “${dest.userData.label}”!`);say('Wheee! Portal leap! Loom beat you there. Probably.');
+}
+/* breed-two-dreams */
+let breedParent=null;
+$('#eBreed').onclick=()=>{
+  if(!selected){toast('Tap a dream first, then 🧬 Breed');return;}
+  if(!breedParent){breedParent=selected;$('#breedBar').classList.add('show');
+    $('#breedLabel').textContent=`🧬 Parent A: “${breedParent.userData.label}” — now tap a second dream`;
+    say('Parent A chosen! Now tap a *different* dream to braid a child. 🧬');blip(520,.2,'sine',.15);}
+  else finishBreed(selected);
+};
+$('#breedCancel').onclick=()=>{breedParent=null;$('#breedBar').classList.remove('show');};
+function finishBreed(parentB){
+  const parentA=breedParent;
+  if(!parentA||!parentB||parentA===parentB){toast('Tap a *different* second dream 🧬');return;}
+  const fnA=labelToFn(parentA.userData.label), fnB=labelToFn(parentB.userData.label);
+  const mid=parentA.position.clone().add(parentB.position).multiplyScalar(.5);
+  mid.x=clamp(mid.x,-70,70);mid.z=clamp(mid.z,-80,80);mid.y=groundY(mid.x,mid.z);
+  if(ink<12){toast('Breeding needs 12 ✨ ink');return;}
+  setInk(ink-12);
+  const child=buildFusion(fnA,fnB,mid);
+  child.scale.multiplyScalar(.9);
+  burst(mid.clone().add(new THREE.Vector3(0,2,0)),0xf9a8d4,40);dreamChord();setTimeout(dreamChord,200);
+  stats.dreams++;stats.fusions++;addBond(10);renderQuests();saveDreams();
+  say(`A baby ${shortName(fnA)}–${shortName(fnB)}! It has A's ears and B's sparkle. `+pick(loomLines.fusion));
+  addLore(`🧬 <b>Bred:</b> “${parentA.userData.label}” × “${parentB.userData.label}” → a baby fusion!`);
+  nudgeWeather(fnA);
+  breedParent=null;$('#breedBar').classList.remove('show');select(child);
+}
+function labelToFn(label){
+  const map={'tree':'tree','forest':'forest','mushroom forest':'mushroom','crystal field':'crystal','frost-crystal grove (snow dream!)':'crystal','cozy house':'house','village':'village','castle':'castle','volcano':'volcano','lake':'lake','rainbow':'rainbow','rainbow arch':'rainbow','jellyfish drift':'jellyfish','lanterns':'lanterns','windmill':'windmill','desert':'cactus','flower garden':'garden','UFO':'ufo','moss golem':'golem','light bridge':'bridge','dream orb':'orb','sky whale':'skywhale','song stones':'songstones','portal arch':'portal','inkwell spring':'inkwell','bounce shroom':'bounce','nightmare vine':'vine'};
+  if(map[label])return map[label];
+  if(label.includes('fusion')){const parts=label.split(/[–-]/);return keywordToFn(parts[0]||'orb');}
+  return keywordToFn(label||'orb');
+}
 function select(g){if(!g)return;selected=g;selRing.visible=true;
   const box=new THREE.Box3().setFromObject(g);const s=Math.max(box.getSize(new THREE.Vector3()).length()/2,1.4);
   selRing.scale.set(s/1.6,s/1.6,1);selRing.position.copy(g.position);selRing.position.y+=.35;
@@ -674,9 +1068,16 @@ $('#eCopy').onclick=()=>{if(!selected)return;
   const c=selected.clone();c.position.x+=3;c.position.z+=3;c.position.y=groundY(c.position.x,c.position.z);
   c.userData.label=selected.userData.label;c.traverse(o=>{o.userData.rootRef=c;});selectable.push(c);dreamGroup.add(c);
   burst(c.position.clone().add(new THREE.Vector3(0,2,0)),0x67e8f9);dreamChord();saveDreams();toast('⧉ Duplicated!');};
-$('#eBanish').onclick=()=>{if(!selected)return;burst(selected.position.clone().add(new THREE.Vector3(0,1.5,0)),0xffffff);
+$('#eBanish').onclick=()=>{if(!selected)return;
+  const isVine=selected.userData.label==='nightmare vine';
+  burst(selected.position.clone().add(new THREE.Vector3(0,1.5,0)),isVine?0xf0abfc:0xffffff,isVine?40:22);
   dreamGroup.remove(selected);selectable.splice(selectable.indexOf(selected),1);
-  say('Poof! Back to stardust. The void thanks you. ☁️');deselect();saveDreams();popSnd();};
+  if(isVine){stats.cleansed++;setInk(ink+18);addBond(8);
+    say('Cleansed! The vine bursts into sweet ink. +18 ✨ You + me = unstoppable. 🌑→✨');
+    addLore('🌑→✨ <b>Cleansed a nightmare vine.</b> Loom did the brave face; you did the tapping.');
+    toast('🌑 Cleansed! +18 ✨ ink');dreamChord();}
+  else say('Poof! Back to stardust. The void thanks you. ☁️');
+  deselect();renderQuests();saveDreams();popSnd();};
 function candyfy(g){g.traverse(o=>{if(o.isMesh&&o.material&&o.material.color){o.material=o.material.clone();
   o.material.color.set(pick(candyPalette));if('emissive' in o.material){o.material.emissive.set(o.material.color);o.material.emissiveIntensity=.25;}}});}
 
@@ -696,6 +1097,159 @@ function tickBursts(dt){for(let i=bursts.length-1;i>=0;i--){const b=bursts[i];b.
   a.needsUpdate=true;b.pts.material.opacity=Math.max(0,b.life);
   if(b.life<=0){scene.remove(b.pts);b.pts.geometry.dispose();b.pts.material.dispose();bursts.splice(i,1);}}}
 
+/* ============ living ink-seeds (walk to collect) ============ */
+const seeds=[];
+const seedGeo=new THREE.OctahedronGeometry(.28,0);
+function spawnSeeds(center,n=3){
+  for(let i=0;i<n;i++){
+    const m=new THREE.Mesh(seedGeo,new THREE.MeshBasicMaterial({color:pick([0x67e8f9,0xc4b5fd,0xf9a8d4,0xfacc15])}));
+    const a=rand(0,Math.PI*2),r=rand(2,6);
+    const x=clamp(center.x+Math.cos(a)*r,-72,72),z=clamp(center.z+Math.sin(a)*r,-82,82);
+    m.position.set(x,groundY(x,z)+1+rand(0,.8),z);
+    m.userData.seed=true;m.userData.phase=rand(0,6);m.userData.born=performance.now();
+    scene.add(m);seeds.push(m);
+  }
+  while(seeds.length>60){const old=seeds.shift();scene.remove(old);}
+}
+function tickSeeds(dt,t){
+  for(let i=seeds.length-1;i>=0;i--){const s=seeds[i];
+    s.rotation.y+=dt*2.4;s.position.y+=Math.sin(t*3+s.userData.phase)*dt*.5;
+    s.scale.setScalar(1+Math.sin(t*4+s.userData.phase)*.15);
+    // expire after 90s
+    if(performance.now()-s.userData.born>90000){scene.remove(s);seeds.splice(i,1);continue;}
+    const d=Math.hypot(player.position.x-s.position.x,player.position.z-s.position.z);
+    const dy=Math.abs(player.position.y-s.position.y);
+    if(d<1.8&&dy<2.6){
+      scene.remove(s);seeds.splice(i,1);
+      setInk(ink+6);stats.seeds++;addBond(1);
+      burst(s.position.clone(),0xa5f3fc,12);blip(rand(700,1100),.15,'sine',.12);
+      if(stats.seeds===5)toast('✨ 5 seeds gathered! Loom is proud.');
+      renderQuests();
+    }
+  }
+  // inkwell aura: standing near one regens fast
+  for(const g of selectable){
+    if(g.userData.inkwell&&Math.hypot(player.position.x-g.position.x,player.position.z-g.position.z)<7){
+      setInk(ink+dt*6);
+      if(Math.random()<dt*3)burst(g.position.clone().add(new THREE.Vector3(rand(-1,1),2,rand(-1,1))),0x67e8f9,4);
+    }
+    if(g.userData.bounce&&Math.hypot(player.position.x-g.position.x,player.position.z-g.position.z)<2.6&&player.position.y<g.position.y+2.2&&vy<=0){
+      vy=13;grounded=false;flying=false;$('#flyBtn').textContent='🕊️';
+      burst(g.position.clone().add(new THREE.Vector3(0,2,0)),0xff6b9d,20);blip(300,.3,'sine',.18);
+      setTimeout(()=>blip(600,.25,'sine',.15),120);
+      say(pick(['BOING! Loom rates that bounce 10/10!','WHEEE! Again! Again!']));
+    }
+  }
+}
+/* ============ 🤝 CO-BUILD: Loom sketches a half-dream, you pour ink to finish it ============ */
+let coop=null;
+function startCoop(){
+  if(coop)return;
+  const ideas=['volcano','crystal','castle','skywhale','mushroom','garden','portal','songstones','village','orb'];
+  const fn=pick(ideas);
+  const at=dreamSpot(true);
+  // Loom's half-sketch: a ghostly scaffold that hovers, unfinished
+  const g=new THREE.Group();
+  const scaffold=new THREE.Mesh(new THREE.IcosahedronGeometry(2.2,1),
+    new THREE.MeshBasicMaterial({color:0x67e8f9,wireframe:true,transparent:true,opacity:.55}));
+  scaffold.position.y=2.2; g.add(scaffold);
+  const core=new THREE.Mesh(new THREE.SphereGeometry(.9,12,12),
+    new THREE.MeshBasicMaterial({color:0xf9a8d4,transparent:true,opacity:.85}));
+  core.position.y=2.2; g.add(core);
+  const light=new THREE.PointLight(0x67e8f9,10,24); light.position.y=2.4; g.add(light);
+  g.position.copy(at);
+  scene.add(g);
+  coop={g,fn,progress:0,scaffold,core,light,born:performance.now(),at};
+  $('#symBar').classList.add('show');
+  $('#symLabel').textContent=`🤝 Loom sketches ${shortName(fn)}… stand close and pour ✨`;
+  say(`Psst — I started a ${shortName(fn)} but I can't finish alone. Stand near me and pour ink! We'll build it together. 🤝`,7000);
+  addBond(4);
+  dreamChord();
+}
+function tickCoop(dt){
+  if(!coop)return;
+  const c=coop;
+  const d=Math.hypot(player.position.x-c.at.x,player.position.z-c.at.z);
+  const near=d<9;
+  // proximity powers co-build; Loom contributes a trickle so it never hard-stalls
+  const rate=near?(near<4?1:(near<6?.7:(near<9?.35:.12))):.05;
+  c.progress=clamp(c.progress+dt*rate*0.17,0,1);
+  $('#symFill').style.width=(c.progress*100).toFixed(0)+'%';
+  $('#symLabel').textContent=near
+    ? `🤝 ${shortName(c.fn)} ${Math.round(c.progress*100)}% — pouring ink…`
+    : `🤝 Loom waits, sketching ${shortName(c.fn)} ${Math.round(c.progress*100)}% — come closer!`;
+  c.scaffold.rotation.y+=dt*1.4; c.scaffold.rotation.x+=dt*.5;
+  c.core.position.y=2.2+Math.sin(performance.now()*.003)*.3;
+  c.core.scale.setScalar(.6+c.progress*.9);
+  c.light.intensity=6+c.progress*16;
+  c.scaffold.material.opacity=.3+c.progress*.4;
+  if(near&&Math.random()<dt*8)burst(c.at.clone().add(new THREE.Vector3(rand(-2,2),rand(1,3.4),rand(-2,2))),0x67e8f9,3);
+  // decay if abandoned a long while
+  if(performance.now()-c.born>150000&&c.progress<0.25){
+    scene.remove(c.g);coop=null;$('#symBar').classList.remove('show');
+    say('My sketch faded… I get distracted by clouds. Ask me again!');
+  }
+  if(c.progress>=1){finishCoop();cooldownCoop=performance.now();}
+}
+function finishCoop(){
+  const c=coop; if(!c)return;
+  burst(c.at.clone().add(new THREE.Vector3(0,2.2,0)),0xf9a8d4,44);
+  scene.remove(c.g); coop=null; $('#symBar').classList.remove('show');
+  const g=(Builders[c.fn]||Builders.orb)(c.at);
+  g.position.y=groundY(c.at.x,c.at.z);
+  dreamChord();setTimeout(dreamChord,200);
+  stats.dreams++;stats.coops++;addBond(14);setInk(ink-10);
+  renderQuests();saveDreams();
+  say(`We did it — a ${shortName(c.fn)} made by BOTH of us! Half yours, half mine. Look at it glow! ${pick(loomLines.coop)}`);
+  addLore(`🤝 <b>Co-build:</b> you and Loom raised a ${shortName(c.fn)} together, hand over paw. Bond ${Math.floor(bond)}♥.`);
+  logDream(`🤝 <b>co-built ${shortName(c.fn)}</b> <span style="opacity:.65">(you + Loom)</span>`);
+  addConstellationStar(`${shortName(c.fn)} (co-built)`);
+  spawnSeeds(g.position.clone(),4);
+  toast('🤝 Co-build complete! Together-made ✨');
+}
+
+/* ============ ⏱ MEMORY ECHO: rewind the world and replay your last seconds ============ */
+let echoT=0, echoCool=0, cooldownCoop=0;
+function replayEcho(){
+  if(coop){toast('Finish the co-build first 🤝');return;}
+  echoT=5.2; echoCool=26;
+  burst(player.position.clone().add(new THREE.Vector3(0,2,0)),0xa5f3fc,40);
+  stats.echos++;renderQuests();
+  blip(200,.5,'sine',.16);setTimeout(()=>blip(600,.4,'sine',.12),180);
+  say(pick(loomLines.echo),7000);
+  addLore('⏱ <b>Memory echo:</b> you rewound time together and watched your own footsteps glow.');
+  toast('⏱ TIME REWIND — your past self dances again!');
+}
+const loomLinesEcho=["Time went sideways! Look — your echo!","I saved your sparkle. Rewinding!","Past-you is moonwalking. Iconic."];
+$('#echoBtn').onclick=replayEcho;
+
+/* nightmare vines + traveler echoes */
+function spawnVine(){
+  const a=rand(0,Math.PI*2),d=rand(10,20);
+  const x=clamp(player.position.x+Math.sin(a)*d,-65,65),z=clamp(player.position.z+Math.cos(a)*d,-75,75);
+  const g=Builders.vine(new THREE.Vector3(x,groundY(x,z),z));
+  say(pick(loomLines.vine));addLore('🌑 <b>A nightmare vine</b> sprouted nearby… cleanse it for +18 ✨.');
+  blip(180,.4,'sawtooth',.1);
+}
+const ghostNames=['Mira','Theo','June','Pip','Sable','Wren'];
+function spawnGhost(){
+  const ideas=['lanterns','flower garden','rainbow bridge','song stones','lake','crystal field'];
+  const idea=pick(ideas);const at=dreamSpot(true);
+  const g=(Builders[parsedSafe(idea)]||Builders.orb)(at);
+  g.traverse(o=>{if(o.isMesh&&o.material&&o.material.transparent!==undefined){o.material=o.material.clone();o.material.transparent=true;o.material.opacity*=.55;}});
+  g.userData.label=`traveler's echo (${pick(ghostNames)})`;
+  // re-tag label
+  g.traverse(o=>{o.userData.rootRef=g;});
+  burst(at.clone().add(new THREE.Vector3(0,2,0)),0xe2e8f0,14);
+  logDream(`👻 A <b>traveler's echo</b> drifted by… (${idea}) — tap to keep or release`);
+  addLore(`👻 <b>Traveler's echo:</b> someone named ${pick(ghostNames)} dreamed “${idea}” in a parallel nap.`);
+  setTimeout(()=>{ // fades after 75s unless touched
+    const i=selectable.indexOf(g);if(i>=0&&selected!==g){dreamGroup.remove(g);selectable.splice(i,1);}
+  },75000);
+  renderQuests();saveDreams();
+}
+function parsedSafe(idea){return keywordToFn(idea);}
+
 /* ============ persistence ============ */
 function saveDreams(){try{
   const data=selectable.map(g=>({label:g.userData.label,x:+g.position.x.toFixed(2),z:+g.position.z.toFixed(2),s:+g.scale.x.toFixed(3)}));
@@ -705,8 +1259,8 @@ function loadDreams(){try{
   const raw=localStorage.getItem('loom-dreams-v1');if(!raw)return;
   const arr=JSON.parse(raw);
   // map labels back to builder fns roughly
-  const label2fn={'tree':'tree','forest':'forest','mushroom forest':'mushroom','crystal field':'crystal','frost-crystal grove (snow dream!)':'crystal','cozy house':'house','village':'village','castle':'castle','volcano':'volcano','lake':'lake','rainbow':'rainbow','rainbow arch':'rainbow','jellyfish drift':'jellyfish','lanterns':'lanterns','windmill':'windmill','desert':'cactus','flower garden':'garden','UFO':'ufo','moss golem':'golem','light bridge':'bridge','dream orb':'orb'};
-  arr.forEach(d=>{const fn=label2fn[d.label]||'orb';const at=new THREE.Vector3(d.x,groundY(d.x,d.z),d.z);
+  const label2fn={'tree':'tree','forest':'forest','mushroom forest':'mushroom','crystal field':'crystal','frost-crystal grove (snow dream!)':'crystal','cozy house':'house','village':'village','castle':'castle','volcano':'volcano','lake':'lake','rainbow':'rainbow','rainbow arch':'rainbow','jellyfish drift':'jellyfish','lanterns':'lanterns','windmill':'windmill','desert':'cactus','flower garden':'garden','UFO':'ufo','moss golem':'golem','light bridge':'bridge','dream orb':'orb','sky whale':'skywhale','song stones':'songstones','portal arch':'portal','inkwell spring':'inkwell','bounce shroom':'bounce','nightmare vine':'vine'};
+  arr.forEach(d=>{const fn=label2fn[d.label]||labelToFn(d.label);const at=new THREE.Vector3(d.x,groundY(d.x,d.z),d.z);
     const g=(Builders[fn]||Builders.orb)(at);g.scale.setScalar(clamp(d.s||1,.3,4));stats.dreams++;});
   if(arr.length)logDream(`🦊 Restored <b>${arr.length} dreams</b> from last visit`);
   renderQuests();
@@ -753,12 +1307,14 @@ $('#photoBtn').onclick=()=>{
   say('Say starlight! …Perfect. Frame that one. 📸');};
 $('#helpBtn').onclick=()=>{ $('#intro').classList.remove('hide'); };
 $('#startBtn').onclick=()=>{ $('#intro').classList.add('hide'); ac();
-  loomSay('greet'); dreamChord(); toast('💭 Type a dream below to begin!'); };
+  loomSay('greet'); dreamChord(); addBond(4);
+  addLore('🌅 <b>Day one:</b> you and Loom woke up on the same island. The Dreambook was blank. Not anymore.');
+  toast('💭 Type a dream — try “volcano + jellyfish”!'); };
 $('#questToggle').addEventListener('click',()=>{if(innerWidth<=760)$('#questCard').classList.toggle('open');});
 
 /* ============ main loop ============ */
 const clock=new THREE.Clock();
-let walkPhase=0;
+let walkPhase=0, loomDanceT=0;
 const camTarget=new THREE.Vector3();
 function tick(){
   requestAnimationFrame(tick);
@@ -781,7 +1337,7 @@ function tick(){
   const gy=groundY(player.position.x,player.position.z);
   if(flying){
     if(keys.Space||keys.KeyE)vy=5; else if(keys.ShiftLeft||keys.KeyQ)vy=-5; else vy*=.9;
-    player.position.y=clamp(player.position.y+vy*dt,gy+.6,42);
+    player.position.y=clamp(player.position.y+vy*dt,gy+.6,150); // fly high into the constellation
   }else{
     vy-=22*dt; player.position.y+=vy*dt;
     if(player.position.y<=gy){player.position.y=gy;vy=0;grounded=true;}else grounded=false;
@@ -812,13 +1368,18 @@ function tick(){
   const hop=Math.abs(Math.sin(t*6))*.28*(ml>.1?1:.3);
   loom.position.lerp(new THREE.Vector3(want2.x,want2.y+hop+.1,want2.z),1-Math.pow(.01,dt));
   loom.lookAt(player.position.x,loom.position.y,player.position.z);
-  loomTail.rotation.z=Math.sin(t*7)*.5; loomTail.material.emissiveIntensity=1+Math.sin(t*3)*.4;
+  if(loomDanceT>0){loomDanceT-=dt;loom.rotation.y+=dt*9;loom.position.y+=Math.abs(Math.sin(t*10))*.05;}
+  loomTail.rotation.z=Math.sin(t*7)*.5; if(bond<10)loomTail.material.emissiveIntensity=1+Math.sin(t*3)*.4;
   loomEarL.rotation.z=Math.sin(t*2.2)*.14;loomEarR.rotation.z=-Math.sin(t*2.2)*.14;
   loomGlow.intensity=(night?12:6)+Math.sin(t*4)*1.2;
   // idle anims for dreams
   dreamGroup.children.forEach(g=>{
     if(g.userData.spin)g.userData.spin.rotation.z+=dt*1.4;
     if(g.userData.ufo){g.position.y+=Math.sin(t*1.5+g.userData.phase)*dt*.6;g.rotation.y+=dt*.4;}
+    if(g.userData.skywhale){g.position.y+=Math.sin(t*.9+g.userData.phase)*dt*.9;g.rotation.y=Math.sin(t*.4+g.userData.phase)*.08;}
+    if(g.userData.portal){const v=g.children.find(c=>c.userData.portalVeil);if(v){v.material.opacity=.35+Math.sin(t*3)*.15;v.rotation.z+=dt*.7;}}
+    if(g.userData.inkwell){const top=g.children.find(c=>c.userData.inkTop);if(top)top.rotation.z+=dt*.8;}
+    if(g.userData.bounce){const top=g.children.find(c=>c.userData.bounceTop);if(top)top.scale.y=.7+Math.sin(t*2.2)*.06;}
     if(g.userData.lava){g.userData.lava.material.color.setHSL(.03+Math.sin(t*3)*.02,1,.5);g.userData.glow.intensity=26+Math.sin(t*5)*8;}
     g.traverse(o=>{if(o.userData&&o.userData.float){o.position.y+=Math.sin(t*2+o.position.x)*dt*.5;}
       if(o.userData&&o.userData.blink){o.visible=Math.sin(t*6+o.position.x*3)>-.2;}
@@ -833,10 +1394,16 @@ function tick(){
   sunSpr.material.opacity=night?.5:.95;
   // ink regen by wandering
   setInk(ink+dt*(ml>.1?1.6:.7));
-  // loom autonomy: auto-dream every ~26s if ink allows
-  if(t*1000-(lastAuto)>26000&&ink>34&&$('#intro').classList.contains('hide')){
+  // 🤝 occasionally Loom starts a co-build instead of a solo dream
+  if(performance.now()-lastAuto>26000&&ink>34&&$('#intro').classList.contains('hide')&&!coop
+     &&performance.now()-cooldownCoop>90000){
+    cooldownCoop=performance.now();
+    startCoop();
+  }
+  // loom autonomy: auto-dream every ~26s if ink allows (sometimes a FUSION!)
+  if(performance.now()-lastAuto>26000&&ink>34&&$('#intro').classList.contains('hide')&&coop){
     lastAuto=performance.now();
-    const ideas=['mushroom forest','crystal field','flower garden','lanterns','rainbow bridge','cozy house','windmill','floating jellyfish','tree','lake'];
+    const ideas=['mushroom forest','sky whale','song stones','flower garden','lanterns','rainbow bridge','cozy village','bounce shroom','inkwell spring','floating jellyfish','portal arch','volcano + mushroom','crystal + rainbow','tree','lake'];
     const idea=pick(ideas);
     say(pick(loomLines.auto)+` (dreaming “${idea}”…)`);
     setTimeout(()=>doDream(idea,true),1400);
@@ -844,7 +1411,39 @@ function tick(){
   // idle chatter
   if(performance.now()-lastIdleLine>45000&&$('#intro').classList.contains('hide')){
     lastIdleLine=performance.now();loomSay('idle');}
-  tickBursts(dt);
+  tickBursts(dt);tickSeeds(dt,t);tickCoop(dt);
+  // ⏱ memory echo: ghost of your past 4s replays + ghost twin
+  if(echoT>0){
+    echoT-=dt;
+    const age=5.2-echoT;
+    // record & replay trail
+    if(!trail.length||performance.now()-trail[trail.length-1].t>90)trail.push({x:player.position.x,y:player.position.y,z:player.position.z,t:performance.now()});
+    while(trail.length&&performance.now()-trail[0].t>4200)trail.shift();
+    if(trail.length>1){
+      const idx=Math.min(trail.length-1,Math.max(0,Math.floor((age/4.2)*trail.length)));
+      const pt=trail[idx];
+      ghost.position.set(pt.x,pt.y,pt.z);
+      ghost.lookAt(player.position.x,player.position.y,player.position.z);
+      ghost.scale.setScalar(clamp(1.15+Math.sin(age*4)*.1,.9,1.4));
+      ghostMat.opacity=.42+Math.sin(age*3)*.14;
+    }
+  } else {ghostMat.opacity=Math.max(0,ghostMat.opacity-dt);ghost.scale.setScalar(Math.max(.01,ghost.scale.x-dt*2));}
+  if(echoCool>0)echoCool-=dt;
+  // constellation twinkle + slow drift
+  conStars.forEach((s,i)=>{
+    s.userData.halo.material.opacity=.55+Math.sin(performance.now()*.002+i)*.25;
+    s.userData.core.scale.setScalar(1+Math.sin(performance.now()*.003+i*1.7)*.12);
+    s.rotation.y+=dt*.08;
+  });
+  // nightmare vines creep in every ~50s (max 3); ghosts visit every ~70s
+  if(performance.now()-lastVine>50000&&$('#intro').classList.contains('hide')){
+    lastVine=performance.now();
+    const vines=selectable.filter(s=>s.userData.label==='nightmare vine').length;
+    if(vines<3&&ink>20)spawnVine();
+  }
+  if(performance.now()-lastGhost>70000&&$('#intro').classList.contains('hide')){
+    lastGhost=performance.now();spawnGhost();
+  }
   renderer.render(scene,camera);
 }
 tick();
