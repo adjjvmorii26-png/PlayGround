@@ -6,150 +6,236 @@
 <title>Loom &amp; You — Pocket Dream Archipelago</title>
 <meta name="description" content="A co-pilot sandbox: you + Loom the fox-spirit dream an open world together. Phone/tablet 3D.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦊</text></svg>">
-<style>
-  :root{
-    --ink:#0b1026; --paper:#fff7e8; --dream:#a78bfa; --dream2:#22d3ee;
-    --peach:#ffb86b; --berry:#ff6b9d; --lime:#a3e635;
-    --glass:rgba(12,16,38,.62); --glass2:rgba(255,255,255,.14);
-    --radius:18px;
-  }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;height:100%;overflow:hidden;background:#070b22;color:#fff;
-    font-family:ui-rounded,system-ui,-apple-system,"SF Pro Rounded",Segoe UI,Roboto,sans-serif;
-    overscroll-behavior:none;touch-action:none;user-select:none;-webkit-user-select:none}
-  #scene{position:fixed;inset:0}
-  #scene canvas{display:block;width:100%;height:100%}
-  /* vignette + grain dream feel */
-  #vignette{position:fixed;inset:0;pointer-events:none;z-index:3;
-    background:radial-gradient(ellipse at center,transparent 55%,rgba(5,6,20,.55) 100%);}
-  /* Top HUD */
-  #topbar{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:8px;right:8px;z-index:20;
-    display:flex;gap:8px;align-items:stretch;pointer-events:none;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
-  #topbar::-webkit-scrollbar{display:none}
-  .pill{pointer-events:auto;background:var(--glass);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-    border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:8px 12px;
-    display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;box-shadow:0 8px 30px rgba(0,0,0,.35);white-space:nowrap;flex:0 0 auto}
-  @media (max-width:760px){
-    #logo b{display:none} #logo::after{content:"LOOM & YOU";font-weight:900;
-      background:linear-gradient(90deg,#c4b5fd,#67e8f9,#f9a8d4);-webkit-background-clip:text;background-clip:text;color:transparent}
-    .pill{padding:7px 10px;font-size:12px} .iconBtn{width:38px;height:38px;font-size:17px;flex:0 0 auto}
-    #leftPanel{width:150px} #dreamLog{max-height:76px;font-size:11px}
-    #dreamBtn{padding:10px 13px;font-size:13.5px} #prompt{font-size:14px}
-  }
-  #logo{font-size:15px;letter-spacing:.2px;white-space:nowrap}
-  #logo b{background:linear-gradient(90deg,#c4b5fd,#67e8f9,#f9a8d4);-webkit-background-clip:text;background-clip:text;color:transparent}
-  #inkWrap{min-width:132px;flex:0 1 auto}
-  #inkBar{width:86px;height:10px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}
-  #inkFill{height:100%;width:100%;border-radius:99px;background:linear-gradient(90deg,var(--dream),var(--dream2));transition:width .4s}
-  #inkNum{font-variant-numeric:tabular-nums;min-width:28px;text-align:right}
-  .spacer{flex:1;pointer-events:none}
-  .iconBtn{pointer-events:auto;width:42px;height:42px;border-radius:999px;border:1px solid rgba(255,255,255,.2);
-    background:var(--glass);backdrop-filter:blur(14px);color:#fff;font-size:19px;display:grid;place-items:center;cursor:pointer}
-  .iconBtn:active{transform:scale(.93)}
-  /* Loom bubble */
-  #loomBubble{position:fixed;z-index:19;left:50%;top:64px;transform:translateX(-50%);max-width:min(92vw,520px);
-    background:rgba(255,247,232,.96);color:#1b1440;border-radius:16px 16px 16px 4px;padding:10px 12px 10px 42px;
-    font-size:14px;line-height:1.35;box-shadow:0 12px 40px rgba(167,139,250,.45);border:2px solid #fff;
-    transition:opacity .4s, transform .4s;pointer-events:none}
-  #loomBubble::before{content:"🦊";position:absolute;left:8px;top:7px;font-size:22px}
-  #loomBubble small{display:block;color:#6d5bd0;font-weight:800;font-size:11px;letter-spacing:.6px;text-transform:uppercase}
-  #loomBubble.hidden{opacity:0;transform:translateX(-50%) translateY(-8px)}
-  /* Quest + log */
-  #leftPanel{position:fixed;z-index:15;left:8px;top:128px;width:196px;display:flex;flex-direction:column;gap:8px}
-  @media (max-width:760px){#leftPanel{width:158px;top:124px} #questCard{display:none} #questCard.open{display:block}}
-  .card{background:var(--glass);border:1px solid rgba(255,255,255,.16);border-radius:var(--radius);
-    padding:10px 11px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
-  .card h3{margin:0 0 6px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#c4b5fd}
-  #quests{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:12px}
-  #quests li{display:flex;gap:7px;align-items:flex-start;background:rgba(255,255,255,.07);border-radius:10px;padding:6px 7px;line-height:1.25}
-  #quests li.done{opacity:.75;text-decoration:line-through}
-  #dreamLog{max-height:132px;overflow:hidden;font-size:12px;display:flex;flex-direction:column;gap:4px}
-  #dreamLog div{background:rgba(255,255,255,.08);border-radius:9px;padding:5px 7px;line-height:1.3}
-  /* Dream bar bottom */
-  #dreamBar{position:fixed;z-index:22;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);
-    display:flex;flex-direction:column;gap:8px}
-  #chips{display:flex;gap:6px;overflow-x:auto;padding:2px;scrollbar-width:none}
-  #chips::-webkit-scrollbar{display:none}
-  .chip{flex:0 0 auto;border:1px solid rgba(255,255,255,.22);background:rgba(20,16,60,.72);color:#fff;
-    border-radius:999px;padding:7px 11px;font-size:12.5px;font-weight:700;cursor:pointer;backdrop-filter:blur(10px)}
-  .chip:active{transform:scale(.95)}
-  #promptRow{display:flex;gap:8px;align-items:center;min-width:0}
-  #promptWrap{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;background:rgba(10,14,36,.78);
-    border:2px solid rgba(167,139,250,.65);border-radius:999px;padding:6px 6px 6px 14px;
-    box-shadow:0 0 0 4px rgba(167,139,250,.15),0 12px 40px rgba(0,0,0,.5);backdrop-filter:blur(16px)}
-  #prompt{flex:1;background:transparent;border:0;outline:0;color:#fff;font-size:16px;min-width:0}
-  #prompt::placeholder{color:rgba(255,255,255,.55)}
-  #dreamBtn{border:0;cursor:pointer;font-weight:900;font-size:15px;color:#1a1240;border-radius:999px;flex:0 0 auto;
-    padding:11px 18px;background:linear-gradient(135deg,#c4b5fd,#67e8f9 55%,#f9a8d4);box-shadow:0 6px 22px rgba(167,139,250,.6)}
-  #dreamBtn:active{transform:scale(.95)}
-  #dreamBtn:disabled{opacity:.5;filter:grayscale(.4)}
-  .miniBtn{width:42px;height:42px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.12);
-    color:#fff;font-size:18px;display:grid;place-items:center;cursor:pointer;flex:0 0 auto}
-  /* Touch controls */
-  #touchUI{position:fixed;inset:0;z-index:12;pointer-events:none;display:none}
-  body.touch #touchUI{display:block}
-  #joyL{position:absolute;left:14px;bottom:118px;width:124px;height:124px;border-radius:50%;
-    background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.25);pointer-events:auto}
-  #joyKnob{position:absolute;left:50%;top:50%;width:56px;height:56px;border-radius:50%;transform:translate(-50%,-50%);
-    background:radial-gradient(circle at 30% 30%,#fff,#a78bfa);box-shadow:0 6px 20px rgba(167,139,250,.7)}
-  #lookHint{position:absolute;right:14px;bottom:118px;width:124px;height:124px;border-radius:50%;
-    border:1.5px dashed rgba(255,255,255,.3);display:grid;place-items:center;font-size:11px;color:rgba(255,255,255,.7);pointer-events:auto}
-  #actionBtns{position:absolute;right:12px;bottom:252px;display:flex;flex-direction:column;gap:8px;pointer-events:auto}
-  .actBtn{width:56px;height:56px;border-radius:50%;border:1px solid rgba(255,255,255,.3);font-weight:900;font-size:12px;
-    background:rgba(20,16,60,.7);color:#fff;backdrop-filter:blur(10px)}
-  .actBtn.on{background:linear-gradient(135deg,#a78bfa,#22d3ee);color:#0b1026}
-  /* Edit panel */
-  #editPanel{position:fixed;z-index:23;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 132px);transform:translateX(-50%);
-    display:none;gap:6px;background:var(--glass);border:1px solid rgba(255,255,255,.2);border-radius:999px;
-    padding:7px;backdrop-filter:blur(14px);max-width:94vw;overflow-x:auto}
-  #editPanel.show{display:flex}
-  #editPanel button{border:0;border-radius:999px;padding:9px 12px;font-weight:800;font-size:13px;white-space:nowrap;cursor:pointer}
-  /* Intro overlay */
-  #intro{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 30%,#2a1e6b 0%,#0b1026 60%,#05071a 100%);padding:18px;transition:opacity .6s}
-  #intro.hide{opacity:0;pointer-events:none}
-  #introCard{max-width:560px;width:100%;background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.06));
-    border:1px solid rgba(255,255,255,.22);border-radius:24px;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.6);text-align:center}
-  #introCard h1{margin:.2em 0;font-size:clamp(28px,6vw,44px);line-height:1.02}
-  #introCard h1 span{background:linear-gradient(90deg,#c4b5fd,#67e8f9,#fbcfe8);-webkit-background-clip:text;background-clip:text;color:transparent}
-  #introCard p{color:#d8d3ff;font-size:14.5px;line-height:1.55}
-  .featureGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0;text-align:left}
-  .featureGrid div{background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:9px 10px;font-size:12.5px;line-height:1.4}
-  #startBtn{font-size:18px;font-weight:900;border:0;border-radius:999px;padding:14px 30px;cursor:pointer;
-    background:linear-gradient(135deg,#c4b5fd,#22d3ee,#f9a8d4);box-shadow:0 12px 40px rgba(167,139,250,.55)}
-  #startBtn:active{transform:scale(.96)}
-  .tiny{font-size:11.5px;color:rgba(255,255,255,.65)}
-  kbd{background:rgba(255,255,255,.15);border-radius:6px;padding:1px 6px;font-size:11px}
-  /* Toast */
-  #toast{position:fixed;z-index:40;left:50%;top:46%;transform:translate(-50%,-50%) scale(.9);opacity:0;
-    background:rgba(10,10,30,.85);border:1px solid rgba(255,255,255,.25);padding:12px 18px;border-radius:16px;
-    font-weight:800;font-size:15px;pointer-events:none;transition:all .3s;text-align:center;max-width:86vw}
-  #toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
-  #photoFlash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:60;transition:opacity .25s}
-  /* Loom skills */
-  #loomPill{cursor:pointer;border-color:rgba(163,230,53,.55)}
-  #loomLvl{font-weight:900;background:linear-gradient(90deg,#a3e635,#67e8f9);color:#0b1026;border-radius:999px;padding:1px 8px;font-size:12px}
-  #xpBar{width:56px;height:8px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden}
-  #xpFill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,#a3e635,#22d3ee);transition:width .4s}
-  #skillPanel{position:fixed;z-index:45;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);opacity:0;pointer-events:none;
-    width:min(92vw,430px);max-height:82vh;overflow:auto;background:rgba(12,14,36,.94);border:1px solid rgba(167,139,250,.5);
-    border-radius:20px;padding:16px;box-shadow:0 30px 80px rgba(0,0,0,.6);transition:all .25s;backdrop-filter:blur(16px)}
-  #skillPanel.show{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto}
-  #skillPanel h2{margin:0 0 2px;font-size:18px}
-  #skillPanel .sub{font-size:12.5px;color:#c4b5fd;margin-bottom:10px}
-  .skillRow{display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
-    border-radius:14px;padding:9px 10px;margin-bottom:8px}
-  .skillRow.locked{opacity:.55;filter:grayscale(.6)}
-  .skillRow .ic{font-size:24px;flex:0 0 auto}
-  .skillRow code{display:block;color:#a5f3fc;font-size:12.5px;font-weight:800}
-  .skillRow p{margin:3px 0 0;font-size:12px;line-height:1.4;color:#e2e8f0}
-  .skillRow .tag{margin-left:auto;flex:0 0 auto;font-size:11px;font-weight:900;border-radius:999px;padding:3px 9px}
-  .tag.on{background:#a3e635;color:#0b1026} .tag.off{background:rgba(255,255,255,.15);color:#fff}
-  #skillClose{width:100%;margin-top:4px;border:0;border-radius:999px;padding:11px;font-weight:900;font-size:14px;cursor:pointer;
-    background:linear-gradient(135deg,#c4b5fd,#67e8f9,#f9a8d4)}
-  #lvlFlash{position:fixed;z-index:46;left:50%;top:38%;transform:translate(-50%,-50%) scale(.8);opacity:0;pointer-events:none;
-    text-align:center;background:rgba(10,10,30,.92);border:2px solid #a3e635;border-radius:20px;padding:18px 26px;transition:all .35s;max-width:88vw}
-  #lvlFlash.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
-  canvas{touch-action:none}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style id="dreamweave-upgrade">
+/* ===== BASE LAYOUT (restored) ===== */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;color:#fff;overscroll-behavior:none;touch-action:none;user-select:none;-webkit-user-select:none}
+#scene{position:fixed;inset:0}
+#scene canvas{display:block;width:100%;height:100%}
+#vignette{position:fixed;inset:0;pointer-events:none;z-index:3}
+#topbar{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:8px;right:8px;z-index:20;display:flex;gap:8px;align-items:stretch;pointer-events:none;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+#topbar::-webkit-scrollbar{display:none}
+.pill{pointer-events:auto;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;white-space:nowrap;flex:0 0 auto;padding:8px 12px}
+.spacer{flex:1;pointer-events:none}
+.iconBtn{pointer-events:auto;width:42px;height:42px;display:grid;place-items:center;cursor:pointer;font-size:19px;color:#fff;flex:0 0 auto}
+#loomBubble{position:fixed;z-index:19;left:50%;transform:translateX(-50%);max-width:min(92vw,520px);transition:opacity .4s,transform .4s;pointer-events:none}
+#loomBubble.hidden{opacity:0;transform:translateX(-50%) translateY(-8px)}
+#leftPanel{position:fixed;z-index:15;left:8px;display:flex;flex-direction:column;gap:8px}
+.card{padding:10px 11px}
+.card h3{margin:0 0 6px;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+#quests{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:12px}
+#quests li{display:flex;gap:7px;align-items:flex-start;padding:6px 7px;line-height:1.25}
+#dreamLog{display:flex;flex-direction:column;gap:4px}
+#dreamLog div{padding:5px 7px;line-height:1.3}
+#dreamBar{position:fixed;z-index:22;left:8px;right:8px;bottom:calc(env(safe-area-inset-bottom,0px) + 8px);display:flex;flex-direction:column}
+#chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+#chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;cursor:pointer;font-size:12.5px;font-weight:700;color:#fff}
+#promptRow{display:flex;gap:8px;align-items:center;min-width:0}
+#promptWrap{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;padding:6px 6px 6px 14px}
+#prompt{flex:1;background:transparent;border:0;outline:0;color:#fff;font-size:16px;min-width:0}
+.miniBtn{width:42px;height:42px;flex:0 0 auto;display:grid;place-items:center;cursor:pointer;font-size:18px;color:#fff}
+#dreamBtn{flex:0 0 auto;cursor:pointer;font-weight:900}
+#dreamBtn:disabled{opacity:.5}
+#touchUI{position:fixed;inset:0;z-index:12;pointer-events:none;display:none}
+body.touch #touchUI{display:block}
+#joyL{position:absolute;left:14px;bottom:118px;width:124px;height:124px;border-radius:50%;pointer-events:auto}
+#joyKnob{position:absolute;left:50%;top:50%;width:56px;height:56px;border-radius:50%;transform:translate(-50%,-50%)}
+#lookHint{position:absolute;right:14px;bottom:118px;width:124px;height:124px;border-radius:50%;display:grid;place-items:center;font-size:11px;pointer-events:auto}
+#actionBtns{position:absolute;right:12px;bottom:252px;display:flex;flex-direction:column;gap:8px;pointer-events:auto}
+.actBtn{width:56px;height:56px;border-radius:50%;font-weight:900;font-size:12px;color:#fff}
+#editPanel{position:fixed;z-index:23;left:50%;transform:translateX(-50%);display:none;gap:6px;padding:7px;max-width:94vw;overflow-x:auto}
+#editPanel.show{display:flex}
+#editPanel button{border:0;padding:9px 12px;font-weight:800;font-size:13px;white-space:nowrap;cursor:pointer}
+#intro{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:18px;transition:opacity .6s}
+#intro.hide{opacity:0;pointer-events:none}
+#introCard{max-width:560px;width:100%;padding:22px;text-align:center}
+#introCard h1{margin:.2em 0;font-size:clamp(28px,6vw,44px);line-height:1.02}
+.featureGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0;text-align:left}
+.featureGrid div{padding:9px 10px;font-size:12.5px;line-height:1.4}
+#startBtn{font-size:18px;font-weight:900;border:0;padding:14px 30px;cursor:pointer}
+.tiny{font-size:11.5px}
+kbd{border-radius:6px;padding:1px 6px;font-size:11px}
+#toast{position:fixed;z-index:40;left:50%;top:46%;transform:translate(-50%,-50%) scale(.9);opacity:0;pointer-events:none;padding:12px 18px;font-weight:800;font-size:15px;transition:all .3s;text-align:center;max-width:86vw}
+#toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#photoFlash{position:fixed;inset:0;opacity:0;pointer-events:none;z-index:60;transition:opacity .25s;background:#fff}
+#loomPill{cursor:pointer}
+#loomLvl{font-weight:900;border-radius:999px;padding:1px 8px;font-size:12px}
+#xpBar{width:56px;height:8px;border-radius:99px;overflow:hidden}
+#xpFill{height:100%;width:0%;border-radius:99px;transition:width .4s}
+#skillPanel{position:fixed;z-index:45;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);opacity:0;pointer-events:none;width:min(92vw,430px);max-height:82vh;overflow:auto;padding:16px;transition:all .25s}
+#skillPanel.show{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto}
+#skillPanel h2{margin:0 0 2px;font-size:18px}
+.skillRow{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;margin-bottom:8px}
+.skillRow .ic{font-size:24px;flex:0 0 auto}
+.skillRow code{display:block;font-size:12.5px;font-weight:800}
+.skillRow p{margin:3px 0 0;font-size:12px;line-height:1.4}
+.skillRow .tag{margin-left:auto;flex:0 0 auto;font-size:11px;font-weight:900;border-radius:999px;padding:3px 9px}
+#skillClose{width:100%;margin-top:4px;border:0;padding:11px;font-weight:900;font-size:14px;cursor:pointer}
+#lvlFlash{position:fixed;z-index:46;left:50%;top:38%;transform:translate(-50%,-50%) scale(.8);opacity:0;pointer-events:none;text-align:center;padding:18px 26px;transition:all .35s;max-width:88vw}
+#lvlFlash.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+/* --- restored fill + type fixes --- */
+#inkBar{overflow:hidden}
+#inkFill{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#a78bfa,#22d3ee,#a3e635);transition:width .4s}
+#xpBar{background:rgba(255,255,255,.18);overflow:hidden}
+#xpFill{display:block;background:linear-gradient(90deg,#a3e635,#22d3ee)}
+#loomBubble small{display:block}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Space Grotesk",monospace;font-size:.92em}
+canvas{touch-action:none}
+/* ===== DREAMWEAVE UPGRADE · stardust loom storybook holographic ===== */
+:root{
+  --night:#070718; --ink2:#0d1030;
+  --violet:#a78bfa; --lagoon:#22d3ee; --candy:#ff6b9d; --gold:#fde68a; --sprout:#a3e635;
+  --parch:#fff6e6; --inktext:#241d55;
+  --holo:linear-gradient(135deg,#c4b5fd,#67e8f9 35%,#f9a8d4 70%,#fde68a);
+}
+html,body{font-family:"Space Grotesk",ui-rounded,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--night)}
+h1,h2,#logo,#dreamBtn,#startBtn,.actBtn{font-family:"Fredoka","Space Grotesk",system-ui,sans-serif}
+/* --- atmosphere layers --- */
+#aurora{position:fixed;inset:-20%;z-index:2;pointer-events:none;mix-blend-mode:screen;opacity:.55;
+  background:
+   radial-gradient(38% 30% at 18% 12%,rgba(167,139,250,.5),transparent 70%),
+   radial-gradient(30% 26% at 82% 18%,rgba(34,211,238,.42),transparent 70%),
+   radial-gradient(34% 30% at 70% 85%,rgba(255,107,157,.32),transparent 70%),
+   radial-gradient(28% 24% at 22% 78%,rgba(253,230,138,.22),transparent 70%);
+  filter:blur(10px) saturate(1.2);animation:auroraDrift 18s ease-in-out infinite alternate}
+@keyframes auroraDrift{from{transform:translate3d(-2%,-1%,0) rotate(-1deg) scale(1)}to{transform:translate3d(2%,2%,0) rotate(1.5deg) scale(1.06)}}
+#grain{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:.5;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.34'/%3E%3C/svg%3E")}
+#vignette{background:radial-gradient(ellipse at 50% 42%,transparent 52%,rgba(3,4,16,.62) 100%)}
+#dreamTint{position:fixed;inset:0;z-index:3;pointer-events:none;mix-blend-mode:soft-light;opacity:.5;transition:background 1s;
+  background:linear-gradient(180deg,rgba(167,139,250,.35),transparent 35%,transparent 65%,rgba(34,211,238,.3))}
+body.night #dreamTint{background:linear-gradient(180deg,rgba(30,27,75,.7),transparent 40%,transparent 65%,rgba(139,92,246,.4));opacity:.75}
+body.night #aurora{opacity:.8}
+#fireflies{position:fixed;inset:0;z-index:5;pointer-events:none;overflow:hidden}
+#fireflies i{position:absolute;border-radius:50%;background:radial-gradient(circle,#fff 0%,#fde68a 35%,transparent 70%);
+  filter:blur(.4px);opacity:0;animation:flyFloat linear infinite}
+@keyframes flyFloat{0%{opacity:0;transform:translateY(10px)}12%{opacity:.9}55%{opacity:.55}100%{opacity:0;transform:translateY(-70px)}}
+/* --- top constellation bar --- */
+#topbar{align-items:center;padding:2px 2px 6px}
+.pill{position:relative;border-radius:18px;background:linear-gradient(180deg,rgba(22,26,64,.82),rgba(10,13,38,.78));
+  border:1px solid rgba(196,181,253,.35);box-shadow:0 10px 30px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.18);overflow:hidden}
+.pill::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.14) 45%,transparent 60%);animation:sheen 5s ease-in-out infinite}
+@keyframes sheen{0%,100%{transform:translateX(-60%)}50%{transform:translateX(60%)}}
+#logo{border-radius:20px 20px 20px 6px;background:linear-gradient(180deg,#241d55,#12163c);border:1.5px dashed rgba(253,230,138,.65);
+  box-shadow:0 8px 26px rgba(167,139,250,.4);font-size:14px;letter-spacing:.4px}
+#logo::before{content:"🧵";font-size:15px}
+#inkWrap{border-style:solid}
+#inkBar{position:relative;height:12px;width:92px;border-radius:99px;background:rgba(255,255,255,.14);box-shadow:inset 0 2px 6px rgba(0,0,0,.5)}
+#inkFill{background:linear-gradient(90deg,#a78bfa,#22d3ee,#a3e635);box-shadow:0 0 12px rgba(34,211,238,.8)}
+#inkNum{color:var(--gold)}
+#loomPill{border:1.5px solid rgba(163,230,53,.6);background:linear-gradient(180deg,rgba(30,50,20,.85),rgba(12,18,38,.85))}
+#loomPill:hover{transform:translateY(-1px)}
+#loomLvl{box-shadow:0 2px 10px rgba(163,230,53,.5)}
+.iconBtn{position:relative;border-radius:16px;background:linear-gradient(180deg,rgba(30,34,80,.9),rgba(12,15,40,.85));
+  border:1px solid rgba(196,181,253,.4);box-shadow:0 8px 22px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.2);transition:transform .15s}
+.iconBtn:hover{transform:translateY(-2px) rotate(-2deg);border-color:var(--lagoon)}
+.iconBtn:active{transform:scale(.9)}
+/* --- loom scroll bubble --- */
+#loomBubble{top:74px;background:linear-gradient(180deg,#fffaf0,#ffeecd);color:var(--inktext);
+  border:2px dashed #b79bff;border-radius:20px 20px 20px 6px;box-shadow:0 14px 44px rgba(167,139,250,.5),0 4px 0 #fff inset;
+  font-family:"Fredoka",system-ui,sans-serif;padding:12px 14px 12px 46px}
+#loomBubble small{color:#8b5cf6}
+#loomBubble::before{animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-3px) rotate(4deg)}}
+#loomBubble::after{content:"";position:absolute;left:22px;bottom:-9px;width:16px;height:16px;background:#ffeecd;
+  border-right:2px dashed #b79bff;border-bottom:2px dashed #b79bff;transform:rotate(45deg)}
+/* --- tarot cards --- */
+#leftPanel{top:136px}
+.card{position:relative;border-radius:20px;background:linear-gradient(180deg,rgba(24,20,62,.86),rgba(9,11,34,.88));
+  border:1px solid rgba(196,181,253,.35);box-shadow:0 16px 40px rgba(0,0,0,.5);overflow:hidden}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--holo);opacity:.9}
+.card h3{color:#e9d5ff;letter-spacing:2px}
+#quests li{border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.04));
+  border-radius:13px;transition:transform .15s}
+#quests li.done{background:linear-gradient(180deg,rgba(163,230,53,.25),rgba(163,230,53,.08));text-decoration-color:var(--sprout)}
+#dreamLog div{border-left:3px solid var(--violet);background:linear-gradient(90deg,rgba(167,139,250,.18),rgba(255,255,255,.05))}
+/* --- dream loom console --- */
+#dreamBar{gap:7px}
+#chips{padding:4px 2px 6px}
+.chip{position:relative;border-radius:14px 14px 14px 4px;padding:8px 12px;background:linear-gradient(180deg,#23265c,#12153a);
+  border:1px dashed rgba(103,232,249,.55);box-shadow:0 6px 18px rgba(0,0,0,.4);transition:transform .15s}
+.chip:hover{transform:translateY(-2px) rotate(-1deg);border-color:var(--gold)}
+.chip:active{transform:scale(.93)}
+#promptRow{position:relative}
+#promptRow::before{content:"✦ ─── ⟡ ─── ✦";position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+  font-size:10px;letter-spacing:3px;color:rgba(196,181,253,.8);pointer-events:none}
+#promptWrap{border-radius:22px;border:2px solid transparent;
+  background:linear-gradient(#0b0f30,#0b0f30) padding-box,var(--holo) border-box;
+  box-shadow:0 0 0 5px rgba(167,139,250,.12),0 0 26px rgba(167,139,250,.45),0 14px 44px rgba(0,0,0,.55)}
+#prompt{font-family:"Space Grotesk",system-ui,sans-serif;font-weight:500}
+#prompt::placeholder{color:rgba(233,213,255,.55)}
+.miniBtn{background:linear-gradient(180deg,rgba(255,255,255,.2),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.3)}
+#dreamBtn{position:relative;overflow:hidden;border-radius:20px 20px 20px 6px;padding:13px 22px;font-size:16px;letter-spacing:.3px;
+  background:linear-gradient(135deg,#f0abfc,#67e8f9 45%,#a3e635 90%);color:#131040;
+  box-shadow:0 10px 30px rgba(240,171,252,.5),0 0 0 3px rgba(255,255,255,.25) inset;transition:transform .12s}
+#dreamBtn::before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent,rgba(255,255,255,.55),transparent 30%);
+  animation:comet 2.8s linear infinite;pointer-events:none}
+@keyframes comet{to{transform:rotate(360deg)}}
+#dreamBtn:hover{transform:translateY(-2px) rotate(-.5deg)}
+#dreamBtn:active{transform:scale(.93)}
+#dreamBtn:disabled{filter:grayscale(.7) brightness(.7)}
+/* --- candy dock edit panel --- */
+#editPanel{border-radius:22px;background:linear-gradient(180deg,rgba(20,18,55,.92),rgba(8,10,30,.94));
+  border:1.5px dashed rgba(249,168,212,.6);box-shadow:0 18px 50px rgba(255,107,157,.25);padding:9px;gap:8px}
+#editPanel button{border-radius:15px 15px 15px 4px;box-shadow:0 4px 0 rgba(0,0,0,.3);transition:transform .12s}
+#editPanel button:hover{transform:translateY(-2px) rotate(-1deg)}
+#editPanel button:active{transform:scale(.9)}
+/* --- touch dreamcatcher --- */
+#joyL{background:radial-gradient(circle at 50% 50%,rgba(167,139,250,.18),rgba(255,255,255,.05) 60%,transparent 70%);
+  border:2px dashed rgba(196,181,253,.6);box-shadow:0 0 24px rgba(167,139,250,.35)}
+#joyKnob{background:radial-gradient(circle at 32% 30%,#fff,#f0abfc 40%,#8b5cf6 85%);box-shadow:0 0 22px rgba(240,171,252,.9)}
+#lookHint{border:2px dotted rgba(103,232,249,.5);background:rgba(34,211,238,.07);font-family:"Fredoka";letter-spacing:.4px}
+.actBtn{font-family:"Fredoka";border-radius:20px 20px 20px 6px;border:1.5px solid rgba(253,230,138,.5);
+  background:linear-gradient(180deg,rgba(40,32,90,.9),rgba(14,14,40,.9));box-shadow:0 8px 22px rgba(0,0,0,.5)}
+.actBtn.on{background:linear-gradient(135deg,#fde68a,#a3e635);color:#1a1240;box-shadow:0 0 22px rgba(253,230,138,.7)}
+/* --- grimoire skill panel --- */
+#skillPanel{background:linear-gradient(180deg,#1c1440,#0a0d26);border:2px dashed rgba(253,230,138,.55);border-radius:24px 24px 24px 8px;
+  box-shadow:0 30px 90px rgba(0,0,0,.7),0 0 40px rgba(167,139,250,.25)}
+#skillPanel h2{font-family:"Fredoka";font-size:22px;background:var(--holo);-webkit-background-clip:text;background-clip:text;color:transparent}
+.skillRow{border-radius:16px 16px 16px 5px;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(255,255,255,.03));border:1px dashed rgba(196,181,253,.4)}
+.skillRow:not(.locked){box-shadow:0 0 18px rgba(163,230,53,.18)}
+.skillRow code{font-family:"Space Grotesk";background:rgba(0,0,0,.4);border-radius:8px;padding:2px 8px;display:inline-block}
+#skillClose{border-radius:16px 16px 16px 5px;font-family:"Fredoka";box-shadow:0 8px 26px rgba(167,139,250,.5)}
+/* --- proclamations --- */
+#toast{background:linear-gradient(180deg,rgba(20,16,55,.95),rgba(8,8,26,.95));border:1.5px dashed rgba(103,232,249,.6);
+  border-radius:18px 18px 18px 5px;box-shadow:0 16px 50px rgba(34,211,238,.3);font-family:"Fredoka"}
+#lvlFlash{background:linear-gradient(180deg,#1e1747,#0a0a24);border:2.5px dashed var(--gold);border-radius:26px;box-shadow:0 0 60px rgba(253,230,138,.4)}
+/* --- intro portal --- */
+#intro{background:radial-gradient(60% 50% at 50% 18%,#3b2a7a 0%,#171343 42%,#05051a 100%)}
+#intro::before{content:"☁️ 🦊 ☁️ 🍄 ☁️ 🌈 ☁️ 🛸 ☁️";position:absolute;top:6%;left:0;right:0;text-align:center;font-size:26px;opacity:.8;
+  animation:cloudDrift 9s ease-in-out infinite alternate;pointer-events:none}
+@keyframes cloudDrift{from{transform:translateX(-24px)}to{transform:translateX(24px)}}
+#introCard{position:relative;background:linear-gradient(180deg,rgba(38,30,90,.92),rgba(10,10,34,.94));
+  border:2px dashed rgba(196,181,253,.6);border-radius:28px 28px 28px 10px;box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 60px rgba(167,139,250,.3);overflow:hidden}
+#introCard::before{content:"";position:absolute;inset:0 0 auto 0;height:5px;background:var(--holo)}
+#introCard h1{font-weight:700;letter-spacing:-.5px}
+#introCard h1 span{background:linear-gradient(90deg,#f0abfc,#67e8f9,#a3e635,#fde68a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.featureGrid div{border-radius:15px 15px 15px 4px;background:linear-gradient(180deg,rgba(255,255,255,.1),rgba(0,0,0,.25));border:1px dashed rgba(255,255,255,.25)}
+#startBtn{position:relative;overflow:hidden;border-radius:20px 20px 20px 6px;background:linear-gradient(135deg,#f0abfc,#67e8f9,#a3e635);
+  color:#181040;box-shadow:0 16px 50px rgba(240,171,252,.55);transition:transform .15s}
+#startBtn::after{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent,rgba(255,255,255,.6),transparent 30%);animation:comet 3s linear infinite}
+#startBtn:hover{transform:translateY(-2px) scale(1.02)}
+kbd{background:rgba(253,230,138,.18);border:1px solid rgba(253,230,138,.4);color:var(--gold)}
+/* marquee strip in intro */
+#introMarquee{margin:12px -22px -22px;padding:9px 0;overflow:hidden;white-space:nowrap;background:rgba(0,0,0,.35);
+  border-top:1.5px dashed rgba(196,181,253,.5);font-size:12.5px;letter-spacing:1.5px;color:#e9d5ff}
+#introMarquee span{display:inline-block;padding-left:100%;animation:marq 16s linear infinite}
+@keyframes marq{to{transform:translateX(-100%)}}
+@media (max-width:760px){
+  #topbar{gap:6px} .pill{font-size:11.5px;padding:7px 9px;border-radius:15px}
+  #logo b{display:none}
+  #inkBar{width:64px} #xpBar{width:40px}
+  #leftPanel{top:118px;width:150px}
+  #loomBubble{top:66px;font-size:13px}
+  #editPanel{bottom:calc(env(safe-area-inset-bottom,0px) + 150px)}
+  #introCard{padding:18px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 <script type="importmap">
 { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
@@ -157,7 +243,11 @@
 </head>
 <body>
 <div id="scene"></div>
+<div id="aurora"></div>
+<div id="dreamTint"></div>
 <div id="vignette"></div>
+<div id="grain"></div>
+<div id="fireflies"></div>
 
 <div id="topbar">
   <div class="pill" id="logo">🦊 <b>LOOM &amp; YOU</b></div>
@@ -229,6 +319,7 @@
     </div>
     <button id="startBtn">Wake up together 🌅</button>
     <p class="tiny"><kbd>WASD</kbd> move · drag look · <kbd>Space</kbd> jump · <kbd>F</kbd> fly · tap objects to edit · every dream costs ✨ ink</p>
+    <div id="introMarquee"><span>✦ DREAM TOGETHER ✦ TAP TO REMIX ✦ LOOM LEARNS CODE ✦ VOLCANO · VILLAGE · UFO · JELLYFISH · RAINBOW BRIDGE ✦ DREAM TOGETHER ✦ TAP TO REMIX ✦&nbsp;</span></div>
   </div>
 </div>
 
@@ -241,6 +332,13 @@
   <button id="skillClose">Keep dreaming ✨</button>
 </div>
 <div id="photoFlash"></div>
+<script>
+/* dreamweave ambience: fireflies */
+(function(){var box=document.getElementById('fireflies');if(!box)return;
+  for(var i=0;i<26;i++){var s=document.createElement('i');var sz=(2+Math.random()*5).toFixed(1);
+    s.style.width=s.style.height=sz+'px';s.style.left=(Math.random()*100)+'vw';s.style.top=(30+Math.random()*65)+'vh';
+    s.style.animationDuration=(6+Math.random()*9).toFixed(1)+'s';s.style.animationDelay=(-Math.random()*10).toFixed(1)+'s';box.appendChild(s);}})();
+</script>
 
 <script type="module">
 import * as THREE from 'three';
@@ -650,12 +748,12 @@ function gainXP(n,reason){
     const newly=skillDefs.filter(d=>d.lv===loomLevel);
     const f=$('#lvlFlash');
     f.innerHTML=`<div style="font-size:40px">🎉🦊🎉</div><div style="font-size:20px;font-weight:900">LOOM reached Level ${loomLevel}!</div>
-      <div style="font-size:13px;margin-top:6px">Reward: <b>${lvlRewards[loomLevel]||'🌟 legendary aura'}</b>${newly.length?`<br>New skill: <b>${newly.map(s=>`loom.${s.code}`).join(', ')}</b> ${newly.map(s=>s.icon).join(' ')}`:''}<br><span style="opacity:.7">${reason||''}</span></div>`;
+      <div style="font-size:13px;margin-top:6px">Reward: <b>${lvlRewards[loomLevel]||'🌟 legendary aura'}</b>${newly.length?`<br>New skill: <code>${newly.map(s=>`loom.${s.code}`).join(', ')}</code> ${newly.map(s=>s.icon).join(' ')}`:''}<br><span style="opacity:.7">${reason||''}</span></div>`;
     f.classList.add('show');clearTimeout(f._h);f._h=setTimeout(()=>f.classList.remove('show'),3400);
     burst(loom.position.clone().add(new THREE.Vector3(0,2,0)),0xa3e635,40);
     dreamChord();setTimeout(dreamChord,300);
     say(`I LEVELED UP! I'm Level ${loomLevel} now! I learned ${newly.length?newly.map(s=>s.code).join(' and '):'new tricks'}! ${pick(loomLines.happy)}`);
-    logDream(`🦊 Loom <b>Level ${loomLevel}</b> — learned <b>${newly.length?newly.map(s=>s.code).join(', '):'bonus power'}</b>!`);
+    logDream(`🦊 Loom <b>Level ${loomLevel}</b> — learned <code>${newly.length?newly.map(s=>s.code).join(', '):'bonus power'}</code>!`);
     if(loomLevel>=3)loom.scale.setScalar(1.25+(loomLevel-1)*.08);
   }
 }
@@ -820,16 +918,17 @@ if(localStorage.getItem('loom-dreams-v1')){ // clear seeds, load real
 /* ============ day/night ============ */
 let night=false;
 function setNight(v){night=v;stats.sawNight=stats.sawNight||v;if(v)gainXP(10,'nightmare-night visit');renderQuests();
+  document.body.classList.toggle('night',v);
   $('#dayBtn').textContent=v?'☀️':'🌙';
-  if(v){scene.background.set(0x05071a);scene.fog.color.set(0x0a1030);scene.fog.density=.011;
-    hemi.intensity=.35;sun.intensity=.12;moon.intensity=.9;sunSpr.material.color.set(0xbcd0ff);sunSpr.position.set(-160,130,-40);
+  if(v){scene.background.set(0x070718);scene.fog.color.set(0x141038);scene.fog.density=.011;
+    hemi.intensity=.5;hemi.color.set(0xb79bff);sun.intensity=.12;moon.intensity=1.1;sunSpr.material.color.set(0xc4b5fd);sunSpr.position.set(-160,130,-40);
     stars.material.opacity=1; loomGlow.intensity=12;
     say(pick(loomLines.night));}
   else{scene.background.set(0x0b1026);scene.fog.color.set(0x1a2456);scene.fog.density=.0075;
-    // actually daydream pastel: lerp background to sky blue
-    scene.background.set(0x87b5e8);scene.fog.color.set(0xa8c8ee);
-    hemi.intensity=1.05;sun.intensity=1.9;moon.intensity=0;sunSpr.material.color.set(0xffe9a8);sunSpr.position.set(180,140,60);
-    stars.material.opacity=.25; loomGlow.intensity=7;}
+    // daydream aurora pastel: soft periwinkle-lagoon gradient feel
+    scene.background.set(0x8fb3e8);scene.fog.color.set(0xb9cbf5);
+    hemi.color.set(0xd9c8ff);hemi.intensity=1.1;sun.intensity=2.0;moon.intensity=0;sunSpr.material.color.set(0xffe9a8);sunSpr.position.set(180,140,60);
+    stars.material.opacity=.22; loomGlow.intensity=7;}
   blip(v?300:600,.25,'sine',.14);}
 $('#dayBtn').onclick=()=>setNight(!night);
 setNight(false);
