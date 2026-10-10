@@ -236,6 +236,87 @@ kbd{background:rgba(253,230,138,.18);border:1px solid rgba(253,230,138,.4);color
   #introCard{padding:18px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== LIVING SYSTEMS · console, status strip, instanced life ===== */
+#consoleBtn{position:relative}
+#consoleBtn .dot{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:#a3e635;
+  box-shadow:0 0 8px #a3e635;animation:pulseDot 2s ease-in-out infinite}
+@keyframes pulseDot{0%,100%{opacity:.4;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+#statusStrip{position:fixed;z-index:18;top:calc(env(safe-area-inset-top,0px) + 60px);right:8px;display:flex;flex-direction:column;
+  gap:5px;align-items:flex-end;pointer-events:none}
+.statPill{pointer-events:auto;background:rgba(12,16,38,.6);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.14);
+  border-radius:999px;padding:4px 9px;font-size:11px;font-weight:700;display:flex;gap:6px;align-items:center;white-space:nowrap;
+  font-variant-numeric:tabular-nums;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.statPill b{color:#a3e635;font-weight:900}
+.statPill .lbl{opacity:.6;font-weight:600}
+.statPill.warn b{color:#fbbf24} .statPill.bad b{color:#fb7185}
+#consolePanel{position:fixed;z-index:47;left:50%;top:50%;transform:translate(-50%,-50%) scale(.94);opacity:0;pointer-events:none;
+  width:min(94vw,470px);max-height:86vh;display:flex;flex-direction:column;border-radius:24px 24px 24px 8px;overflow:hidden;
+  background:linear-gradient(180deg,#1c1440f2,#0a0d26f7);border:2px dashed rgba(103,232,249,.5);
+  box-shadow:0 30px 90px rgba(0,0,0,.75),0 0 50px rgba(34,211,238,.2);transition:all .25s}
+#consolePanel.show{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto}
+#consolePanel header{display:flex;align-items:center;gap:8px;padding:12px 14px 8px;border-bottom:1px solid rgba(255,255,255,.1)}
+#consolePanel header h2{margin:0;font-size:16px;font-family:"Fredoka";background:var(--holo);
+  -webkit-background-clip:text;background-clip:text;color:transparent;flex:1}
+.tabRow{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid rgba(255,255,255,.08)}
+.tabRow::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#e2e8f0;
+  border-radius:999px;padding:6px 11px;font-size:12px;font-weight:800;cursor:pointer;font-family:"Fredoka"}
+.tab.on{background:linear-gradient(135deg,#a3e635,#22d3ee);color:#0b1026;border-color:transparent}
+.paneWrap{overflow-y:auto;padding:12px 14px;flex:1}
+.pane{display:none} .pane.on{display:block}
+.pane h4{margin:0 0 8px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#67e8f9;font-weight:900}
+.pane p.d{font-size:12.5px;line-height:1.55;color:#cbd5e1;margin:0 0 10px}
+.metric{display:flex;justify-content:space-between;align-items:center;gap:8px;background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:7px 10px;margin-bottom:6px;font-size:12.5px}
+.metric b{font-variant-numeric:tabular-nums;color:#fde68a}
+.bar{height:7px;border-radius:99px;background:rgba(255,255,255,.14);overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#a3e635,#22d3ee);transition:width .35s}
+.bar.bio i{background:linear-gradient(90deg,#22d3ee,#a78bfa)}
+.bar.age i{background:linear-gradient(90deg,#fde68a,#fb7185)}
+.btnRow{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}
+.btnRow button{border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.09);color:#fff;border-radius:12px;
+  padding:8px 11px;font-size:12px;font-weight:800;cursor:pointer;font-family:"Fredoka";transition:transform .12s}
+.btnRow button:hover{transform:translateY(-2px)}
+.btnRow button:active{transform:scale(.94)}
+.btnRow button.on{background:linear-gradient(135deg,#a3e635,#22d3ee);color:#0b1026}
+.btnRow button:disabled{opacity:.45;cursor:not-allowed}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.swatches{display:flex;gap:4px;margin-top:6px}
+.sw{flex:1;height:26px;border-radius:8px;border:1px solid rgba(255,255,255,.2);font-size:10px;font-weight:900;
+  display:grid;place-items:center;color:#0b1026}
+.isoRow{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border-radius:12px;padding:7px 9px;margin-bottom:6px}
+.isoRow .nm{font-size:12px;font-weight:800;flex:1}
+.isoRow .st{font-size:10.5px;opacity:.8;text-align:right;line-height:1.25}
+.isoRow button{border:0;border-radius:9px;padding:5px 8px;font-size:11px;font-weight:900;cursor:pointer;
+  background:linear-gradient(135deg,#f0abfc,#67e8f9);color:#131040}
+kbd.hk{font-size:10.5px;padding:1px 5px}
+/* ===== mobile ergonomics ===== */
+button,.chip,.tab{touch-action:manipulation}
+#rotHint{position:fixed;inset:0;z-index:80;display:none;place-items:center;padding:22px;
+  background:radial-gradient(ellipse at 50% 40%,#2a1e6b,#05071a);text-align:center}
+#rotHint.show{display:grid}
+#rotHint .phone{font-size:60px;animation:tilt 2.2s ease-in-out infinite}
+@keyframes tilt{0%,100%{transform:rotate(-14deg)}50%{transform:rotate(14deg)}}
+#rotHint p{font-family:"Fredoka";font-size:16px;margin:10px 0 4px}
+#rotHint small{opacity:.7;font-size:12.5px;display:block;margin-bottom:14px}
+#rotHint button{border:0;border-radius:999px;padding:11px 22px;font-weight:900;font-family:"Fredoka";cursor:pointer;
+  background:linear-gradient(135deg,#a3e635,#22d3ee);color:#0b1026}
+#toast{pointer-events:none}
+#topbar,#leftPanel,#statusStrip,#dreamBar{padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
+#skillClose,#consoleClose{-webkit-appearance:none}
+@media (max-width:760px){
+  #statusStrip{top:auto;bottom:calc(env(safe-area-inset-bottom,0px) + 186px);right:max(6px,env(safe-area-inset-right));
+    flex-direction:row;flex-wrap:wrap;justify-content:flex-end;max-width:56vw}
+  .statPill{font-size:10px;padding:3px 7px}
+}
+#coach{position:fixed;z-index:70;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 108px);
+  background:linear-gradient(180deg,#fffaf0,#ffeecd);color:#241d55;border:2px dashed #b79bff;border-radius:18px 18px 18px 6px;
+  padding:11px 14px;font-family:"Fredoka";font-size:13px;box-shadow:0 14px 44px rgba(167,139,250,.5);
+  max-width:min(90vw,430px);text-align:center;opacity:0;pointer-events:none;transition:opacity .35s,transform .35s}
+#coach.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+#coach b{color:#7c3aed}
+
 </style>
 <script type="importmap">
 { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
@@ -259,7 +340,16 @@ kbd{background:rgba(253,230,138,.18);border:1px solid rgba(253,230,138,.4);color
   <button class="iconBtn" id="dayBtn" title="Day/Night">🌙</button>
   <button class="iconBtn" id="photoBtn" title="Photo">📸</button>
   <button class="iconBtn" id="soundBtn" title="Sound">🔊</button>
+  <button class="iconBtn" id="consoleBtn" title="Living systems">🧬<span class="dot"></span></button>
   <button class="iconBtn" id="helpBtn" title="Help">❓</button>
+</div>
+
+<div id="statusStrip">
+  <div class="statPill" id="stBiome">🌿 <span class="lbl">Biome</span> <b>—</b></div>
+  <div class="statPill" id="stAge">🗝 <span class="lbl">Memory</span> <b>0</b></div>
+  <div class="statPill" id="stSwarm">🐝 <span class="lbl">Loomings</span> <b>0</b></div>
+  <div class="statPill" id="stAudio">🔊 <span class="lbl">Chord</span> <b>—</b></div>
+  <div class="statPill" id="stPerf">⚙ <span class="lbl">FPS</span> <b>60</b></div>
 </div>
 
 <div id="loomBubble" class="hidden"><small>🦊 Loom · your dream partner</small><span id="loomText">…</span></div>
@@ -315,7 +405,7 @@ kbd{background:rgba(253,230,138,.18);border:1px solid rgba(253,230,138,.4);color
       <div>🦊 <b>Living partner:</b> moods, memories, suggestions, auto-dreams</div>
       <div>📱 <b>Tablet-first:</b> twin sticks, tap-to-edit, voice dreaming</div>
       <div>🧪 <b>Experimental:</b> dream-ink economy, daydream/nightmare skies, photo quests</div>
-      <div>💻 <b>NEW · Code Skills:</b> Loom gains XP, levels 1→6, learns sprout() glow() loop() + earns rewards</div>
+      <div>💻 <b>Code Skills ∞:</b> Loom gains XP, levels 1→12 then Dreamweave forever — 24 skills + petting + Dreamdex</div>
     </div>
     <button id="startBtn">Wake up together 🌅</button>
     <p class="tiny"><kbd>WASD</kbd> move · drag look · <kbd>Space</kbd> jump · <kbd>F</kbd> fly · tap objects to edit · every dream costs ✨ ink</p>
@@ -323,13 +413,45 @@ kbd{background:rgba(253,230,138,.18);border:1px solid rgba(253,230,138,.4);color
   </div>
 </div>
 
+<div id="coach"></div>
+<div id="rotHint">
+  <div>
+    <div class="phone">📱</div>
+    <p>Turn sideways for the dream</p>
+    <small>Loom &amp; You breathes best in landscape.</small>
+    <button id="rotOk">Dream anyway ✨</button>
+  </div>
+</div>
 <div id="toast"></div>
 <div id="lvlFlash"></div>
 <div id="skillPanel">
   <h2>🦊 Loom's Code Skills</h2>
-  <div class="sub">Your co-pilot learns <b>dream-code</b> as you create together. Earn XP → level up → unlock skills + rewards. Tap the 🦊 pill to view.</div>
+  <div class="sub">Your co-pilot learns <b>dream-code</b> as you create together. Earn XP → level up → unlock skills + rewards. <b>24 skills · Lv 1–12 · then ∞ Dreamweave forever.</b> Tap the 🦊 pill to view. Psst — you can <b>pet Loom</b> in 3D for XP!</div>
   <div id="skillList"></div>
   <button id="skillClose">Keep dreaming ✨</button>
+</div>
+
+<div id="consolePanel">
+  <header>
+    <h2>🧬 Living Systems</h2>
+    <button class="iconBtn" id="consoleClose" style="width:34px;height:34px;font-size:15px">✕</button>
+  </header>
+  <div class="tabRow">
+    <button class="tab on" data-tab="eco">🌿 Ecosystem</button>
+    <button class="tab" data-tab="mem">🗝 Memory</button>
+    <button class="tab" data-tab="swarm">🐝 Swarm</button>
+    <button class="tab" data-tab="snd">🔊 Soundscape</button>
+    <button class="tab" data-tab="perf">⚙ Perf</button>
+    <button class="tab" data-tab="save">💾 Save</button>
+  </div>
+  <div class="paneWrap">
+    <div class="pane on" id="pane-eco"></div>
+    <div class="pane" id="pane-mem"></div>
+    <div class="pane" id="pane-swarm"></div>
+    <div class="pane" id="pane-snd"></div>
+    <div class="pane" id="pane-perf"></div>
+    <div class="pane" id="pane-save"></div>
+  </div>
 </div>
 <div id="photoFlash"></div>
 <script>
@@ -342,6 +464,7 @@ kbd{background:rgba(253,230,138,.18);border:1px solid rgba(253,230,138,.4);color
 
 <script type="module">
 import * as THREE from 'three';
+import { ResonanceReefs, reefBus } from './src/ResonanceReefs.js';
 
 /* ============ utils ============ */
 const $=s=>document.querySelector(s);
@@ -352,11 +475,104 @@ if(('ontouchstart' in window)||navigator.maxTouchPoints>0) document.body.classLi
 function toast(msg,ms=1800){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),ms);}
 function say(text,ms=5200){$('#loomText').textContent=text;const b=$('#loomBubble');b.classList.remove('hidden');clearTimeout(b._h);b._h=setTimeout(()=>b.classList.add('hidden'),ms);}
 function logDream(html){const d=document.createElement('div');d.innerHTML=html;const box=$('#dreamLog');box.prepend(d);while(box.children.length>5)box.lastChild.remove();}
+// particle pool — declared up front so burst() is safe from any init-time caller
+const bursts=[];
+const SAVE_KEY='loom-save-v2', SAVE_VER=2;
+function readSave(){
+  try{const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');return s&&s.v===SAVE_VER?s:null;}catch(e){return null;}
+}
+function writeSave(patch){
+  const cur=readSave()||{v:SAVE_VER};
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify(Object.assign(cur,patch,{v:SAVE_VER})));}catch(e){}
+  return cur;
+}
+// one-time migration from the scattered v1 keys
+function migrateLegacy(){
+  if(readSave())return false;
+  const get=k=>{try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}};
+  const skills=get('loom-skills-v1'), dex=get('loom-dex-v1'), world=get('loom-world-v1');
+  if(!skills&&!dex&&!world)return false;
+  writeSave({
+    skills:skills||{xp:0,lv:1},
+    dex:dex||{},
+    world:world||{hiddenUnlocked:false,artifacts:[],swarmJob:'harvest',perfs:{tier:'high',auto:true}},
+    migratedAt:Date.now()
+  });
+  try{['loom-skills-v1','loom-dex-v1','loom-world-v1','loom-dreams-v1'].forEach(k=>localStorage.removeItem(k));}catch(e){}
+  return true;
+}
+function exportSave(){
+  const s=readSave();
+  if(!s){toast('Nothing to export yet — dream something first 💭');return;}
+  const blob=new Blob([JSON.stringify(s,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`loom-dreamworld-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  toast('💾 Dream world exported');
+}
+function importSave(){
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='application/json,.json';
+  inp.onchange=()=>{
+    const f=inp.files&&inp.files[0];if(!f)return;
+    const rd=new FileReader();
+    rd.onload=()=>{
+      try{
+        const j=JSON.parse(String(rd.result));
+        if(!j||typeof j!=='object'||!j.skills)throw new Error('shape');
+        localStorage.setItem(SAVE_KEY,JSON.stringify(Object.assign({},j,{v:SAVE_VER})));
+        toast('📥 Imported! Reloading the dream world…');
+        setTimeout(()=>location.reload(),900);
+      }catch(e){toast('⚠️ That file is not a Loom dream save.');}
+    };
+    rd.readAsText(f);
+  };
+  inp.click();
+}
+function resetSave(){
+  if(!confirm('Erase this entire dream world — islands, Loom, skills and all?'))return;
+  try{Object.keys(localStorage).filter(k=>k.startsWith('loom-')).forEach(k=>localStorage.removeItem(k));}catch(e){}
+  toast('🌌 Wiped clean. A new dream awaits…');
+  setTimeout(()=>location.reload(),900);
+}
+function buzz(ms){try{if(navigator.vibrate&&soundOn)navigator.vibrate(ms);}catch(e){}}
+$('#rotOk').onclick=()=>{$('#rotHint').classList.remove('show');rotDismissed=true;localStorage.setItem('loom-rot','1');buzz(8);};
+let rotDismissed=localStorage.getItem('loom-rot')==='1';
+function checkOrientation(){
+  if(rotDismissed)return;
+  const portrait=innerHeight>innerWidth;
+  const phoneish=innerWidth<820&&matchMedia('(pointer:coarse)').matches;
+  $('#rotHint').classList.toggle('show',portrait&&phoneish);
+}
+addEventListener('resize',checkOrientation);addEventListener('orientationchange',()=>setTimeout(checkOrientation,120));
+/* first-run coach marks */
+const COACH=[
+  {id:'dream', t:'Type a <b>dream</b> below (or tap a chip) and watch it bloom in 3D.'},
+  {id:'tap',  t:'<b>Tap</b> anything you dream to remix · grow · candy-fy · banish it.'},
+  {id:'pet',  t:'<b>Tap Loom</b> himself for a heart-bond and bonus XP 💜'},
+  {id:'sys',  t:'Open the <b>🧬 Living Systems</b> console: ecosystem, memory decay, swarm, soundscape, perf.'},
+];
+let coachStep=parseInt(localStorage.getItem('loom-coach')||'0',10)||0;
+function coachShow(i){
+  const el=$('#coach');
+  if(i>=COACH.length||coachStep>=COACH.length){el.classList.remove('show');return;}
+  const c=COACH[i];
+  if(!c)return;
+  el.innerHTML=c.t;el.classList.add('show');
+  coachStep=Math.max(coachStep,i+1);
+  try{localStorage.setItem('loom-coach',String(coachStep));}catch(e){}
+  clearTimeout(coachShow._t);
+  coachShow._t=setTimeout(()=>el.classList.remove('show'),7000);
+}
+function coachAdvance(){if(coachStep<COACH.length)coachShow(coachStep);}
 
 /* ============ audio (tiny synth, no assets) ============ */
 let AC=null, soundOn=true;
-function ac(){if(!AC){AC=new (window.AudioContext||window.webkitAudioContext)();}if(AC.state==='suspended')AC.resume();return AC;}
-function blip(f=520,d=.18,type='sine',g=.16){if(!soundOn)return;try{const c=ac(),o=c.createOscillator(),v=c.createGain();o.type=type;o.frequency.setValueAtTime(f,c.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(60,f*.5),c.currentTime+d);v.gain.setValueAtTime(g,c.currentTime);v.gain.exponentialRampToValueAtTime(.0001,c.currentTime+d);o.connect(v).connect(c.destination);o.start();o.stop(c.currentTime+d);}catch(e){}}
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return null;}}
+  if(AC.state==='suspended')AC.resume().catch(()=>{});return AC;}
+function blip(f=520,d=.18,type='sine',g=.16){if(!soundOn)return;try{const c=ac();if(!c)return;const o=c.createOscillator(),v=c.createGain();o.type=type;o.frequency.setValueAtTime(f,c.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(60,f*.5),c.currentTime+d);v.gain.setValueAtTime(g,c.currentTime);v.gain.exponentialRampToValueAtTime(.0001,c.currentTime+d);o.connect(v).connect(c.destination);o.start();o.stop(c.currentTime+d);}catch(e){}}
 function dreamChord(){[523,659,784,1046].forEach((f,i)=>setTimeout(()=>blip(f,.35,'sine',.12),i*90));}
 function popSnd(){blip(rand(300,700),.12,'triangle',.14);}
 $('#soundBtn').onclick=()=>{soundOn=!soundOn;$('#soundBtn').textContent=soundOn?'🔊':'🔇';};
@@ -368,6 +584,12 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+// Shadows are the single most expensive pass here, so we render them on demand
+// instead of every frame: the map is only re-rendered when the world actually changes.
+renderer.shadowMap.autoUpdate=false;
+renderer.shadowMap.needsUpdate=true;
+let shadowDirty=2;
+function markShadowDirty(n){shadowDirty=Math.max(shadowDirty,n||1);}
 container.appendChild(renderer.domElement);
 
 const scene=new THREE.Scene();
@@ -415,38 +637,58 @@ for(let i=0;i<3;i++){const rg=new THREE.RingGeometry(30+i*28,30.6+i*28,96);
 const dreamGroup=new THREE.Group(); scene.add(dreamGroup); // all player/loom creations
 const islands=[];
 function noiseH(x,z){return Math.sin(x*.35)*Math.cos(z*.3)*1.2+Math.sin(x*.12+z*.21)*1.8;}
+const TOP_Y=1.35;
+// height of an island's walkable surface (shared by geometry + collision so they never disagree)
+function islandH(x,z){return TOP_Y+Math.max(0,noiseH(x,z)*.12);}
 function makeIsland(x,z,r,colorTop=0x7ddf8e,colorSide=0x8a6a4f){
-  const geo=new THREE.CylinderGeometry(r,r*1.18,7,28,3);
-  const pos=geo.attributes.position;
-  for(let i=0;i<pos.count;i++){const vx=pos.getX(i),vz=pos.getZ(i);
-    if(pos.getY(i)>0){pos.setY(i, pos.getY(i)+noiseH(vx+x,vz+z)*.55);}}
-  geo.computeVertexNormals();
-  const mat=new THREE.MeshStandardMaterial({color:colorSide,roughness:.9});
-  const m=new THREE.Mesh(geo,mat);m.position.set(x,-2.4,z);m.receiveShadow=true;m.castShadow=true;scene.add(m);
-  const topGeo=new THREE.CircleGeometry(r*.99,28);
-  const tp=topGeo.attributes.position;
-  for(let i=0;i<tp.count;i++){tp.setZ(i, tp.getZ(i)+0); }
-  const top=new THREE.Mesh(topGeo,new THREE.MeshStandardMaterial({color:colorTop,roughness:.85}));
-  top.rotation.x=-Math.PI/2;top.position.set(x,1.35,z);top.receiveShadow=true;scene.add(top);
-  // beach rim
-  const rim=new THREE.Mesh(new THREE.TorusGeometry(r*.99, .55, 10, 40),
-    new THREE.MeshStandardMaterial({color:0xfde68a,roughness:.8}));
-  rim.rotation.x=Math.PI/2;rim.position.set(x,.55,z);scene.add(rim);
-  islands.push({x,z,r,topY:1.35});
+  // cliff walls: top rim sits BELOW the lowest walkable height so nothing z-fights
+  const geo=new THREE.CylinderGeometry(r,r*1.15,7,44,1);
+  const m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:colorSide,roughness:.92}));
+  m.position.set(x,TOP_Y-.16-3.5,z);m.receiveShadow=true;m.castShadow=true;scene.add(m);
+  // walkable surface as a radial grid sampling islandH() — visual and collision agree
+  const RINGS=9,SEG=44,pos=[],idx=[];
+  pos.push(x,islandH(x,z),z);                       // centre vertex
+  for(let ri=1;ri<=RINGS;ri++){
+    const rr=r*.995*(ri/RINGS);
+    for(let si=0;si<SEG;si++){
+      const a=si/SEG*Math.PI*2, px=Math.cos(a)*rr, pz=Math.sin(a)*rr;
+      pos.push(x+px,islandH(x+px,z+pz),z+pz);
+    }
+  }
+  // wind counter-clockwise seen from above so normals face +Y
+  for(let si=0;si<SEG;si++){const a=1+si,b=1+(si+1)%SEG;idx.push(0,b,a);}
+  for(let ri=1;ri<RINGS;ri++){
+    const base=1+(ri-1)*SEG, next=1+ri*SEG;
+    for(let si=0;si<SEG;si++){
+      const s2=(si+1)%SEG;
+      idx.push(base+si,base+s2,next+si, base+s2,next+s2,next+si);
+    }
+  }
+  const tg=new THREE.BufferGeometry();
+  tg.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  tg.setIndex(idx);tg.computeVertexNormals();
+  const top=new THREE.Mesh(tg,new THREE.MeshStandardMaterial({color:colorTop,roughness:.85,flatShading:false}));
+  top.receiveShadow=true;top.castShadow=true;scene.add(top);
+  // beach rim tucked under the surface edge
+  const rim=new THREE.Mesh(new THREE.TorusGeometry(r*.99,.5,10,44),
+    new THREE.MeshStandardMaterial({color:0xfde68a,roughness:.85}));
+  rim.rotation.x=Math.PI/2;rim.position.set(x,TOP_Y-.2,z);scene.add(rim);
+  islands.push({x,z,r,topY:TOP_Y});
+  islandTops.push(top);
   return {base:m,top};
 }
+const islandTops=[];
 makeIsland(0,0,22,0x86efac);
 makeIsland(44,-18,14,0xf9a8d4);
 makeIsland(-42,-24,15,0x93c5fd);
 makeIsland(-8,-58,17,0xfde68a);
 makeIsland(30,42,13,0xc4b5fd);
 makeIsland(-36,38,12,0x6ee7b7);
-// starter decor: a few trees + lanterns so first frame is alive
+// walkable height with a soft shoreline so you slide into the sea instead of cliff-dropping
 function groundY(x,z){
-  // find island
   let best=null,bd=1e9;
   for(const isl of islands){const d=Math.hypot(x-isl.x,z-isl.z);if(d<bd){bd=d;best=isl;}}
-  if(best&&bd<best.r) return best.topY+Math.max(0,noiseH(x,z)*.12);
+  if(best&&bd<best.r){const edge=clamp((best.r-bd)/2.2,0,1);return -1.2+(islandH(x,z)+1.2)*edge;}
   return -1.2;
 }
 
@@ -485,15 +727,13 @@ const Builders={
     const win2=win.clone();win2.position.x=.8;g.add(win2);
     const glow=new THREE.PointLight(0xffd27a,6,10);glow.position.set(0,2,2);g.add(glow);
     g.position.copy(p);shadowify(g);return tagSelectable(g,'cozy house');},
-  village(p){const g=new THREE.Group();for(let i=0;i<5;i++){const h=Builders.house(new THREE.Vector3(rand(-10,10),0,rand(-10,10)));g.add(h.clone?h:h);} 
-    // NOTE: Builders.house already adds to dreamGroup; reparent: move children
-    // simpler: build 5 houses inline
-    g.clear();for(let i=0;i<5;i++){const bx=rand(-10,10),bz=rand(-10,10);
+  village(p){const g=new THREE.Group();
+    // build inline so nothing leaks into dreamGroup/selectable
+    for(let i=0;i<5;i++){const bx=rand(-10,10),bz=rand(-10,10);
       const base=new THREE.Mesh(new THREE.BoxGeometry(2.4,1.9,2.2),new THREE.MeshStandardMaterial({color:pick([0xfff7e8,0xfde68a,0xe0e7ff]),roughness:.8}));base.position.set(bx,.95,bz);
       const roof=new THREE.Mesh(new THREE.ConeGeometry(2,1.3,4),new THREE.MeshStandardMaterial({color:pick([0xf43f5e,0x8b5cf6,0x0ea5e9,0x10b981]),flatShading:true}));roof.position.set(bx,2.5,bz);roof.rotation.y=Math.PI/4;
-      g.add(base,roof);}
-    // remove the accidentally added houses from dreamGroup/selectable
-    for(let i=selectable.length-1;i>=0;i--){if(selectable[i].userData.label==='cozy house'&&selectable[i].position.distanceTo(p)<1){dreamGroup.remove(selectable[i]);selectable.splice(i,1);}}
+      const door=new THREE.Mesh(new THREE.BoxGeometry(.6,1.1,.08),new THREE.MeshStandardMaterial({color:0x5b3a29}));door.position.set(bx,.55,bz+1.11);
+      g.add(base,roof,door);}
     const lamp=new THREE.PointLight(0xffd27a,20,30);lamp.position.y=4;g.add(lamp);
     g.position.copy(p);shadowify(g);return tagSelectable(g,'village');},
   castle(p){const g=new THREE.Group();const stone=new THREE.MeshStandardMaterial({color:0xe2e8f0,roughness:.85});
@@ -595,7 +835,7 @@ function parseDream(text){
   if(has('rainbow')) return {fn:'rainbow',ink:12,blurb:'a rainbow arch'};
   if(has('jelly','jellyfish','float','sky whale','balloon')) return {fn:'jellyfish',ink:14,blurb:'a drift of dream jellyfish'};
   if(has('lantern','light','firefly','star lamp')) return {fn:'lanterns',ink:12,blurb:'floating lanterns'};
-  if(has('windmill','wind мельница'.toLowerCase(),'mill')) return {fn:'windmill',ink:12,blurb:'a sleepy windmill'};
+  if(has('windmill','wind','mill')) return {fn:'windmill',ink:12,blurb:'a sleepy windmill'};
   if(has('desert','cactus','sand','dune')) return {fn:'cactus',ink:11,blurb:'a tiny desert'};
   if(has('flower','garden','meadow','blossom','rose','tulip')) return {fn:'garden',ink:11,blurb:'a flower garden'};
   if(has('ufo','alien','spaceship','saucer','airship')) return {fn:'ufo',ink:16,blurb:'a curious UFO'};
@@ -649,23 +889,26 @@ loom.position.set(2.5,1.35,6); loom.scale.setScalar(1.25); scene.add(loom);
 
 /* ============ movement / camera ============ */
 const keys={};
-addEventListener('keydown',e=>{keys[e.code]=true;
-  if(e.code==='Space')e.preventDefault();
+const typing=e=>{const a=e.target;return a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA'||a.isContentEditable);};
+addEventListener('keydown',e=>{
+  if(typing(e))return;              // never move/fly while typing a dream
+  keys[e.code]=true;
+  if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
   if(e.code==='KeyF')toggleFly();
-  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
-  if(e.code==='Enter'&&document.activeElement===$('#prompt'))dreamFromInput();
 });
 addEventListener('keyup',e=>keys[e.code]=false);
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false;}); // no stuck keys on tab switch
 let yaw=Math.PI, pitch=-.32, dist=9.5;
 let flying=false, vy=0, grounded=true;
 function toggleFly(){flying=!flying;$('#flyBtn').textContent=flying?'🦅':'🕊️';$('#mFly').classList.toggle('on',flying);
   toast(flying?'🕊️ Dream-flight ON — swim through sky':'🚶 Walking again');blip(flying?700:400,.2,'sine',.15); loomMood(flying?'amazed':'calm');}
-// drag look (mouse + touch right half)
-let dragging=false,lx=0,ly=0;
-renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;lx=e.clientX;ly=e.clientY;});
+// drag look (mouse + touch). Only starts on the canvas itself, so HUD drags never spin the camera.
+let dragging=false,lx=0,ly=0,moved=0;
+renderer.domElement.addEventListener('pointerdown',e=>{dragging=true;moved=0;lx=e.clientX;ly=e.clientY;});
 addEventListener('pointerup',()=>dragging=false);
-addEventListener('pointermove',e=>{if(!dragging)return;if(e.target.closest&&e.target.closest('#dreamBar,#topbar,#leftPanel,#editPanel,#touchUI,#intro'))return;
-  const dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;
+addEventListener('pointercancel',()=>dragging=false);
+addEventListener('pointermove',e=>{if(!dragging)return;
+  const dx=e.clientX-lx,dy=e.clientY-ly;lx=e.clientX;ly=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);
   yaw-=dx*.0052;pitch=clamp(pitch-dy*.004,-1.15,.5);});
 addEventListener('wheel',e=>{dist=clamp(dist+e.deltaY*.01,4,22);},{passive:true});
 // joystick
@@ -709,57 +952,785 @@ function renderQuests(){const ul=$('#quests');ul.innerHTML='';
 renderQuests();
 $('#questToggle').onclick=()=>$('#questCard').classList.toggle('open');
 
-/* ============ Loom coding skills + rewards ============ */
+migrateLegacy();
+
+/* ============ Loom coding skills + rewards · UNLIMITED progression ============ */
+const HAND_MAX=12;
 const skillDefs=[
-  {id:'sprout', icon:'🌱', code:'sprout()', name:'Sprout', desc:'Bigger Grow button (+25% size), cheaper dreams.', lv:1},
+  {id:'sprout', icon:'🌱', code:'sprout()', name:'Sprout', desc:'Bigger Grow button, dreams cost −1 ✨.', lv:1},
+  {id:'inkwell', icon:'💧', code:'inkwell()', name:'Inkwell', desc:'Wandering refills ✨ ink 60% faster.', lv:1},
   {id:'glow', icon:'💡', code:'glow()', name:'Glow', desc:'Candy-fy adds a real light. Lanterns + crystals shine brighter.', lv:2},
   {id:'loop', icon:'⧉', code:'loop(3)', name:'Loop', desc:'Duplicate leaves an extra mini-copy. Remixes grant bonus XP.', lv:2},
   {id:'terraform', icon:'🌋', code:'terraform()', name:'Terraform', desc:'Volcano / lake / crystal / desert cost −4 ✨ ink.', lv:3},
+  {id:'tidecall', icon:'🌊', code:'tidecall()', name:'Tidecall', desc:'Lake + bridge cost −4 ✨. You float higher over ocean.', lv:3},
   {id:'levitate', icon:'🎈', code:'levitate()', name:'Levitate', desc:'+40% fly speed, jellyfish & UFO float higher.', lv:4},
-  {id:'skyweave', icon:'🌈', code:'skyweave()', name:'Skyweave', desc:'Rainbow + bridge cost −4 ✨. Loom auto-dreams twice as often.', lv:5},
+  {id:'songline', icon:'🎵', code:'songline()', name:'Songline', desc:'Every dream sings: richer chord + bonus XP.', lv:4},
+  {id:'skyweave', icon:'🌈', code:'skyweave()', name:'Skyweave', desc:'Rainbow + lanterns + jellyfish cost −4 ✨. Loom auto-dreams 2× as often.', lv:5},
+  {id:'heartbond', icon:'💜', code:'heartbond()', name:'Heartbond', desc:'Tap / pet Loom himself for bonus XP + hearts. He glows brighter.', lv:5},
+  {id:'bloom', icon:'🌸', code:'bloom()', name:'Bloom', desc:'Garden + forest + mushroom cost −4 ✨. Flowers spawn bigger.', lv:6},
+  {id:'prism', icon:'🔮', code:'prism()', name:'Prism', desc:'Candy-fy light ×2. Crystals + rainbows glow at night.', lv:6},
+  {id:'skysail', icon:'⛵', code:'skysail()', name:'Skysail', desc:'Another +40% fly speed (stacks). Bridges stretch longer.', lv:7},
+  {id:'echo', icon:'🔊', code:'echo()', name:'Echo', desc:'Duplicate drops TWO mini-copies. Photos grant +50% XP.', lv:7},
+  {id:'stardrape', icon:'✨', code:'stardrape()', name:'Stardrape', desc:'Night ink-regen ×2. Stars + lanterns burn brighter.', lv:8},
+  {id:'quake', icon:'🌍', code:'quake()', name:'Quake', desc:'Volcano + castle cost −4 ✨. Volcanoes erupt bigger bursts.', lv:8},
+  {id:'overgrowth', icon:'🌳', code:'overgrowth()', name:'Overgrowth', desc:'Grow ×2 size. Forests spawn 12 trees instead of 9.', lv:9},
+  {id:'moonmilk', icon:'🌙', code:'moonmilk()', name:'Moonmilk', desc:'Night visits +25 XP. +20 max ✨ ink, forever.', lv:9},
+  {id:'aurora', icon:'🌌', code:'aurora()', name:'Aurora', desc:'Nightmare-night turns aurora-teal. Night XP doubled.', lv:10},
+  {id:'golemheart', icon:'🪨', code:'golemheart()', name:'Golemheart', desc:'Golems bounce happily + grant XP. Houses glow warmer.', lv:10},
+  {id:'recursion', icon:'♾️', code:'recursion()', name:'Recursion', desc:'ALL XP +50%. Remixes can trigger an echo-copy.', lv:11},
+  {id:'timeloop', icon:'⏳', code:'timeloop()', name:'Timeloop', desc:'Auto-dreams 2× faster again (stacks). Idle chatter grants XP.', lv:11},
+  {id:'dreamdex', icon:'📖', code:'dreamdex()', name:'Dreamdex', desc:'First dream of each type +30 XP. Collection shown in skill book.', lv:12},
+  {id:'loomgod', icon:'👑', code:'loomgod()', name:'Loomgod', desc:'Everything −1 ✨ more. +40 max ink. Golden aura + crown.', lv:12},
 ];
-const lvlRewards={2:'+20 max ✨ ink',3:'gold crown 👑 + new chips',4:'faster flight 🦅',5:'rapid auto-dreams ⚡',6:'legendary aura 🌟'};
+const lvlRewards={2:'+20 max ✨ ink',3:'gold crown 👑',4:'faster flight 🦅',5:'pet Loom 💜',6:'prism lights 🔮',7:'echo copies 🔊',8:'night regen ✨',9:'overgrowth 🌳',10:'aurora night 🌌',11:'XP ×1.5 ♾️',12:'Dreamdex 📖 + 👑'};
+const masteryOf=lv=>Math.max(0,lv-HAND_MAX);
 let loomXP=0, loomLevel=1;
-try{const s=JSON.parse(localStorage.getItem('loom-skills-v1')||'{}');loomXP=s.xp||0;loomLevel=s.lv||1;}catch(e){}
-const xpNeed=()=>loomLevel*40;
+try{const s=(readSave()&&readSave().skills)||{xp:0,lv:1};loomXP=s.xp||0;loomLevel=Math.min(999,Math.max(1,s.lv||1));}catch(e){}
+let discovered={};
+try{discovered=(readSave()&&readSave().dex)||{};}catch(e){discovered={};}
+const xpNeed=()=>40+(loomLevel-1)*20;
 function hasSkill(id){const d=skillDefs.find(s=>s.id===id);return d&&loomLevel>=d.lv;}
+const xpMultiplier=()=>1+masteryOf(loomLevel)*.06+(hasSkill('recursion')?.5:0);
+const flyMultiplier=()=> (hasSkill('levitate')?1.4:1)*(hasSkill('skysail')?1.4:1)*(1+masteryOf(loomLevel)*.04);
+const regenMultiplier=night=>(hasSkill('inkwell')?1.6:1)*((hasSkill('stardrape')&&night)?2:1)*((hasSkill('moonmilk')&&night)?1.5:1)*(1+masteryOf(loomLevel)*.03);
+const autoIntervalMs=()=>26000/(hasSkill('skyweave')?2:1)/(hasSkill('timeloop')?2:1)/(1+masteryOf(loomLevel)*.15);
+function discountFor(fn){
+  let d=0;
+  if(hasSkill('sprout'))d+=1;
+  if(hasSkill('terraform')&&['volcano','lake','crystal','cactus'].includes(fn))d+=4;
+  if(hasSkill('tidecall')&&['lake','bridge'].includes(fn))d+=4;
+  if(hasSkill('skyweave')&&['rainbow','bridge','jellyfish','lanterns'].includes(fn))d+=4;
+  if(hasSkill('bloom')&&['garden','forest','mushroom','tree'].includes(fn))d+=4;
+  if(hasSkill('quake')&&['volcano','castle'].includes(fn))d+=4;
+  if(hasSkill('loomgod'))d+=1;
+  d+=masteryOf(loomLevel);
+  return d;
+}
 function renderSkills(){
-  if(loomLevel>=2)maxInk=120; if(loomLevel>=5)maxInk=140;
-  $('#loomLvl').textContent=(loomLevel>=3?'👑 ':'')+'Lv '+loomLevel;
+  maxInk=Math.min(400,100+(loomLevel-1)*10+(hasSkill('loomgod')?40:0)+(hasSkill('moonmilk')?20:0)+(window._maxInkBonus||0));
+  const crown=loomLevel>=3?'👑 ':'';const inf=masteryOf(loomLevel)>0?` ∞${masteryOf(loomLevel)}`:'';
+  $('#loomLvl').textContent=crown+'Lv '+loomLevel+inf;
   $('#xpFill').style.width=clamp(loomXP/xpNeed()*100,0,100)+'%';
   const box=$('#skillList');if(!box)return;box.innerHTML='';
+  const m=masteryOf(loomLevel);
+  if(m>0){const b=document.createElement('div');b.className='skillRow';
+    b.innerHTML=`<div class="ic">🌟</div><div><code>loom.dreamweave(${m})</code><p><b>Dreamweave +${m}</b> · infinite mastery — +${m*10} max ✨, +${Math.round(m*6)}% XP, −${m} ✨ cost, +${Math.round(m*4)}% fly.</p></div><span class="tag on">∞ ACTIVE</span>`;
+    box.appendChild(b);}
+  // next infinite preview
+  const nx=document.createElement('div');nx.className='sub';
+  nx.innerHTML=`Next: <b>Lv ${loomLevel+1}</b> needs <b>${xpNeed()} XP</b>${loomLevel+1>HAND_MAX?` → <code>loom.dreamweave(${m+1})</code>`:''} · You have <b>${loomXP}</b> XP`;
+  box.appendChild(nx);
   skillDefs.forEach(d=>{
     const un=loomLevel>=d.lv;
     const row=document.createElement('div');row.className='skillRow'+(un?'':' locked');
-    row.innerHTML=`<div class="ic">${d.icon}</div><div><code>loom.${d.code}</code><p><b>${d.name}</b> · unlocks Lv ${d.lv} — ${d.desc}</p></div><span class="tag ${un?'on':'off'}">${un?'LEARNED':'Lv '+d.lv}</span>`;
+    row.innerHTML=`<div class="ic">${d.icon}</div><div><code>loom.${d.code}</code><p><b>${d.name}</b> · Lv ${d.lv} — ${d.desc}</p></div><span class="tag ${un?'on':'off'}">${un?'LEARNED':'Lv '+d.lv}</span>`;
     box.appendChild(row);
   });
+  // dreamdex collection
+  const types=['tree','forest','mushroom','crystal','house','village','castle','volcano','lake','rainbow','jellyfish','lanterns','windmill','cactus','garden','ufo','golem','bridge','orb'];
+  const got=types.filter(t=>discovered[t]);
   const p=document.createElement('div');p.className='sub';
-  p.innerHTML=`XP <b>${loomXP}/${xpNeed()}</b> → next level · Rewards: ${Object.entries(lvlRewards).map(([l,r])=>`Lv${l} ${r}`).join(' · ')}`;
+  p.innerHTML=`📖 Dreamdex <b>${got.length}/${types.length}</b> ${got.length?('· '+got.map(t=>({tree:'🌳',forest:'🌲',mushroom:'🍄',crystal:'💎',house:'🏠',village:'🏘️',castle:'🏰',volcano:'🌋',lake:'🌊',rainbow:'🌈',jellyfish:'🎐',lanterns:'🏮',windmill:'🌬️',cactus:'🌵',garden:'🌸',ufo:'🛸',golem:'🪨',bridge:'🌉',orb:'🔮'}[t]||'✨')).join(' ')):'· dream new things to fill it!'}`;
   box.appendChild(p);
-  try{localStorage.setItem('loom-skills-v1',JSON.stringify({xp:loomXP,lv:loomLevel}));}catch(e){}
+  const r=document.createElement('div');r.className='sub';
+  r.innerHTML=`Rewards: ${Object.entries(lvlRewards).map(([l,rd])=>`Lv${l} ${rd}`).join(' · ')} · <b>Lv13+ ∞ Dreamweave</b> every level, forever`;
+  box.appendChild(r);
+  writeSave({skills:{xp:loomXP,lv:loomLevel}});
 }
-function gainXP(n,reason){
-  if(!n)return;loomXP+=n;
+function gainXP(raw,reason){
+  if(!raw)return;
+  loomXP+=Math.round(raw*xpMultiplier());
   let ups=0;
-  while(loomXP>=xpNeed()&&loomLevel<6){loomXP-=xpNeed();loomLevel++;ups++;}
+  let guard=0;
+  while(loomXP>=xpNeed()&&loomLevel<999&&guard++<50){loomXP-=xpNeed();loomLevel++;ups++;}
   renderSkills();
   if(ups>0){
-    const newly=skillDefs.filter(d=>d.lv===loomLevel);
+    const newly=skillDefs.filter(d=>d.lv>loomLevel-ups&&d.lv<=loomLevel);
+    const m=masteryOf(loomLevel);
+    const reward=loomLevel>HAND_MAX?`🌟 Dreamweave +${m} (∞)`:(lvlRewards[loomLevel]||'🌟 legendary aura');
     const f=$('#lvlFlash');
-    f.innerHTML=`<div style="font-size:40px">🎉🦊🎉</div><div style="font-size:20px;font-weight:900">LOOM reached Level ${loomLevel}!</div>
-      <div style="font-size:13px;margin-top:6px">Reward: <b>${lvlRewards[loomLevel]||'🌟 legendary aura'}</b>${newly.length?`<br>New skill: <code>${newly.map(s=>`loom.${s.code}`).join(', ')}</code> ${newly.map(s=>s.icon).join(' ')}`:''}<br><span style="opacity:.7">${reason||''}</span></div>`;
+    f.innerHTML=`<div style="font-size:40px">🎉🦊🎉</div><div style="font-size:20px;font-weight:900">LOOM reached Level ${loomLevel}${m>0?' ∞':''}!</div>
+      <div style="font-size:13px;margin-top:6px">Reward: <b>${reward}</b>${newly.length?`<br>New skill: <code>${newly.map(s=>`loom.${s.code}`).join(', ')}</code> ${newly.map(s=>s.icon).join(' ')}`:''}<br><span style="opacity:.7">${reason||''}</span></div>`;
     f.classList.add('show');clearTimeout(f._h);f._h=setTimeout(()=>f.classList.remove('show'),3400);
     burst(loom.position.clone().add(new THREE.Vector3(0,2,0)),0xa3e635,40);
     dreamChord();setTimeout(dreamChord,300);
-    say(`I LEVELED UP! I'm Level ${loomLevel} now! I learned ${newly.length?newly.map(s=>s.code).join(' and '):'new tricks'}! ${pick(loomLines.happy)}`);
-    logDream(`🦊 Loom <b>Level ${loomLevel}</b> — learned <code>${newly.length?newly.map(s=>s.code).join(', '):'bonus power'}</code>!`);
-    if(loomLevel>=3)loom.scale.setScalar(1.25+(loomLevel-1)*.08);
+    say(`I LEVELED UP! I'm Level ${loomLevel} now! ${newly.length?('I learned '+newly.map(s=>s.code).join(' and ')+'! '):(m>0?('Dreamweave +'+m+' flows through me! '):'New tricks! ')}${pick(loomLines.happy)}`);
+    logDream(`🦊 Loom <b>Level ${loomLevel}${m>0?' ∞':''}</b> — ${newly.length?('learned <code>'+newly.map(s=>s.code).join(', ')+'</code>!'):('Dreamweave +'+m+'!')}`);
+    loom.scale.setScalar(Math.min(2.2,1.25+(loomLevel-1)*.05));
   }
 }
 $('#loomPill').onclick=()=>{renderSkills();$('#skillPanel').classList.add('show');popSnd();};
 $('#skillClose').onclick=()=>$('#skillPanel').classList.remove('show');
 renderSkills();window._skillsReady=true;
+
+/* ============================================================
+   LIVING SYSTEMS · perf tiering, instanced flora, spirit trail,
+   async build streaming, ecology, memory lattices, swarm, audio
+   ============================================================ */
+const isoName=['Meadow','Rose Atoll','Cobalt Shelf','Sunspire','Lilac Cay','Verdant Rest','The Hidden Layer'];
+
+/* ---------- 1. adaptive performance tiering ---------- */
+const PERF={tier:'high',auto:true,ratio:Math.min(devicePixelRatio,2),fps:60,acc:0,frames:0,drawCalls:0,tris:0};
+function detectTier(){
+  let mem=navigator.deviceMemory||4, cores=navigator.hardwareConcurrency||4, mobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const weak=mobile&&(mem<=2||cores<=4);
+  return weak?'low':(mobile?'mid':'high');
+}
+function applyTier(t,announce){
+  PERF.tier=t;
+  const caps={low:0.62,mid:1.0,high:Math.min(devicePixelRatio,2)};
+  PERF.ratio=Math.min(caps[t],devicePixelRatio);
+  renderer.setPixelRatio(PERF.ratio);
+  renderer.shadowMap.enabled=t!=='low';
+  const want={low:512,mid:1024,high:2048}[t];
+  if(sun.shadow.mapSize.x!==want){sun.shadow.mapSize.set(want,want);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}}
+  document.getElementById('grain').style.display=t==='low'?'none':'';
+  document.getElementById('aurora').style.display=t==='low'?'none':'';
+  document.getElementById('fireflies').style.display=t==='low'?'none':'';
+  FLORA_MAX=t==='low'?120:t==='mid'?220:300;
+  TRAIL_MAX=t==='low'?36:t==='mid'?70:120;
+  BOID_MAX=t==='low'?8:t==='mid'?16:24;
+  try{if(typeof reefs!=='undefined'&&reefs&&reefs.setQuality)reefs.setQuality(t);}catch(e){}
+  markShadowDirty(3);
+  floraMesh.count=Math.min(floraMesh.count,FLORA_MAX);
+  saveWorld();
+  renderPerfPane();
+  if(announce)toast(`⚙ Quality: ${t.toUpperCase()} (${Math.round(PERF.ratio*100)}% res)`);
+}
+function autoTune(dt){
+  PERF.acc+=dt;PERF.frames++;
+  if(PERF.acc<1)return;
+  PERF.fps=PERF.frames/PERF.acc;PERF.acc=0;PERF.frames=0;
+  const info=renderer.info.render;
+  PERF.drawCalls=info.calls;PERF.tris=info.triangles;
+  const el=$('#stPerf');if(el){el.querySelector('b').textContent=Math.round(PERF.fps);
+    el.className='statPill'+(PERF.fps<30?' bad':PERF.fps<50?' warn':'');}
+  if(!PERF.auto)return;
+  const cap={low:0.62,mid:1.0,high:Math.min(devicePixelRatio,2)}[PERF.tier];
+  // converge fast when we are far off target, gently once we are close
+  if(PERF.fps<40&&PERF.ratio>0.5){
+    const step=PERF.fps<25?0.18:0.08;
+    PERF.ratio=Math.max(0.5,PERF.ratio-step);renderer.setPixelRatio(PERF.ratio);
+  }
+  else if(PERF.fps>57&&PERF.ratio<cap){PERF.ratio=Math.min(cap,PERF.ratio+0.05);renderer.setPixelRatio(PERF.ratio);}
+}
+
+/* ---------- 2. instanced cyber-flora (1 draw call) ---------- */
+let FLORA_MAX=300;
+const floraMesh=new THREE.InstancedMesh(
+  new THREE.ConeGeometry(.24,1.35,5),
+  new THREE.MeshStandardMaterial({roughness:.55,flatShading:true,emissive:0x0b3a2e,emissiveIntensity:.4}),FLORA_MAX);
+floraMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+floraMesh.castShadow=false;floraMesh.frustumCulled=false;scene.add(floraMesh);
+const flora=[];const _m4=new THREE.Matrix4(),_q=new THREE.Quaternion(),_v=new THREE.Vector3(),_s=new THREE.Vector3(),_c=new THREE.Color();
+const floraColors=[0x4ade80,0x22d3ee,0xa78bfa,0xf9a8d4,0xfde68a,0xa3e635];
+function plantFlora(x,z,island,seeded){
+  if(flora.length>=FLORA_MAX)flora.shift();
+  const b=biomeOf(island);
+  const moist=b?b.moisture:.5;
+  flora.push({x,z,y:0,g:0,rate:rand(.06,.16)*(0.6+moist*0.8),s:rand(.7,1.9),rot:rand(0,6.3),
+    hue:pick(floraColors),island,seeded:!!seeded});
+}
+function updateFlora(dt){
+  for(let i=0;i<flora.length;i++){
+    const f=flora[i];
+    if(f.g<1){f.g=Math.min(1,f.g+dt*f.rate);if(f.g>=1&&f.seeded&&Math.random()<.3)plantFlora(f.x+rand(-3,3),f.z+rand(-3,3),f.island,false);}
+    const b=biomeOf(f.island), bio=b?b.bio:.4;
+    f.y=groundY(f.x,f.z);
+    const sway=Math.sin(clock.elapsedTime*1.6+f.rot)*.08;
+    _v.set(f.x,f.y+.62*f.s*sway,f.z);_q.setFromAxisAngle(new THREE.Vector3(0,1,0),f.rot);
+    _s.set(f.s,f.s*(0.25+f.g*.75),f.s);
+    _m4.compose(_v,_q,_s);floraMesh.setMatrixAt(i,_m4);
+    _c.setHex(f.hue);_c.offsetHSL(0,0,bio*.12);
+    _c.multiplyScalar(0.55+f.g*.45+bio*.2);
+    floraMesh.setColorAt(i,_c);
+  }
+  floraMesh.count=Math.min(flora.length,FLORA_MAX);
+  floraMesh.instanceMatrix.needsUpdate=true;
+  if(floraMesh.instanceColor)floraMesh.instanceColor.needsUpdate=true;
+  // bio-luminescence glow scales with ecosystem health
+  floraMesh.material.emissiveIntensity=.25+bioAvg()*.85+(night?.5:0);
+  // keep the modular reefs hugging the real shorelines (not on top of land)
+  if(reefAnchorT===undefined||clock.elapsedTime-reefAnchorT>4){
+    reefAnchorT=clock.elapsedTime;
+    if(islands.length)reefs.setAnchors(islands.map((isl,k)=>{
+      const a=(k/islands.length)*Math.PI*2;
+      return {x:isl.x+Math.cos(a)*(isl.r*1.3),z:isl.z+Math.sin(a)*(isl.r*1.3)};
+    }));
+  }
+}
+let reefAnchorT=0;
+
+/* ---------- 3. spirit trail / dream aura ---------- */
+let TRAIL_MAX=140;
+const TRAIL_N=TRAIL_MAX;
+const trailGeo=new THREE.BufferGeometry();
+const trailPos=new Float32Array(TRAIL_N*3),trailCol=new Float32Array(TRAIL_N*3),trailSize=new Float32Array(TRAIL_N);
+trailGeo.setAttribute('position',new THREE.BufferAttribute(trailPos,3));
+trailGeo.setAttribute('color',new THREE.BufferAttribute(trailCol,3));
+trailGeo.setAttribute('size',new THREE.BufferAttribute(trailSize,1));
+const trailPts=new THREE.Points(trailGeo,new THREE.PointsMaterial({size:.34,vertexColors:true,transparent:true,
+  opacity:.95,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true}));
+trailPts.frustumCulled=false;scene.add(trailPts);
+const trail=[];let loomBusy=0;
+function emitTrail(p,color,life,size){
+  if(trail.length>=TRAIL_N)trail.shift();
+  trail.push({x:p.x,y:p.y,z:p.z,vx:rand(-.5,.5),vy:rand(.1,.7),vz:rand(-.5,.5),life,max:life,
+    r:((color>>16)&255)/255,g:((color>>8)&255)/255,b:(color&255)/255,size:size||1});
+}
+function updateTrail(dt){
+  // aura idles around Loom; bursts while it "thinks" about a prompt
+  if(loomBusy>0&&Math.random()<.75)emitTrail(loom.position.clone().add(new THREE.Vector3(rand(-.6,.6),rand(0,1.4),rand(-.6,.6))),0xc4b5fd,.9,1.3);
+  else if(Math.random()<.22)emitTrail(loom.position.clone().add(new THREE.Vector3(rand(-.5,.5),rand(.3,1.2),rand(-.5,.5))),0x67e8f9,1.3,.8);
+  for(let i=trail.length-1;i>=0;i--){const p=trail[i];
+    p.life-=dt;if(p.life<=0){trail.splice(i,1);continue;}
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vy-=.4*dt;
+    const a=p.life/p.max;
+    trailPos[i*3]=p.x;trailPos[i*3+1]=p.y;trailPos[i*3+2]=p.z;
+    trailCol[i*3]=p.r*a;trailCol[i*3+1]=p.g*a;trailCol[i*3+2]=p.b*a;
+    trailSize[i]=p.size*a;
+  }
+  for(let i=trail.length;i<TRAIL_N;i++){trailSize[i]=0;trailPos[i*3+1]=-999;}
+  trailGeo.attributes.position.needsUpdate=true;
+  trailGeo.attributes.color.needsUpdate=true;
+  trailGeo.attributes.size.needsUpdate=true;
+}
+
+/* ---------- 4. async build streaming (never blocks a frame) ---------- */
+const buildQueue=[];
+function enqueueBuild(fn,label,onDone){
+  buildQueue.push({fn,label,onDone,parts:3});
+  loomBusy=1.6; // Loom visibly "thinks" while the dream streams in
+  emitTrail(loom.position.clone().add(new THREE.Vector3(0,1.6,0)),0xa3e635,1.2,1.6);
+  say(`Hmm… ${label} is weaving itself into the world. Give me a sec!`);
+}
+function pumpBuilds(){
+  if(!buildQueue.length)return;
+  const job=buildQueue[0];
+  if(!job.started){
+    job.started=true;
+    try{job.fn&&job.fn();}
+    catch(e){console.warn('dream build failed',e);buildQueue.shift();return;}
+  }
+  job.parts--;
+  if(job.parts<=0){buildQueue.shift();loomBusy=Math.max(loomBusy,.4);try{job.onDone&&job.onDone();}catch(e){console.warn('dream finish failed',e);}}
+}
+
+/* ---------- 5. ecosystem biomes ---------- */
+const biomes=islands.map((isl,i)=>({i,visit:0,total:0,bio:.45,moisture:.5,mood:.5,lastSeen:Date.now(),age:0,stage:0,fog:0,ruins:0}));
+function biomeOf(i){return biomes[i]||null;}
+function biomeAt(x,z){
+  let best=null,bd=1e9;
+  biomes.forEach((b,idx)=>{const isl=islands[idx];const d=Math.hypot(x-isl.x,z-isl.z);if(d<bd){bd=d;best=b;}});
+  return bd<best?null:{b:best,d:bd};
+}
+function bioAvg(){return biomes.reduce((s,b)=>s+b.bio,0)/biomes.length;}
+const STAGES=[['Fresh','🌱'],['Overgrown','🌿'],['Mythic Ruins','🏛️'],['Spirit Fog','👻']];
+function ageStage(sec,visits){
+  if(sec>420&&visits>=6)return 3;
+  if(sec>180&&visits>=3)return 2;
+  if(sec>60)return 1;
+  return 0;
+}
+function tickEco(dt){
+  const now=Date.now();
+  biomes.forEach((b,idx)=>{
+    const isl=islands[idx];
+    const near=Math.hypot(player.position.x-isl.x,player.position.z-isl.z)<isl.r+8;
+    if(near){b.visit+=dt;b.lastSeen=now;b.bio=Math.min(1,b.bio+dt*0.02*(1+b.mood));}
+    else b.bio=Math.max(.08,b.bio-dt*0.004);
+    b.moisture=Math.min(1,Math.max(.05,b.moisture+dt*(near?0.004:-0.0012)));
+    b.mood=Math.min(1,Math.max(0,b.mood+dt*((near?0.01:-0.002)*(0.5+b.bio))));
+    const away=(now-b.lastSeen)/1000;
+    b.stage=ageStage(away,b.total);
+    b.fog=b.stage>=3?Math.min(1,b.fog+dt*.2):Math.max(0,b.fog-dt*.25);
+    b.ruins=b.stage>=2?Math.min(1,b.ruins+dt*.15):Math.max(0,b.ruins-dt*.1);
+  });
+  // Loom drops cyber-flora seeds where he idles
+  seedTimer-=dt;
+  if(seedTimer<=0&&!flying){
+    seedTimer=rand(6,12);
+    const spot=nearestIsland(loom.position.x,loom.position.z);
+    if(spot&&Math.random()<.55+bioAvg()*.4){
+      plantFlora(loom.position.x+rand(-4,4),loom.position.z+rand(-4,4),spot.i,true);
+      if(Math.random()<.3)say(pick(["I dropped a cyber-flora seed. Watch it grow!","A seed! It will become a dream-bloom.","*plants a glowing seed*"]),2600);
+    }
+  }
+}
+let seedTimer=7;
+function nearestIsland(x,z){let best=0,bd=1e9;islands.forEach((isl,i)=>{const d=Math.hypot(x-isl.x,z-isl.z);if(d<bd){bd=d;best=i;}});return {i:best,d:bd};}
+
+/* ---------- 6. memory lattices + excavation ---------- */
+const artifacts=[];let hiddenUnlocked=false;
+function seedMemory(){
+  // one artifact per island, revealed once its memory decays past stage 2
+  islands.forEach((isl,i)=>{if(!artifacts.some(a=>a.island===i)){
+    const a=document.createElement('a');}});
+}
+function canExcavate(){
+  const b=biomes.find(b=>b.stage>=2);
+  return b?{b,i:biomes.indexOf(b)}:null;
+}
+function makeSeal(i){
+  const isl=islands[i];if(!isl)return null;
+  if(artifacts.some(a=>a.island===i))return null;
+  const seal=new THREE.Group();
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(.85,.14,8,26),
+    new THREE.MeshStandardMaterial({color:0xfde68a,emissive:0xf59e0b,emissiveIntensity:1.3,roughness:.3,metalness:.5}));
+  const core=new THREE.Mesh(new THREE.OctahedronGeometry(.5),new THREE.MeshStandardMaterial({
+    color:0xfff7e8,emissive:0xfde68a,emissiveIntensity:1.8,transparent:true,opacity:.9}));
+  core.position.y=.1;seal.add(ring,core);
+  const l=new THREE.PointLight(0xfde68a,10,16);l.position.y=1;seal.add(l);
+  const ang=rand(0,6.28),rr=rand(2,isl.r*.55);
+  const x=isl.x+Math.cos(ang)*rr,z=isl.z+Math.sin(ang)*rr;
+  seal.position.set(x,groundY(x,z)+.9,z);
+  seal.userData.label='ancient seal';seal.userData.selectable=true;seal.userData.isSeal=true;
+  seal.traverse(o=>{o.userData.rootRef=seal;});
+  dreamGroup.add(seal);artifacts.push({island:i,obj:seal});selectable.push(seal);
+  // animate it in
+  seal.scale.setScalar(0.01);
+  return seal;
+}
+function maybeUnlock(){
+  if(!hiddenUnlocked&&artifacts.length>=3){unlockHiddenLayer();return true;}
+  return false;
+}
+function excavate(){
+  const f=canExcavate();if(!f)return;
+  if(ink<12){toast('Need 12 ✨ ink to excavate a memory.');return;}
+  setInk(ink-12);
+  f.b.total++;f.b.stage=0;f.b.lastSeen=Date.now();
+  const seal=makeSeal(f.i);if(!seal)return;
+  sealPop(seal);
+  markShadowDirty(3);
+  gainXP(40,'memory excavated');
+  logDream(`🗝 Excavated an <b>ancient seal</b> from ${isoName[f.i]} — forgotten dreams remember you.`);
+  say(pick(["I remembered THIS! It's still warm…","The past left you a gift. Take it.","A seal! Someone dreamed here long ago."]));
+  dreamChord();popSnd();
+  maybeUnlock();
+  saveWorld();renderMemPane();
+}
+function sealPop(seal){
+  burst(seal.position.clone(),0xfde68a,42);
+  const t0=performance.now();
+  (function grow(){const k=Math.min(1,(performance.now()-t0)/650);
+    seal.scale.setScalar(0.01+k*k*(3-2*k)*(1+Math.sin(k*Math.PI)*.25));
+    if(k<1)requestAnimationFrame(grow);else seal.scale.setScalar(1);})();
+}
+function unlockHiddenLayer(){
+  hiddenUnlocked=true;
+  const isl=makeIsland(62,52,16,0xc4b5fd,0x6d5b8a);
+  islands.push(isl);biomes.push({i:islands.length-1,visit:0,total:0,bio:.7,moisture:.6,mood:.8,lastSeen:Date.now(),age:0,stage:0,fog:.2,ruins:.3});
+  for(let i=0;i<26;i++)plantFlora(isl.x+rand(-12,12),isl.z+rand(-12,12),islands.length-1,true);
+  markShadowDirty(4);burst(new THREE.Vector3(isl.x,2,isl.z),0xa78bfa,60);
+  toast('🗝 HIDDEN TERRAIN LAYER UNLOCKED — The Hidden Layer rises!');
+  logDream('🗝 <b>Hidden Layer unlocked.</b> A seventh island surfaces from the deep.');
+  say('THE HIDDEN LAYER! I remembered it existed — now you can go there! 🏝️');
+  setMaxInkBonus(30);
+}
+
+/* ---------- 7. multi-agent swarm (Loomings) ---------- */
+let BOID_MAX=28;
+const boids=[];
+const boidMesh=new THREE.InstancedMesh(
+  new THREE.ConeGeometry(.22,.7,6),
+  new THREE.MeshStandardMaterial({color:0x67e8f9,emissive:0x22d3ee,emissiveIntensity:1.1,roughness:.3,flatShading:true}),BOID_MAX);
+boidMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);boidMesh.frustumCulled=false;scene.add(boidMesh);
+let swarmTarget=null,swarmJob='harvest',boidAcc=0;
+function deploySwarm(n){
+  const want=Math.min(BOID_MAX,boids.length+(n||4));
+  while(boids.length<want){
+    const a=rand(0,6.28);
+    boids.push({p:new THREE.Vector3(loom.position.x+Math.cos(a)*2,loom.position.y+1,loom.position.z+Math.sin(a)*2),
+      v:new THREE.Vector3(rand(-2,2),rand(0,1),rand(-2,2)),phase:rand(0,6.28),carry:0});
+  }
+  saveWorld();renderSwarmPane();updateStatus();
+  toast(`🐝 ${boids.length} Loomings deployed — ${swarmJob}`);
+  blip(880,.2,'triangle',.14);
+}
+function clearBridge(){
+  let n=0;
+  bridgePlanks.forEach(b=>{
+    if(b.mesh){b.mesh.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material&&o.material.dispose)o.material.dispose();});
+      dreamGroup.remove(b.mesh);
+      const i=selectable.indexOf(b.mesh);if(i>-1)selectable.splice(i,1);}
+    n++;});
+  bridgePlanks.length=0;markShadowDirty(2);
+  toast(`🌉 Cleared ${n} swarm planks`);
+  saveWorld();renderSwarmPane();
+}
+function recallSwarm(){
+  boids.length=0;boidMesh.count=0;saveWorld();renderSwarmPane();updateStatus();toast('🐝 Loomings recalled home.');
+}
+function setSwarmJob(j){swarmJob=j;saveWorld();renderSwarmPane();toast('🐝 Swarm job: '+j);}
+function updateSwarm(dt){
+  if(!boids.length){boidMesh.count=0;return;}
+  const tgt=swarmTarget||new THREE.Vector3(player.position.x,player.position.y+1,player.position.z);
+  boidAcc+=dt;
+  for(let i=0;i<boids.length;i++){
+    const b=boids[i];
+    const acc=new THREE.Vector3();
+    // seek target
+    acc.add(tgt.clone().sub(b.p).normalize().multiplyScalar(1.6));
+    // separation + cohesion (cheap boid steering)
+    let sep=new THREE.Vector3(),ali=new THREE.Vector3(),n=0;
+    for(let j=0;j<boids.length;j++){ if(i===j)continue; const o=boids[j];
+      const d=b.p.distanceTo(o.p);
+      if(d<2.2){sep.add(b.p.clone().sub(o.p).normalize().multiplyScalar((2.2-d)*1.3));}
+      ali.add(o.v);n++; }
+    if(n){ali.divideScalar(n).sub(b.v).multiplyScalar(.35);acc.add(ali);}
+    acc.add(sep);
+    // stay above ground
+    const gy=groundY(b.p.x,b.p.z)+1.4;
+    if(b.p.y<gy)acc.y+=(gy-b.p.y)*2.4; if(b.p.y>14)acc.y-=2;
+    b.v.addScaledVector(acc,dt); b.v.multiplyScalar(0.94);
+    const sp=b.v.length(); if(sp>6.5)b.v.multiplyScalar(6.5/sp);
+    b.p.addScaledVector(b.v,dt);
+    b.phase+=dt*7;
+    // harvest job: converts proximity to dream energy into ink
+    if(swarmJob==='harvest'&&b.p.distanceTo(player.position)<9)b.carry=Math.min(1,b.carry+dt*.4);
+    if(swarmJob==='harvest'&&b.carry>=1){b.carry=0;setInk(ink+1.5);if(Math.random()<.12)gainXP(2,'swarm harvest');}
+    if(swarmJob==='bridge'){b.p.lerp(tgt,dt*.5);}
+    // orient + bob
+    const dir=b.v.clone().normalize();
+    _q.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.lengthSq()>.01?dir:new THREE.Vector3(0,1,0));
+    const roll=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),b.phase*.25);
+    _q.multiply(roll);
+    _v.copy(b.p).addScaledVector(new THREE.Vector3(0,1,0),Math.sin(b.phase)*.12);
+    const s=.7+b.carry*.5;
+    _s.set(s,s,s);
+    _m4.compose(_v,_q,_s);boidMesh.setMatrixAt(i,_m4);
+    if(Math.random()<dt*1.2)emitTrail(b.p,0x22d3ee,.5,.6);
+  }
+  boidMesh.count=boids.length;boidMesh.instanceMatrix.needsUpdate=true;
+  // bridge job actually lays planks toward the target
+  if(swarmJob==='bridge'&&swarmTarget&&boidAcc>1.2){
+    boidAcc=0;
+    if(ink>=2&&bridgePlanks.length<40){
+      setInk(ink-2);
+      const last=bridgePlanks[bridgePlanks.length-1]||swarmTarget;
+      const np=new THREE.Vector3(last.x+rand(-.6,.6),last.y+rand(0,.3),last.z+rand(-.6,.6));
+      const pl=new THREE.Mesh(new THREE.BoxGeometry(2.6,.2,2.6),
+        new THREE.MeshStandardMaterial({color:pick([0xa78bfa,0x67e8f9]),emissive:0x6d28d9,emissiveIntensity:.6,roughness:.4}));
+      pl.position.copy(np);pl.castShadow=true;
+      pl.userData.label='swarm plank';pl.userData.selectable=true;pl.userData.isPlank=true;
+      pl.userData.rootRef=pl;
+      dreamGroup.add(pl);selectable.push(pl);bridgePlanks.push({p:np,mesh:pl});
+      markShadowDirty(2);burst(np,0x67e8f9,10);
+    }
+  }
+}
+const bridgePlanks=[];
+function rallyAt(x,z){
+  swarmTarget=new THREE.Vector3(x,groundY(x,z)+1.5,z);
+  toast('🐝 Rally point set');popSnd();renderSwarmPane();
+}
+
+/* ---------- 8. generative soundscape ---------- */
+const SOUND={on:true,chord:0,nodes:[],analyser:null,master:null,padGain:null};
+function initSoundscape(){
+  try{
+    const c=ac();if(!c||SOUND.master)return;
+    SOUND.master=c.createGain();SOUND.master.gain.value=.16;
+    SOUND.analyser=c.createAnalyser();SOUND.analyser.fftSize=256;
+    SOUND.master.connect(SOUND.analyser);SOUND.analyser.connect(c.destination);
+    SOUND.padGain=c.createGain();SOUND.padGain.gain.value=.5;SOUND.padGain.connect(SOUND.master);
+    const chords=[[130.8,196,261.6],[146.8,220,293.7],[110,164.8,246.9],[164.8,246.9,329.6]];
+    for(let v=0;v<3;v++){
+      const o=c.createOscillator();o.type=v===0?'sine':'triangle';
+      const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=700;
+      const g=c.createGain();g.gain.value=v===0?.35:.16;
+      o.connect(f);f.connect(g);g.connect(SOUND.padGain);o.start();
+      SOUND.nodes.push({o,f,g});
+    }
+    SOUND.chords=chords;applyChord(0);
+  }catch(e){}
+}
+const CHORD_NAMES=['Root','Fifth','Deep','Lift'];
+function applyChord(i){
+  if(!SOUND.nodes.length)return;
+  SOUND.chord=i%SOUND.nodes.length?i%SOUND.nodes.length:0;
+  const ch=SOUND.chords[SOUND.chord];
+  SOUND.nodes.forEach((n,v)=>{try{n.o.frequency.setTargetAtTime(ch[v],ac().currentTime,.6);}catch(e){}});
+}
+function soundscapeStem(fn){
+  if(!SOUND.on||!ac())return;
+  const c=ac();
+  const stems={crystal:[[880,1320]],volcano:[[55,80]],lake:[[330,440]],lanterns:[[660,990,1320]],jellyfish:[[520,780]],rainbow:[[660,880,1100]],bridge:[[440,660]],ufo:[[300,900]],forest:[[220,330]],mushroom:[[280,420]],golem:[[90,140]],garden:[[500,750]]};
+  const s=stems[fn];if(!s)return;
+  s.forEach(pair=>pair.forEach((f,i)=>{
+    const o=c.createOscillator(),g=c.createGain();
+    o.type=fn==='volcano'?'sawtooth':'sine';o.frequency.value=f;
+    const t=c.currentTime+i*.05;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.07,t+.04);g.gain.exponentialRampToValueAtTime(.0001,t+1.4);
+    o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+1.5);
+  }));
+}
+function audioLevel(){
+  if(!SOUND.analyser||!SOUND.on)return 0;
+  try{const a=new Uint8Array(SOUND.analyser.frequencyBinCount);SOUND.analyser.getByteFrequencyData(a);
+    let s=0;for(let i=0;i<a.length;i++)s+=a[i];return s/a.length/255;}catch(e){return 0;}
+}
+
+/* ---------- 8c. ambient bed: ocean swell + altitude wind ---------- */
+const BED={sea:null,wind:null,seaGain:null,windGain:null,seaFilter:null,windFilter:null,ready:false};
+function initAmbience(){
+  try{
+    const c=ac();if(!c||BED.ready)return;
+    // brown-ish noise buffer, looped — cheap, no asset download
+    const len=c.sampleRate*4;
+    const buf=c.createBuffer(1,len,c.sampleRate);
+    const d=buf.getChannelData(0);
+    let last=0;
+    for(let i=0;i<len;i++){
+      const white=Math.random()*2-1;
+      last=(last+0.02*white)/1.02;      // brown noise integration
+      d[i]=last*3.2;
+    }
+    // smooth the loop seam
+    const fade=c.sampleRate*0.35;
+    for(let i=0;i<fade;i++){const k=i/fade;d[i]*=k;d[len-1-i]*=k;}
+    // ocean layer
+    const s=c.createBufferSource();s.buffer=buf;s.loop=true;
+    BED.seaFilter=c.createBiquadFilter();BED.seaFilter.type='lowpass';BED.seaFilter.frequency.value=520;
+    BED.seaGain=c.createGain();BED.seaGain.gain.value=.05;
+    s.connect(BED.seaFilter).connect(BED.seaGain).connect(SOUND.master||c.destination);
+    s.start();BED.sea=s;
+    // wind layer (same source, band-passed higher)
+    const s2=c.createBufferSource();s2.buffer=buf;s2.loop=true;
+    BED.windFilter=c.createBiquadFilter();BED.windFilter.type='bandpass';BED.windFilter.frequency.value=900;BED.windFilter.Q.value=.7;
+    BED.windGain=c.createGain();BED.windGain.gain.value=.006;
+    s2.connect(BED.windFilter).connect(BED.windGain).connect(SOUND.master||c.destination);
+    s2.start();BED.wind=s2;
+    BED.ready=true;
+  }catch(e){}
+}
+function updateAmbience(dt,t){
+  if(!BED.ready||!SOUND.on||!ac())return;
+  const spot=biomeAt(player.position.x,player.position.z);
+  const seaDist=spot?spot.d:999;
+  // louder surf when you're away from land
+  const surf=clamp(0.02+(seaDist<70?0.055*(1-clamp(seaDist/70,0,1)):0.05)+rainOn*.05,0,.14);
+  // wind rises with altitude and while flying
+  const alt=clamp((player.position.y-1.4)/30,0,1);
+  const wind=0.004+alt*0.05+(flying?0.03:0);
+  try{
+    BED.seaGain.gain.value+=(surf-BED.seaGain.gain.value)*Math.min(1,dt*.6);
+    BED.windGain.gain.value+=(wind-BED.windGain.gain.value)*Math.min(1,dt*.8);
+    BED.seaFilter.frequency.value=420+Math.sin(t*.23)*90+bioAvg()*260;
+    BED.windFilter.frequency.value=700+alt*1400+Math.sin(t*.17)*180;
+  }catch(e){}
+}
+const RAIN_N=260;
+const rainMesh=new THREE.InstancedMesh(new THREE.BoxGeometry(.02,.9,.02),
+  new THREE.MeshBasicMaterial({color:0xa5f3fc,transparent:true,opacity:.5}),RAIN_N);
+rainMesh.frustumCulled=false;rainMesh.visible=false;scene.add(rainMesh);
+const rainDrops=Array.from({length:RAIN_N},()=>({x:rand(-30,30),y:rand(0,26),z:rand(-30,30),s:rand(.6,1.5)}));
+let rainOn=0,rainTarget=0,statusTick=0;
+// one soft fog sprite per island for the memory-decay "spirit fog"
+const fogSprites=islands.map(()=>{
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex,color:0xb79bff,transparent:true,opacity:0,depthWrite:false}));
+  s.scale.set(40,14,1);scene.add(s);return s;
+});
+function tickWeather(dt){
+  // rain drifts in when the world is wet or the sky is dark
+  rainTarget=(night?0.5:0)+bioAvg()*0.5;
+  rainOn+=(rainTarget-rainOn)*Math.min(1,dt*.25);
+  rainMesh.visible=rainOn>.05;
+  if(rainMesh.visible){
+    rainMesh.material.opacity=.16+rainOn*.4;
+    const cx=player.position.x,cz=player.position.z;
+    for(let i=0;i<RAIN_N;i++){
+      const d=rainDrops[i];
+      d.y-=dt*22*d.s; d.x-=dt*2.2;
+      if(d.y<-2){d.y=rand(18,28);d.x=rand(-30,30);d.z=rand(-30,30);
+        // rain waters the nearest biome
+        if(Math.random()<.3){const n=nearestIsland(cx,cz);const b=biomeOf(n.i);if(b)b.moisture=Math.min(1,b.moisture+.01);}}
+      _v.set(cx+d.x,d.y,cz+d.z);_q.identity();_s.set(1,d.s,1);
+      _m4.compose(_v,_q,_s);rainMesh.setMatrixAt(i,_m4);
+    }
+    rainMesh.instanceMatrix.needsUpdate=true;
+    if(rainOn>.7&&Math.random()<dt*.12)blip(rand(900,1600),.05,'sine',.05);
+  }
+  // spirit fog rises over islands whose memories have decayed
+  biomes.forEach((b,i)=>{const isl=islands[i];const s=fogSprites[i];if(!s||!isl)return;
+    s.position.set(isl.x,TOP_Y+3.5,isl.z);
+    s.material.opacity=b.fog*.42;
+    s.scale.set(isl.r*2.4+Math.sin(tickCount*.4)*1.5,isl.r*.9,1);
+    s.visible=b.fog>.02;});
+  // water rises a touch with global moisture — never desyncs collision (visual only)
+  ocean.position.y=-1.2+Math.sin(clock.elapsedTime*.8)*.12+rainOn*.18;
+}
+function updateChord(){
+  if(!SOUND.on||!SOUND.nodes.length)return;
+  const target=bioAvg()<.28?2:bioAvg()<.55?0:bioAvg()<.8?1:3;
+  if(target!==SOUND.chord&&Math.random()<.03)applyChord(target);
+  // biome mood opens the pad filter — the world breathes
+  try{if(SOUND.padGain&&ac()){
+    const lvl=audioLevel();
+    SOUND.padGain.gain.value=.35+bioAvg()*.45;
+    SOUND.nodes.forEach((n,v)=>{n.f.frequency.value=500+bioAvg()*900+(v*180);});
+  }}catch(e){}
+}
+let tickCount=0;
+
+/* ---------- 9. status strip + panes ---------- */
+function setMaxInkBonus(v){window._maxInkBonus=(window._maxInkBonus||0)+v;renderSkills();toast(`✨ Max dream-ink capacity +${v} (now ${Math.round(maxInk)})`);}
+function updateStatus(){
+  const spot=biomeAt(player.position.x,player.position.z);
+  const eb=$('#stBiome');if(spot){eb.querySelector('b').textContent=STAGES[spot.b.stage][1]+' '+Math.round(spot.b.bio*100)+'%';
+    eb.className='statPill'+(spot.b.stage>=2?' warn':'');}
+  $('#stAge').querySelector('b').textContent=artifacts.length+'/3'+(hiddenUnlocked?' ✦':'');
+  $('#stSwarm').querySelector('b').textContent=boids.length;
+  const sb=$('#stAudio');if(sb){const l=audioLevel();sb.querySelector('b').textContent=CHORD_NAMES[SOUND.chord]+' '+Math.round(l*100);
+    sb.className='statPill'+(l>.6?' warn':'');}
+}
+function renderEcoPane(){
+  const p=$('#pane-eco');
+  p.innerHTML=`<h4>🌿 Living Ecosystem</h4>
+    <p class="d">Islands are alive. Your visits and dreams feed <b>bio-luminescence</b>; Loom scatters <b>cyber-flora</b> seeds that grow where you linger. Unvisited islands lose vitality.</p>
+    <div class="metric">Global bio-luminescence<div style="flex:1;margin-left:8px"><div class="bar bio"><i style="width:${Math.round(bioAvg()*100)}%"></i></div></div><b>${Math.round(bioAvg()*100)}%</b></div>
+    <div class="metric">Cyber-flora growing<div style="flex:1;margin-left:8px"><div class="bar"><i style="width:${Math.round(flora.length/FLORA_MAX*100)}%"></i></div></div><b>${flora.length}</b></div>
+    <div class="btnRow"><button id="ecoSeed">🌱 Scatter 12 seeds</button><button id="ecoBloom">✨ Force bloom</button></div>
+    <h4 style="margin-top:12px">Islands</h4><div id="ecoIsles"></div>`;
+  const box=p.querySelector('#ecoIsles');
+  biomes.forEach((b,i)=>{const isl=islands[i];if(!isl)return;
+    const d=document.createElement('div');d.className='isoRow';
+    const stage=STAGES[b.stage];
+    d.innerHTML=`<div class="nm">${stage[1]} ${isoName[i]||'Isle '+i}<div class="st">bio ${Math.round(b.bio*100)}% · wet ${Math.round(b.moisture*100)}% · ${b.total} memories</div></div>
+      <div class="st">${stage[0]}</div>`;
+    box.appendChild(d);
+  });
+  p.querySelector('#ecoSeed').onclick=()=>{for(let k=0;k<12;k++){const s=nearestIsland(player.position.x,player.position.z);
+    plantFlora(player.position.x+rand(-14,14),player.position.z+rand(-14,14),s.i,true);}updateStatus();renderEcoPane();toast('🌱 12 cyber-flora seeds planted');popSnd();};
+  p.querySelector('#ecoBloom').onclick=()=>{flora.forEach(f=>f.g=1);updateStatus();renderEcoPane();toast('✨ Everything bloomed at once!');burst(player.position.clone(),0xa3e635,40);};
+}
+function renderMemPane(){
+  const f=canExcavate();
+  const p=$('#pane-mem');
+  p.innerHTML=`<h4>🗝 Memory Latent Lattices</h4>
+    <p class="d">Every island remembers. Leave one unvisited and its memories decay into <b>mythic ruins</b>, then <b>spirit fog</b>. Ask Loom to <b>excavate</b> and forgotten dreams become ancient seals. Collect 3 to unlock a hidden terrain layer.</p>
+    <div class="metric">Ancient seals<div style="flex:1;margin-left:8px"><div class="bar age"><i style="width:${Math.min(100,artifacts.length/3*100)}%"></i></div></div><b>${artifacts.length}/3</b></div>
+    <div class="metric">Hidden layer<div style="flex:1;margin-left:8px"><div class="bar"><i style="width:${hiddenUnlocked?100:0}%"></i></div></div><b>${hiddenUnlocked?'OPEN ✦':'sealed'}</b></div>
+    <div class="btnRow"><button id="memExc" ${f?'':'disabled'}>🗝 Excavate memory (12 ✨)</button></div>
+    ${f?`<p class="d">Ready: <b>${isoName[biomes.indexOf(f.b)]}</b> is at ${STAGES[f.b.stage][0]} stage.</p>`:'<p class="d">No island has decayed far enough yet. Wander away and come back later.</p>'}
+    <h4 style="margin-top:12px">Decay map</h4><div id="memIsles"></div>`;
+  p.querySelector('#memExc').onclick=excavate;
+  const box=p.querySelector('#memIsles');
+  biomes.forEach((b,i)=>{const isl=islands[i];if(!isl)return;
+    const away=Math.round((Date.now()-b.lastSeen)/1000);
+    const d=document.createElement('div');d.className='isoRow';
+    d.innerHTML=`<div class="nm">${isoName[i]||'Isle '+i}<div class="st">${STAGES[b.stage][1]} ${STAGES[b.stage][0]}${b.fog>.2?' · fog '+Math.round(b.fog*100)+'%':''}${b.ruins>.2?' · ruins '+Math.round(b.ruins*100)+'%':''}</div></div><div class="st">${away}s ago</div>`;
+    box.appendChild(d);});
+}
+function renderSwarmPane(){
+  const p=$('#pane-swarm');
+  p.innerHTML=`<h4>🐝 Loomings Swarm</h4>
+    <p class="d">Loom summons <b>spirit creatures</b> that steer with boid rules. <b>Harvest</b> converts their presence into ✨ ink, <b>Rally</b> sends them to you, <b>Bridge</b> makes them lay light planks toward your rally point.</p>
+    <div class="metric">Active Loomings<div style="flex:1;margin-left:8px"><div class="bar"><i style="width:${Math.round(boids.length/BOID_MAX*100)}%"></i></div></div><b>${boids.length}/${BOID_MAX}</b></div>
+    <div class="metric">Current job<div style="flex:1;margin-left:8px"></div><b>${swarmJob}</b></div>
+    <div class="btnRow"><button id="swPlus">➕ Deploy 4</button><button id="swAll">🚀 Deploy all</button><button id="swRecall">🏠 Recall</button>
+      <button id="swClear" ${bridgePlanks.length?'':'disabled'}>🌉 Clear bridge (${bridgePlanks.length})</button></div>
+    <div class="btnRow"><button class="${swarmJob==='harvest'?'on':''}" data-job="harvest">🌾 Harvest</button><button class="${swarmJob==='rally'?'on':''}" data-job="rally">🎯 Rally</button><button class="${swarmJob==='bridge'?'on':''}" data-job="bridge">🌉 Bridge</button></div>
+    <p class="d">Tap the ground in the world to set a rally point (${bridgePlanks.length} planks laid).</p>`;
+  p.querySelector('#swPlus').onclick=()=>deploySwarm(4);
+  p.querySelector('#swAll').onclick=()=>deploySwarm(BOID_MAX);
+  p.querySelector('#swRecall').onclick=recallSwarm;
+  p.querySelector('#swClear').onclick=clearBridge;
+  p.querySelectorAll('[data-job]').forEach(b=>b.onclick=()=>setSwarmJob(b.dataset.job));
+}
+function renderSndPane(){
+  const p=$('#pane-snd');
+  p.innerHTML=`<h4>🔊 Soundscape Topology</h4>
+    <p class="d">The archipelago is an instrument. A generative pad plays a chord that shifts with ecosystem health, and each terrain type adds its own stem when it dreams into existence.</p>
+    <div class="metric">Soundscape<div style="flex:1;margin-left:8px"></div><b>${SOUND.on?'ON':'OFF'}</b></div>
+    <div class="metric">Chord<div style="flex:1;margin-left:8px"></div><b>${CHORD_NAMES[SOUND.chord]}</b></div>
+    <div class="btnRow"><button id="sndToggle">${SOUND.on?'🔇 Mute':'🔊 Unmute'}</button>
+      <button data-chord="0">Root</button><button data-chord="1">Fifth</button><button data-chord="2">Deep</button><button data-chord="3">Lift</button></div>
+    <p class="d">Energy level <b>${Math.round(audioLevel()*100)}%</b> — stems: crystal bells, volcano rumble, lagoon swells.</p>`;
+  p.querySelector('#sndToggle').onclick=()=>{SOUND.on=!SOUND.on;if(SOUND.padGain)SOUND.padGain.gain.value=SOUND.on?.5:0;renderSndPane();updateStatus();};
+  p.querySelectorAll('[data-chord]').forEach(b=>b.onclick=()=>{initSoundscape();applyChord(+b.dataset.chord);renderSndPane();updateStatus();blip(660,.2,'sine',.12);});
+}
+function renderPerfPane(){
+  const p=$('#pane-perf');if(!p)return;
+  p.innerHTML=`<h4>⚙ Performance</h4>
+    <p class="d">Adaptive resolution scales the render target to hold a smooth frame rate. Flora and swarm use <b>instanced batching</b> (1 draw call each); terrain edits stream in asynchronously so the frame never stalls.</p>
+    <div class="metric">FPS<div style="flex:1;margin-left:8px"><div class="bar"><i style="width:${Math.min(100,PERF.fps/60*100)}%"></i></div></div><b>${Math.round(PERF.fps)}</b></div>
+    <div class="metric">Render scale<div style="flex:1;margin-left:8px"><div class="bar"><i style="width:${Math.round(PERF.ratio/Math.max(1,devicePixelRatio)*100)}%"></i></div></div><b>${Math.round(PERF.ratio*100)}%</b></div>
+    <div class="metric">Draw calls<div style="flex:1;margin-left:8px"></div><b>${PERF.drawCalls}</b></div>
+    <div class="metric">Triangles<div style="flex:1;margin-left:8px"></div><b>${(PERF.tris/1000).toFixed(0)}k</b></div>
+    <div class="metric">Quality tier<div style="flex:1;margin-left:8px"></div><b>${PERF.tier.toUpperCase()}</b></div>
+    <div class="btnRow"><button class="${PERF.auto?'on':''}" id="pAuto">${PERF.auto?'🤖 Auto-tune ON':'🤖 Auto-tune OFF'}</button></div>
+    <div class="btnRow"><button data-tier="low">📉 Low</button><button data-tier="mid">📊 Mid</button><button data-tier="high">📈 High</button></div>`;
+  p.querySelector('#pAuto').onclick=()=>{PERF.auto=!PERF.auto;renderPerfPane();};
+  p.querySelectorAll('[data-tier]').forEach(b=>b.onclick=()=>{PERF.auto=false;applyTier(b.dataset.tier,true);renderPerfPane();});
+}
+function renderSavePane(){
+  const p=$('#pane-save');if(!p)return;
+  const sv=readSave();
+  const bytes=sv?JSON.stringify(sv).length:0;
+  const dexCount=Object.keys(discovered||{}).length;
+  p.innerHTML=`<h4>💾 Dream Save</h4>
+    <p class="d">Everything lives in one versioned blob: your islands, Loom's level and skills, the Dreamdex, memories and the hidden layer. Old saves migrate automatically.</p>
+    <div class="metric">Save format<div style="flex:1;margin-left:8px"></div><b>v${sv?sv.v:'—'}</b></div>
+    <div class="metric">Dreams saved<div style="flex:1;margin-left:8px"></div><b>${sv&&sv.dreams?sv.dreams.length:0}</b></div>
+    <div class="metric">Dreamdex<div style="flex:1;margin-left:8px"></div><b>${dexCount}/19</b></div>
+    <div class="metric">Loom<div style="flex:1;margin-left:8px"></div><b>Lv ${loomLevel}</b></div>
+    <div class="metric">Seals<div style="flex:1;margin-left:8px"></div><b>${artifacts.length}</b></div>
+    <div class="metric">Blob size<div style="flex:1;margin-left:8px"></div><b>${(bytes/1024).toFixed(1)} kB</b></div>
+    <div class="btnRow">
+      <button id="svExport">⬇ Export</button>
+      <button id="svImport">⬆ Import</button>
+      <button id="svRefresh">↻ Refresh</button>
+      <button id="svReset" style="background:rgba(251,113,133,.25);color:#fecdd3">🗑 Reset world</button>
+    </div>
+    <p class="d">Export writes a JSON file you can re-import on any device — the dream world travels with you.</p>`;
+  p.querySelector('#svExport').onclick=exportSave;
+  p.querySelector('#svImport').onclick=importSave;
+  p.querySelector('#svRefresh').onclick=()=>{renderSavePane();toast('↻ Save pane refreshed');};
+  p.querySelector('#svReset').onclick=resetSave;
+}
+function renderPane(id){
+  renderEcoPane();renderMemPane();renderSwarmPane();renderSndPane();renderPerfPane();renderSavePane();
+  if(id)$('#pane-'+id).classList.add('on');
+}
+$('#consoleBtn').onclick=()=>{buzz(12);coachAdvance();renderPane('eco');$('#consolePanel').classList.add('show');popSnd();};
+$('#consoleClose').onclick=()=>$('#consolePanel').classList.remove('show');
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));t.classList.add('on');
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));$('#pane-'+t.dataset.tab).classList.add('on');
+});
+function saveWorld(){writeSave({world:{hiddenUnlocked,artifacts:artifacts.map(a=>a.island),swarmJob,perfs:{tier:PERF.tier,auto:PERF.auto}}});}
+function loadWorld(){try{const w=(readSave()&&readSave().world)||{};
+  // restore seals FIRST so the hidden-layer unlock stays consistent with 3/3
+  if(Array.isArray(w.artifacts))w.artifacts.forEach(i=>{const s=makeSeal(i);if(s)sealPop(s);});
+  if(!hiddenUnlocked&&artifacts.length>=3)unlockHiddenLayer();
+  if(w.hiddenUnlocked&&!hiddenUnlocked){const isl=makeIsland(62,52,16,0xc4b5fd,0x6d5b8a);islands.push(isl);
+    biomes.push({i:islands.length-1,visit:0,total:0,bio:.7,moisture:.6,mood:.8,lastSeen:Date.now(),age:0,stage:0,fog:.2,ruins:.3});
+    for(let i=0;i<26;i++)plantFlora(isl.x+rand(-12,12),isl.z+rand(-12,12),islands.length-1,false);
+    hiddenUnlocked=true;setMaxInkBonus(30);}
+  if(w.swarmJob)swarmJob=w.swarmJob;
+  if(w.perfs&&w.perfs.tier){PERF.tier=w.perfs.tier;PERF.auto=w.perfs.auto!==false;}
+}catch(e){console.warn('loadWorld failed',e);}}
+loadWorld();
+// honour a previously chosen quality tier, otherwise auto-detect the device
+const _svPerf=(readSave()&&readSave().world&&readSave().world.perfs)||{};
+applyTier(['low','mid','high'].includes(_svPerf.tier)?_svPerf.tier:detectTier(),false);
+
+/* ---------- 10. ResonanceReefs (modular system) ---------- */
+const reefs=new ResonanceReefs(scene,camera,renderer,{quality:PERF.tier});
+function updateReefs(elapsedTime){
+  // publish audio energy + a transient beat into the module's shared channel
+  const lvl=audioLevel();
+  reefBus.level=lvl;
+  reefBus.beat=reefBus.beat*0.92+(lvl>.16?lvl:0);
+  reefBus.hue=(bioAvg()*0.6+trail.length/TRAIL_N*0.4)%1;
+  reefs.update(elapsedTime);
+}
+// starter flora so the world feels alive on first visit
+(function seedFlora(){for(let k=0;k<70;k++){const idx=Math.floor(Math.random()*islands.length);const isl=islands[idx];if(!isl)continue;
+  const a=rand(0,6.28),rr=rand(0,isl.r*.85);plantFlora(isl.x+Math.cos(a)*rr,isl.z+Math.sin(a)*rr,idx,false);}})();
+
 
 /* ============ loom mind (moods / memory / autonomy) ============ */
 const loomLines={
@@ -787,33 +1758,48 @@ function dreamSpot(byLoom=false){
 }
 function doDream(raw,byLoom=false){
   const parsed=parseDream(raw||'dream orb');
-  // skill discounts (coding skills pay off)
-  if(hasSkill('terraform')&&['volcano','lake','crystal','cactus'].includes(parsed.fn))parsed.ink=Math.max(4,parsed.ink-4);
-  if(hasSkill('skyweave')&&['rainbow','bridge','jellyfish','lanterns'].includes(parsed.fn))parsed.ink=Math.max(4,parsed.ink-4);
-  if(hasSkill('sprout'))parsed.ink=Math.max(4,parsed.ink-1);
-  if(ink<parsed.ink&&!byLoom){toast(`Need ${parsed.ink} ✨ ink (have ${Math.floor(ink)}) — wander to refill!`);loomSay('idle');return null;}
+  parsed.ink=Math.max(3,parsed.ink-discountFor(parsed.fn));
+  if(ink<parsed.ink&&!byLoom){toast(`Need ${parsed.ink} \u2728 ink (have ${Math.floor(ink)}) \u2014 wander to refill!`);loomSay('idle');return null;}
   setInk(ink-parsed.ink);
   const at=dreamSpot(byLoom);
-  const g=(Builders[parsed.fn]||Builders.orb)(at);
-  g.position.y=groundY(at.x,at.z);
-  if(parsed.fn==='bridge'){ // face forward
-    g.rotation.y=yaw; g.position.y+=.4;
-  }
-  // spawn burst
-  burst(g.position.clone().add(new THREE.Vector3(0,2,0)),parsed.fn==='volcano'?0xff5a00:0xc4b5fd);
-  dreamChord();
-  stats.dreams++; if(byLoom)stats.loomDreams++;
-  loomMemories.push({what:parsed.blurb,when:Date.now()});
-  logDream(`${byLoom?'🦊':'💭'} <b>${parsed.blurb}</b> <span style="opacity:.65">“${(raw||'').slice(0,42)}”</span>`);
-  const reactions=byLoom?loomLines.auto:loomLines.happy;
-  say((byLoom?'I dreamed '+parsed.blurb+' for us! ':'Behold — '+parsed.blurb+'! ')+pick(reactions));
-  loomMoodState='happy';
-  gainXP(byLoom?18:12, byLoom?'auto-dream bonus':'dream bonus');
-  renderQuests(); saveDreams();
-  // settle physics: objects on ocean float? keep y
+  // stream the build across frames so a burst of dreams never stalls the loop
+  let g=null;
+  enqueueBuild(()=>{
+    g=(Builders[parsed.fn]||Builders.orb)(at);
+    g.position.y=groundY(at.x,at.z);
+    if(parsed.fn==='bridge'){g.rotation.y=yaw;g.position.y+=.4;}
+  },parsed.blurb,()=>{
+    burst(g.position.clone().add(new THREE.Vector3(0,2,0)),parsed.fn==='volcano'?0xff6b1a:0xc4b5fd,hasSkill('quake')&&parsed.fn==='volcano'?48:26);
+    for(let i=0;i<10;i++)emitTrail(g.position.clone().add(new THREE.Vector3(rand(-1.5,1.5),rand(.5,3),rand(-1.5,1.5))),parsed.fn==='volcano'?0xff6b1a:0xa78bfa,1.1,1.2);
+    soundscapeStem(parsed.fn);
+    if(hasSkill('songline')){dreamChord();setTimeout(dreamChord,220);}else dreamChord();
+    if(hasSkill('overgrowth')&&parsed.fn==='forest'){for(let i=0;i<3;i++){const t=new THREE.Group();t.add(trunk(rand(1.6,3)));t.add(leafBall(rand(1,1.9),pick([0x22c55e,0x4ade80,0xa3e635]),rand(2.6,3.6)));t.position.set(rand(-9,9),0,rand(-9,9));t.traverse(o=>{o.userData.rootRef=g;});g.add(t);}shadowify(g);}
+    if(hasSkill('bloom')&&parsed.fn==='garden')g.scale.multiplyScalar(1.3);
+    // ecosystem: the island you build on remembers
+    const near=nearestIsland(at.x,at.z);
+    if(near.d<islands[near.i].r+26&&biomeOf(near.i)){
+      const b=biomeOf(near.i);
+      b.total++;b.mood=Math.min(1,b.mood+.12);b.bio=Math.min(1,b.bio+.06);b.moisture=Math.min(1,b.moisture+.05);
+      for(let i=0;i<3;i++)plantFlora(at.x+rand(-5,5),at.z+rand(-5,5),near.i,false);
+    }
+    stats.dreams++; if(byLoom)stats.loomDreams++;
+    if(!discovered[parsed.fn]){discovered[parsed.fn]=1;writeSave({dex:discovered});
+      const bonus=hasSkill('dreamdex')?30:6;
+      logDream(`\ud83d\udcd6 New dream type discovered: <b>${parsed.blurb}</b>! +${bonus} XP`);
+      gainXP(bonus,'dreamdex discovery');
+    }
+    loomMemories.push({what:parsed.blurb,when:Date.now()});
+    logDream(`${byLoom?'\ud83e\udd38':'\ud83d\udcad'} <b>${parsed.blurb}</b> <span style="opacity:.65">\u201c${(raw||'').slice(0,42)}\u201d</span>`);
+    const reactions=byLoom?loomLines.auto:loomLines.happy;
+    say((byLoom?'I dreamed '+parsed.blurb+' for us! ':'Behold \u2014 '+parsed.blurb+'! ')+pick(reactions));
+    loomMoodState='happy';
+    gainXP((byLoom?18:12)+(hasSkill('songline')?8:0)+(night&&hasSkill('aurora')?12:0), byLoom?'auto-dream bonus':'dream bonus');
+    if(swarmJob==='harvest'&&boids.length)boids.forEach(b=>b.carry=Math.min(1,b.carry+.15));
+    renderQuests(); saveDreams(); updateStatus(); markShadowDirty(2);
+  });
   return g;
 }
-function dreamFromInput(){const el=$('#prompt');const v=el.value.trim()||pick(['mushroom forest','crystal field','cozy village','rainbow bridge','floating jellyfish','volcano','UFO','flower garden']);
+function dreamFromInput(){buzz(10);coachAdvance();const el=$('#prompt');const v=el.value.trim()||pick(['mushroom forest','crystal field','cozy village','rainbow bridge','floating jellyfish','volcano','UFO','flower garden']);
   doDream(v,false);el.value='';el.blur();}
 $('#dreamBtn').onclick=dreamFromInput;
 $('#prompt').addEventListener('keydown',e=>{if(e.key==='Enter')dreamFromInput();e.stopPropagation();});
@@ -841,12 +1827,23 @@ let downAt=0,downXY=[0,0];
 renderer.domElement.addEventListener('pointerdown',e=>{downAt=performance.now();downXY=[e.clientX,e.clientY];});
 renderer.domElement.addEventListener('pointerup',e=>{
   if(performance.now()-downAt>350||Math.hypot(e.clientX-downXY[0],e.clientY-downXY[1])>10)return;
+  buzz(6);
   if(e.target.closest&&e.target.closest('#dreamBar,#topbar,#leftPanel,#editPanel,#touchUI'))return;
   ptr.x=(e.clientX/innerWidth)*2-1;ptr.y=-(e.clientY/innerHeight)*2+1;
   ray.setFromCamera(ptr,camera);
+  // 💜 pet Loom himself (heartbond boosts it)
+  const pet=ray.intersectObject(loom,true);
+  if(pet.length){const amt=hasSkill('heartbond')?15:4;gainXP(amt,'petting Loom 💜');popSnd();
+    burst(loom.position.clone().add(new THREE.Vector3(0,1.6,0)),0xff6b9d,hasSkill('heartbond')?30:12);
+    say(pick(["Purrr… *fox purring intensifies*","Hehe! That tickles my tails!","*happy fox noises* Best. Pet. Ever."]));return;}
   const hits=ray.intersectObjects(selectable,true);
   if(hits.length){select(findRoot(hits[0].object));popSnd();}
-  else deselect();
+  else{
+    deselect();
+    // 🐝 tapping open ground sets a swarm rally point
+    const gh=ray.intersectObjects(islandTops,true);
+    if(gh.length&&boids.length){rallyAt(gh[0].point.x,gh[0].point.z);emitTrail(new THREE.Vector3(gh[0].point.x,gh[0].point.y+1,gh[0].point.z),0x22d3ee,1,1.4);}
+  }
 });
 function select(g){if(!g)return;selected=g;selRing.visible=true;
   const box=new THREE.Box3().setFromObject(g);const s=Math.max(box.getSize(new THREE.Vector3()).length()/2,1.4);
@@ -855,24 +1852,29 @@ function select(g){if(!g)return;selected=g;selRing.visible=true;
   say(`Ooh, “${g.userData.label}”! Grow it? Candy-fy it? Your paws, your rules.`,3500);}
 function deselect(){selected=null;selRing.visible=false;$('#editPanel').classList.remove('show');}
 $('#eClose').onclick=deselect;
-$('#eGrow').onclick=()=>{if(!selected)return;selected.scale.multiplyScalar(hasSkill('sprout')?1.5:1.25);popSnd();stats.remixes++;gainXP(hasSkill('loop')?12:8,'remix bonus');renderQuests();saveDreams();};
-$('#eShrink').onclick=()=>{if(!selected)return;selected.scale.multiplyScalar(.8);popSnd();stats.remixes++;gainXP(hasSkill('loop')?12:8,'remix bonus');renderQuests();saveDreams();};
-$('#eCandy').onclick=()=>{if(!selected)return;candyfy(selected);dreamChord();stats.remixes++;gainXP(hasSkill('loop')?12:8,'remix bonus');renderQuests();saveDreams();
+$('#eGrow').onclick=()=>{if(!selected)return;markShadowDirty(2);selected.scale.multiplyScalar(clamp(selected.scale.x*(hasSkill('overgrowth')?2:hasSkill('sprout')?1.5:1.25),.3,6));popSnd();stats.remixes++;gainXP(hasSkill('loop')?12:8,'remix bonus');if(hasSkill('recursion')&&Math.random()<.3){gainXP(10,'recursion echo');toast('♾️ recursion echo! +XP');}renderQuests();saveDreams();};
+$('#eShrink').onclick=()=>{if(!selected)return;markShadowDirty(2);selected.scale.multiplyScalar(clamp(selected.scale.x*.8,.3,6));popSnd();stats.remixes++;gainXP(hasSkill('loop')?12:8,'remix bonus');renderQuests();saveDreams();};
+$('#eCandy').onclick=()=>{if(!selected)return;markShadowDirty(2);candyfy(selected);dreamChord();stats.remixes++;gainXP(hasSkill('loop')?12:8,'remix bonus');renderQuests();saveDreams();
   say(pick(["CANDY-FIED! My teeth hurt looking at it. 🍬","Sugar-rush makeover complete!","So shiny! The golems are jealous."]));};
 $('#eCopy').onclick=()=>{if(!selected)return;
   const c=selected.clone();c.position.x+=3;c.position.z+=3;c.position.y=groundY(c.position.x,c.position.z);
   c.userData.label=selected.userData.label;c.traverse(o=>{o.userData.rootRef=c;});selectable.push(c);dreamGroup.add(c);
-  if(hasSkill('loop')){const m=c.clone();m.position.x+=2.5;m.position.z-=2.5;m.scale.multiplyScalar(.55);m.traverse(o=>{o.userData.rootRef=m;});selectable.push(m);dreamGroup.add(m);toast('⧉ loop(3): bonus mini-copy!');}
-  burst(c.position.clone().add(new THREE.Vector3(0,2,0)),0x67e8f9);dreamChord();gainXP(10,'duplicate bonus');saveDreams();toast('⧉ Duplicated!');};
+  if(hasSkill('loop')||hasSkill('echo')){const n=hasSkill('echo')?2:1;for(let i=0;i<n;i++){const m=c.clone();m.position.x+=2.5+i*1.5;m.position.z-=2.5;m.scale.multiplyScalar(.55);m.traverse(o=>{o.userData.rootRef=m;});selectable.push(m);dreamGroup.add(m);}toast(hasSkill('echo')?'🔊 echo(): TWO bonus mini-copies!':'⧉ loop(3): bonus mini-copy!');}
+  markShadowDirty(2);burst(c.position.clone().add(new THREE.Vector3(0,2,0)),0x67e8f9);dreamChord();gainXP(10,'duplicate bonus');saveDreams();toast('⧉ Duplicated!');};
 $('#eBanish').onclick=()=>{if(!selected)return;burst(selected.position.clone().add(new THREE.Vector3(0,1.5,0)),0xffffff);
-  dreamGroup.remove(selected);selectable.splice(selectable.indexOf(selected),1);
-  say('Poof! Back to stardust. The void thanks you. ☁️');deselect();saveDreams();popSnd();};
-function candyfy(g){g.traverse(o=>{if(o.isMesh&&o.material&&o.material.color){o.material=o.material.clone();
-  o.material.color.set(pick(candyPalette));if('emissive' in o.material){o.material.emissive.set(o.material.color);o.material.emissiveIntensity=.25;}}});
-  if(hasSkill('glow')&&!g.userData.glowLight){const l=new THREE.PointLight(pick([0xff6b9d,0xa78bfa,0x22d3ee]),8,14);l.position.y=3;g.add(l);g.userData.glowLight=l;toast('💡 glow(): dream now emits light!');}}
+  // full teardown so banished dreams don't leak GPU memory
+  selected.traverse(o=>{if(o.isMesh||o.isPoints||o.isLine){if(o.geometry)o.geometry.dispose();
+    if(o.material){(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose&&m.dispose());}}});
+  dreamGroup.remove(selected);
+  const i=selectable.indexOf(selected);if(i>-1)selectable.splice(i,1);
+  if(selRing.visible)deselect();
+  say('Poof! Back to stardust. The void thanks you. ☁️');saveDreams();popSnd();};
+function candyfy(g){g.traverse(o=>{if(o.isMesh&&o.material&&o.material.color){const old=o.material;o.material=old.clone();
+  o.material.color.set(pick(candyPalette));if('emissive' in o.material){o.material.emissive.set(o.material.color);o.material.emissiveIntensity=.25;}
+  if(old!==o.material&&old.dispose&&!old.userData.shared)old.dispose();}});
+  if(hasSkill('glow')&&!g.userData.glowLight){const l=new THREE.PointLight(pick([0xff6b9d,0xa78bfa,0x22d3ee]),hasSkill('prism')?16:8,hasSkill('prism')?22:14);l.position.y=3;g.add(l);g.userData.glowLight=l;toast(hasSkill('prism')?'🔮 prism(): DOUBLE-bright dreamlight!':'💡 glow(): dream now emits light!');}}
 
 /* ============ particles ============ */
-const bursts=[];
 function burst(p,color=0xc4b5fd,n=26){
   const g=new THREE.BufferGeometry(),pos=new Float32Array(n*3),vel=[];
   for(let i=0;i<n;i++){pos[i*3]=p.x;pos[i*3+1]=p.y;pos[i*3+2]=p.z;
@@ -889,40 +1891,43 @@ function tickBursts(dt){for(let i=bursts.length-1;i>=0;i--){const b=bursts[i];b.
 
 /* ============ persistence ============ */
 function saveDreams(){try{
-  const data=selectable.map(g=>({label:g.userData.label,x:+g.position.x.toFixed(2),z:+g.position.z.toFixed(2),s:+g.scale.x.toFixed(3)}));
-  localStorage.setItem('loom-dreams-v1',JSON.stringify(data.slice(-60)));
+  const data=selectable.map(g=>({label:g.userData.label,x:+g.position.x.toFixed(2),z:+g.position.z.toFixed(2),y:+g.position.y.toFixed(2),s:+g.scale.x.toFixed(3)}));
+  writeSave({dreams:data.slice(-60)});
 }catch(e){}}
 function loadDreams(){try{
-  const raw=localStorage.getItem('loom-dreams-v1');if(!raw)return;
-  const arr=JSON.parse(raw);
-  // map labels back to builder fns roughly
-  const label2fn={'tree':'tree','forest':'forest','mushroom forest':'mushroom','crystal field':'crystal','frost-crystal grove (snow dream!)':'crystal','cozy house':'house','village':'village','castle':'castle','volcano':'volcano','lake':'lake','rainbow':'rainbow','rainbow arch':'rainbow','jellyfish drift':'jellyfish','lanterns':'lanterns','windmill':'windmill','desert':'cactus','flower garden':'garden','UFO':'ufo','moss golem':'golem','light bridge':'bridge','dream orb':'orb'};
-  arr.forEach(d=>{const fn=label2fn[d.label]||'orb';const at=new THREE.Vector3(d.x,groundY(d.x,d.z),d.z);
-    const g=(Builders[fn]||Builders.orb)(at);g.scale.setScalar(clamp(d.s||1,.3,4));stats.dreams++;});
+  const sv=readSave();const arr=sv&&Array.isArray(sv.dreams)?sv.dreams:null;if(!arr)return;
+  const label2fn={'tree':'tree','forest':'forest','mushroom forest':'mushroom','crystal field':'crystal','frost-crystal grove (snow dream!)':'crystal','cozy house':'house','village':'village','castle':'castle','volcano':'volcano','lake':'lake','rainbow':'rainbow','rainbow arch':'rainbow','jellyfish drift':'jellyfish','lanterns':'lanterns','windmill':'windmill','desert':'cactus','flower garden':'garden','UFO':'ufo','moss golem':'golem','light bridge':'bridge','dream orb':'orb','wild dream orb':'orb'};
+  arr.slice(-60).forEach(d=>{
+    if(typeof d!=='object'||!isFinite(d.x)||!isFinite(d.z))return; // skip corrupt rows
+    const fn=label2fn[d.label]||'orb';
+    const g=(Builders[fn]||Builders.orb)(new THREE.Vector3(d.x,groundY(d.x,d.z),d.z));
+    g.position.y=isFinite(d.y)?clamp(d.y,-2,50):groundY(d.x,d.z);
+    g.scale.setScalar(clamp(d.s||1,.3,4));stats.dreams++;});
   if(arr.length)logDream(`🦊 Restored <b>${arr.length} dreams</b> from last visit`);
   renderQuests();
-}catch(e){}}
-// seed starter dreams (only if empty)
-if(!localStorage.getItem('loom-dreams-v1')){
-  const s1=Builders.forest(new THREE.Vector3(-6,groundY(-6,-4),-4));
-  const s2=Builders.lanterns(new THREE.Vector3(8,groundY(8,2),2));
-  const s3=Builders.house(new THREE.Vector3(5,groundY(5,-8),-8));
-  stats.dreams+=3; logDream('🦊 Loom pre-dreamed a <b>forest</b>, <b>house</b> + <b>lanterns</b>');
-}
-// then load (will add on top if existed)
-if(localStorage.getItem('loom-dreams-v1')){ // clear seeds, load real
-  while(selectable.length){dreamGroup.remove(selectable.pop());}
-  dreamGroup.clear(); stats.dreams=0; loadDreams();
-}
+}catch(e){console.warn('loadDreams failed',e);}}
+// restore saved world, or seed a starter scene on first visit
+(function initWorld(){
+  const sv=readSave();const saved=sv&&Array.isArray(sv.dreams)&&sv.dreams.length?sv.dreams:null;
+  if(saved){while(selectable.length){const g=selectable.pop();dreamGroup.remove(g);}dreamGroup.clear();stats.dreams=0;loadDreams();}
+  else{
+    Builders.forest(new THREE.Vector3(-6,groundY(-6,-4),-4));
+    Builders.lanterns(new THREE.Vector3(8,groundY(8,2),2));
+    Builders.house(new THREE.Vector3(5,groundY(5,-8),-8));
+    stats.dreams+=3;logDream('🦊 Loom pre-dreamed a <b>forest</b>, <b>house</b> + <b>lanterns</b>');
+    saveDreams();
+  }
+})();
 
 /* ============ day/night ============ */
 let night=false;
-function setNight(v){night=v;stats.sawNight=stats.sawNight||v;if(v)gainXP(10,'nightmare-night visit');renderQuests();
+function setNight(v){markShadowDirty(3);return applyNight(v);}
+function applyNight(v){night=v;stats.sawNight=stats.sawNight||v;if(v)gainXP((hasSkill('moonmilk')?25:10)*(hasSkill('aurora')?2:1),'nightmare-night visit');renderQuests();
   document.body.classList.toggle('night',v);
   $('#dayBtn').textContent=v?'☀️':'🌙';
-  if(v){scene.background.set(0x070718);scene.fog.color.set(0x141038);scene.fog.density=.011;
-    hemi.intensity=.5;hemi.color.set(0xb79bff);sun.intensity=.12;moon.intensity=1.1;sunSpr.material.color.set(0xc4b5fd);sunSpr.position.set(-160,130,-40);
-    stars.material.opacity=1; loomGlow.intensity=12;
+  if(v){scene.background.set(0x070718);scene.fog.color.set(hasSkill('aurora')?0x0e3a4a:0x141038);scene.fog.density=.011;
+    hemi.intensity=hasSkill('aurora')?.8:.5;hemi.color.set(hasSkill('aurora')?0x67e8f9:0xb79bff);sun.intensity=.12;moon.intensity=1.1;sunSpr.material.color.set(0xc4b5fd);sunSpr.position.set(-160,130,-40);
+    stars.material.opacity=1; loomGlow.intensity=hasSkill('heartbond')?16:12;
     say(pick(loomLines.night));}
   else{scene.background.set(0x0b1026);scene.fog.color.set(0x1a2456);scene.fog.density=.0075;
     // daydream aurora pastel: soft periwinkle-lagoon gradient feel
@@ -941,11 +1946,12 @@ $('#photoBtn').onclick=()=>{
   renderer.render(scene,camera);
   const url=renderer.domElement.toDataURL('image/png');
   const a=document.createElement('a');a.href=url;a.download='loom-dreamworld.png';a.click();
-  stats.photos++;gainXP(10,'photo reward');renderQuests();toast('📸 Dream saved to photos! +10 XP');saveDreams();
+  stats.photos++;gainXP(hasSkill('echo')?15:10,'photo reward');renderQuests();toast(`📸 Dream saved to photos! +${hasSkill('echo')?15:10} XP`);saveDreams();
   say('Say starlight! …Perfect. Frame that one. 📸');};
 $('#helpBtn').onclick=()=>{ $('#intro').classList.remove('hide'); };
-$('#startBtn').onclick=()=>{ $('#intro').classList.add('hide'); ac();
-  loomSay('greet'); dreamChord(); toast('💭 Type a dream below to begin!'); };
+$('#startBtn').onclick=()=>{ $('#intro').classList.add('hide'); ac(); initSoundscape(); initAmbience();
+  loomSay('greet'); dreamChord(); buzz(14); toast('💭 Type a dream below to begin!');
+  checkOrientation(); if(coachStep<COACH.length)setTimeout(()=>coachShow(coachStep),700); };
 $('#questToggle').addEventListener('click',()=>{if(innerWidth<=760)$('#questCard').classList.toggle('open');});
 
 /* ============ main loop ============ */
@@ -954,14 +1960,14 @@ let walkPhase=0;
 const camTarget=new THREE.Vector3();
 function tick(){
   requestAnimationFrame(tick);
-  const dt=Math.min(clock.getDelta(),.05), t=clock.elapsedTime;
+  const dt=Math.min(clock.getDelta(),.05), t=clock.elapsedTime; tickCount=t;
   // movement input
   let ix=0,iz=0;
   if(keys.KeyW||keys.ArrowUp)iz-=1; if(keys.KeyS||keys.ArrowDown)iz+=1;
   if(keys.KeyA||keys.ArrowLeft)ix-=1; if(keys.KeyD||keys.ArrowRight)ix+=1;
   ix+=joy.x; iz+=joy.y;
   if(keys.Space&&grounded){vy=7;grounded=false;popSnd();}
-  const sp=(flying?14:7)*(hasSkill('levitate')&&flying?1.4:1);
+  const sp=(flying?14:7)*(flying?flyMultiplier():1);
   // camera-relative: forward = (sin yaw, cos yaw), right = (sin(yaw-PI/2), cos(yaw-PI/2))
   const fx=Math.sin(yaw),fz=Math.cos(yaw);
   const rx=Math.sin(yaw-Math.PI/2),rz=Math.cos(yaw-Math.PI/2);
@@ -1006,7 +2012,9 @@ function tick(){
   loom.lookAt(player.position.x,loom.position.y,player.position.z);
   loomTail.rotation.z=Math.sin(t*7)*.5; loomTail.material.emissiveIntensity=1+Math.sin(t*3)*.4;
   loomEarL.rotation.z=Math.sin(t*2.2)*.14;loomEarR.rotation.z=-Math.sin(t*2.2)*.14;
-  loomGlow.intensity=(night?12:6)+Math.sin(t*4)*1.2;
+  loomGlow.intensity=(night?(hasSkill('heartbond')?16:12):(hasSkill('loomgod')?10:6))+Math.sin(t*4)*1.2;
+  // golemheart: golems bounce with joy
+  if(hasSkill('golemheart'))dreamGroup.children.forEach(g=>{if(g.userData.golem)g.position.y+=Math.abs(Math.sin(t*3+g.position.x))*.008;});
   // idle anims for dreams
   dreamGroup.children.forEach(g=>{
     if(g.userData.spin)g.userData.spin.rotation.z+=dt*1.4;
@@ -1023,10 +2031,10 @@ function tick(){
   ocean.position.y=-1.2+Math.sin(t*.8)*.12;
   rings.forEach((r,i)=>{r.scale.setScalar(1+Math.sin(t*.7+i*2)*.02);r.material.opacity=.16+Math.sin(t*1.2+i)*.06;});
   sunSpr.material.opacity=night?.5:.95;
-  // ink regen by wandering
-  setInk(ink+dt*(ml>.1?1.6:.7));
-  // loom autonomy: auto-dream every ~26s if ink allows (skyweave halves it)
-  const autoMs=hasSkill('skyweave')?13000:26000;
+  // ink regen by wandering (inkwell / stardrape / mastery scale it)
+  setInk(ink+dt*(ml>.1?1.6:.7)*regenMultiplier(night));
+  // loom autonomy (skyweave + timeloop + mastery stack)
+  const autoMs=autoIntervalMs();
   if(t*1000-(lastAuto)>autoMs&&ink>34&&$('#intro').classList.contains('hide')){
     lastAuto=performance.now();
     const ideas=['mushroom forest','crystal field','flower garden','lanterns','rainbow bridge','cozy house','windmill','floating jellyfish','tree','lake'];
@@ -1034,15 +2042,33 @@ function tick(){
     say(pick(loomLines.auto)+` (dreaming “${idea}”…)`);
     setTimeout(()=>doDream(idea,true),1400);
   }
-  // idle chatter
+  // idle chatter (timeloop turns chatter into XP)
   if(performance.now()-lastIdleLine>45000&&$('#intro').classList.contains('hide')){
-    lastIdleLine=performance.now();loomSay('idle');}
+    lastIdleLine=performance.now();loomSay('idle');if(hasSkill('timeloop'))gainXP(6,'timeloop daydream');}
+  // ===== living systems =====
+  pumpBuilds();                                   // async dream streaming
+  if(loomBusy>0)loomBusy-=dt;
+  tickEco(dt);                                    // biomes, seeds, decay
+  updateFlora(dt);                                // instanced cyber-flora
+  updateTrail(dt);                                // Loom's spirit aura
+  updateSwarm(dt);                                // boid Loomings
+  tickWeather(dt);                                // rain + spirit fog
+  updateChord();                                  // soundscape follows the biome
+  updateReefs(t);                                 // modular ResonanceReefs system
+  updateAmbience(dt,t);                           // ocean + wind bed
+  autoTune(dt);
+  statusTick+=dt; if(statusTick>.5){statusTick=0;updateStatus();}
   tickBursts(dt);
+  // on-demand shadows: refresh while things move, then idle
+  if(ml>.05||flying)markShadowDirty(1);
+  if(shadowDirty>0){renderer.shadowMap.needsUpdate=true;shadowDirty--;}
   renderer.render(scene,camera);
 }
 tick();
 
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+  const cap={low:0.62,mid:1.0,high:Math.min(devicePixelRatio,2)}[PERF.tier];
+  renderer.setPixelRatio(Math.min(cap,devicePixelRatio,PERF.ratio*1.05));renderer.setSize(innerWidth,innerHeight);});
 // prevent page scroll/zoom gestures on game
 document.addEventListener('touchmove',e=>{if(e.target===renderer.domElement)e.preventDefault();},{passive:false});
 document.addEventListener('gesturestart',e=>e.preventDefault());
