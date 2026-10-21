@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GHOST HULL — MIRA Repair</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: #02040a; color: #e3eefc; font-family: 'Courier New', 'Segoe UI', system-ui, monospace; -webkit-tap-highlight-color: transparent; }
+  #canvas { position: absolute; inset: 0; display: block; }
+
+  /* CRT / holographic overlay */
+  #overlay { position: absolute; inset: 0; pointer-events: none; z-index: 40;
+    background:
+      linear-gradient(rgba(18, 16, 64, 0.15) 50%, transparent 50%),
+      linear-gradient(90deg, rgba(255,0,0,0.03), rgba(0,255,0,0.01), rgba(0,0,255,0.03));
+    background-size: 100% 4px, 3px 100%;
+    mix-blend-mode: overlay;
+  }
+  #scanlines { position: absolute; inset: 0; pointer-events: none; z-index: 41;
+    background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+  }
+  #vignette { position: absolute; inset: 0; pointer-events: none; z-index: 42;
+    background: radial-gradient(circle, transparent 40%, rgba(2,4,10,0.85) 90%);
+  }
+  #glitch { position: absolute; inset: 0; pointer-events: none; z-index: 45; opacity: 0; transition: opacity .15s; }
+
+  /* HUD */
+  #hud { position: absolute; inset: 0; pointer-events: none; padding: 14px; }
+  #topbar { display: flex; justify-content: space-between; align-items: start; }
+  .panel { background: rgba(6, 10, 22, 0.72); border: 1px solid rgba(0, 255, 160, 0.35); padding: 10px 14px; border-radius: 8px; backdrop-filter: blur(6px); pointer-events: auto; max-width: 420px; box-shadow: 0 0 20px rgba(0,255,160,0.15); }
+  .panel.critical { border-color: rgba(255,40,60,0.6); box-shadow: 0 0 30px rgba(255,40,60,0.25); }
+  h1 { font-size: 0.95rem; letter-spacing: 3px; text-transform: uppercase; color: #00ffa0; margin-bottom: 6px; text-shadow: 0 0 12px rgba(0,255,160,0.5); font-weight: 700; }
+  h1.warn { color: #ff283c; text-shadow: 0 0 12px rgba(255,40,60,0.7); }
+  .stat { font-size: 0.8rem; color: #cfd9ea; font-family: 'Courier New', monospace; }
+  .stat b { color: #00ffa0; font-size: 1.1rem; }
+  .stat b.warn { color: #ff283c; }
+  #integrity { width: 100%; height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; margin-top: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15); }
+  #integrity-bar { height: 100%; width: 48%; background: linear-gradient(90deg, #00ffa0, #4cc9ff); border-radius: 3px; box-shadow: 0 0 14px #00ffa0; transition: width .2s; }
+  #integrity-bar.warn { background: linear-gradient(90deg, #ffb347, #ff6b6b); box-shadow: 0 0 14px #ff283c; }
+
+  #ai { position: absolute; bottom: 18px; left: 18px; right: 18px; max-width: 560px; pointer-events: auto; }
+  #ai-bubble { background: rgba(4, 8, 18, 0.88); border: 1px solid rgba(0,255,160,0.4); border-left: 5px solid #00ffa0; padding: 16px 20px; border-radius: 0 14px 14px 14px; backdrop-filter: blur(10px); box-shadow: 0 12px 40px rgba(0,0,0,0.5); position: relative; }
+  #ai-bubble::before { content: ''; position: absolute; left: -14px; top: 18px; width: 0; height: 0; border: 14px solid transparent; border-right-color: rgba(0,255,160,0.35); }
+  #ai-name { font-size: 0.65rem; letter-spacing: 2.5px; color: #00ffa0; text-transform: uppercase; margin-bottom: 6px; font-weight: 800; }
+  #ai-text { font-size: 1rem; line-height: 1.45; color: #e3eefc; font-weight: 600; font-family: 'Courier New', monospace; }
+  #ai-cue { font-size: 0.75rem; color: #8ff0c0; margin-top: 8px; font-style: italic; font-family: 'Courier New', monospace; }
+
+  #obj { position: absolute; top: 62px; left: 18px; pointer-events: auto; }
+  #obj-list { list-style: none; }
+  #obj-list li { margin: 7px 0; font-size: 0.82rem; color: #a9b8d0; padding-left: 24px; position: relative; font-family: 'Courier New', monospace; }
+  #obj-list li::before { content: '[_]'; position: absolute; left: 0; top: 0; color: #ffb347; font-size: 0.75rem; font-weight: 700; }
+  #obj-list li.done { color: #00ffa0; }
+  #obj-list li.done::before { content: '[OK]'; color: #00ffa0; }
+
+  /* Controls */
+  #controls { position: absolute; bottom: 14px; left: 0; right: 0; height: 100px; pointer-events: none; display: flex; justify-content: space-between; padding: 0 18px; }
+  #joy, #act { pointer-events: auto; }
+  .stick { position: relative; width: 88px; height: 88px; border: 2px solid rgba(255,255,255,0.15); border-radius: 50%; background: rgba(255,255,255,0.03); touch-action: none; box-shadow: inset 0 0 15px rgba(0,255,160,0.08); }
+  .stick-thumb { position: absolute; width: 38px; height: 38px; background: radial-gradient(circle, #00ffa0, #008f6b); border: 2px solid #fff; border-radius: 50%; left: 25px; top: 25px; box-shadow: 0 0 16px rgba(0,255,160,0.7); }
+  .stick-label { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 0.62rem; color: #6f82a8; letter-spacing: 1.5px; text-transform: uppercase; }
+  #act { width: 88px; height: 88px; background: rgba(255,40,60,0.18); border: 2px solid rgba(255,40,60,0.5); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #ff283c; font-size: 1.4rem; touch-action: none; box-shadow: 0 0 25px rgba(255,40,60,0.4); }
+  #act:active { background: rgba(255,40,60,0.4); transform: scale(0.93); }
+
+  #hint { position: absolute; top: 52%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; color: #ffb347; font-size: 0.85rem; letter-spacing: 3px; text-transform: uppercase; opacity: 0; transition: opacity .25s; text-shadow: 0 0 14px rgba(255,179,71,0.6); font-weight: 800; font-family: 'Courier New', monospace; }
+  #hint.show { opacity: 1; }
+
+  #start { position: absolute; inset: 0; background: radial-gradient(circle at center, #0a152e 0%, #02040a 70%); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 50; text-align: center; padding: 24px; }
+  #start h1 { font-size: 1.9rem; margin-bottom: 10px; color: #00ffa0; text-shadow: 0 0 30px rgba(0,255,160,0.6); letter-spacing: 4px; font-weight: 800; }
+  #start p { color: #b8c6da; max-width: 460px; margin-bottom: 26px; line-height: 1.6; font-size: 0.95rem; }
+  #btn-start { padding: 16px 42px; font-size: 1.05rem; background: #00ffa0; color: #020812; border: none; border-radius: 10px; font-weight: 800; letter-spacing: 2px; cursor: pointer; box-shadow: 0 0 30px rgba(0,255,160,0.5); text-transform: uppercase; }
+  #btn-start:active { transform: scale(0.95); }
+  .note { margin-top: 18px; font-size: 0.68rem; color: #6f7d9b; letter-spacing: 1px; }
+
+  #load { position: absolute; inset: 0; background: #02040a; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 60; color: #00ffa0; }
+  .spin { width: 44px; height: 44px; border: 3px solid rgba(0,255,160,0.15); border-top-color: #00ffa0; border-radius: 50%; animation: spin 0.7s linear infinite; margin-bottom: 12px; box-shadow: 0 0 20px rgba(0,255,160,0.3); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 500px) {
+    .panel { max-width: 90vw; padding: 8px 12px; }
+    #ai { max-width: 92vw; left: 10px; right: 10px; }
+    #obj { top: 52px; left: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="load"><div class="spin"></div><div>initializing ghost-hull systems...</div></div>
+
+<div id="start">
+  <h1>GHOST HULL</h1>
+  <p>Your battered vessel drifts in dead space. Life support is failing. MIRA, the ship AI, is your only guide.</p>
+  <p>Free-roam the ship. Find the ruptured panels. Repair them before hull integrity hits zero.</p>
+  <button id="btn-start">INITIALIZE</button>
+  <div class="note">Phone/Tablet — Landscape recommended. Left joystick: move • Drag right side: look • Red button: interact • Desktop: W/A/S/D + drag + E</div>
+</div>
+
+<div id="canvas"></div>
+
+<div id="overlay"></div>
+<div id="scanlines"></div>
+<div id="vignette"></div>
+<div id="glitch"></div>
+
+<div id="hud">
+  <div id="topbar">
+    <div class="panel" id="panel-integrity">
+      <h1 id="integrity-label">HULL INTEGRITY</h1>
+      <div class="stat" id="integrity-text">48% — DEGRADED</div>
+      <div id="integrity"><div id="integrity-bar"></div></div>
+    </div>
+    <div class="panel" style="text-align:right;">
+      <div class="stat">SECTOR: <b id="sector">CORE</b></div>
+      <div class="stat">OXYGEN: <b id="oxygen">12:00</b></div>
+      <div class="stat">FPS: <b id="fps">--</b></div>
+    </div>
+  </div>
+  <div id="obj">
+    <h1 style="font-size:0.8rem; margin-bottom:7px;">objectives</h1>
+    <ul id="obj-list">
+      <li id="obj-1">Reach engineering deck</li>
+      <li id="obj-2">Repair primary reactor conduit</li>
+      <li id="obj-3">Restore life support</li>
+      <li id="obj-4">Stabilize hull integrity</li>
+    </ul>
+  </div>
+  <div id="ai">
+    <div id="ai-bubble">
+      <div id="ai-name">MIRA — SHIP AI</div>
+      <div id="ai-text">Initializing. Pilot, can you hear me? The ship is compromised. Move to engineering.</div>
+      <div id="ai-cue">[MIRA is speaking]</div>
+    </div>
+  </div>
+  <div id="hint">[ INTERACT ]</div>
+</div>
+
+<div id="controls">
+  <div id="joy" class="stick"><div class="stick-thumb"></div><div class="stick-label">move</div></div>
+  <div id="act">E</div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------------- PERF CONFIG ----------------
+const CFG = {
+  walkSpeed: 4.4,
+  runSpeed: 7.2,
+  mouseSensitivity: 0.0012,
+  integrityStart: 48,
+  integrityDecayBase: 0.05,
+  repairAmount: 18,
+  interactDist: 5.0,
+  fixTime: 2.0,
+  maxPixelRatio: 1.5,
+  sparkUpdateHz: 30,
+};
+
+// ---------------- STATE ----------------
+const state = {
+  integrity: CFG.integrityStart,
+  oxygen: 720,
+  sector: 'CORE',
+  objectives: [
+    { id: 'obj-1', done: false, text: 'Reach engineering deck' },
+    { id: 'obj-2', done: false, text: 'Repair primary reactor conduit' },
+    { id: 'obj-3', done: false, text: 'Restore life support' },
+    { id: 'obj-4', done: false, text: 'Stabilize hull integrity' },
+  ],
+  currentDialogue: 0,
+  isPlaying: false,
+  lastTime: 0,
+  fixedCount: 0,
+  frames: 0,
+  fpsTime: 0,
+  fps: 0,
+  glitchIntensity: 0,
+};
+
+// Dialogue
+const DIALOGUE = [
+  { text: "Initializing. Pilot, can you hear me? The ship is compromised. Move to engineering.", cue: "MIRA is speaking", sector: 'CORE' },
+  { text: "Massive hull breaches detected aft. Integrity is dropping. You have to reach the reactor.", cue: "MIRA is speaking", sector: 'CORE' },
+  { text: "Damaged panel ahead. Interact with it to begin repairs. I will walk you through the seal.", cue: "MIRA is speaking", sector: 'ENGINEERING' },
+  { text: "Primary conduit stabilizing. Now find the life support coupler on this deck.", cue: "MIRA is speaking", sector: 'ENGINEERING' },
+  { text: "Life support back online. Oxygen recovering. One final breach in the forward bay.", cue: "MIRA is speaking", sector: 'LIFE SUPPORT' },
+  { text: "Final seal engaged. Hull integrity holding. We're going to make it, pilot.", cue: "MIRA is speaking", sector: 'BRIDGE' },
+];
+
+// ---------------- SCENE ----------------
+const canvas = document.querySelector('#canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', alpha: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, CFG.maxPixelRatio));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x02040a);
+scene.fog = new THREE.FogExp2(0x02040a, 0.03);
+
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 120);
+camera.position.set(0, 1.6, 0);
+
+// ---------------- LIGHTING ----------------
+const ambient = new THREE.AmbientLight(0xffffff, 0.18);
+scene.add(ambient);
+
+const mainLight = new THREE.DirectionalLight(0xffffff, 0.5);
+mainLight.position.set(12, 18, 8);
+mainLight.castShadow = true;
+mainLight.shadow.mapSize.set(1024, 1024);
+mainLight.shadow.bias = -0.0005;
+scene.add(mainLight);
+
+const fillLight = new THREE.DirectionalLight(0x00ffa0, 0.25);
+fillLight.position.set(-12, 4, -10);
+scene.add(fillLight);
+
+const emergencyLights = [];
+const EMERGENCY_POS = [
+  [-8, 2.8, -8], [0, 2.8, -2], [8, 2.8, 6],
+  [-6, 2.8, 14], [6, 2.8, 22], [0, 2.8, 30]
+];
+for (const [x, y, z] of EMERGENCY_POS) {
+  const light = new THREE.PointLight(0xff283c, 0, 14);
+  light.position.set(x, y, z);
+  scene.add(light);
+  emergencyLights.push({ light, flicker: Math.random() * 10 });
+}
+
+// ---------------- GEOMETRY & MATERIALS ----------------
+const matWall = new THREE.MeshStandardMaterial({ color: 0x141a28, roughness: 0.8, metalness: 0.3 });
+const matWallDmg = new THREE.MeshStandardMaterial({ color: 0x241212, roughness: 0.9, metalness: 0.4 });
+const matFloor = new THREE.MeshStandardMaterial({ color: 0x0e121c, roughness: 0.7, metalness: 0.4 });
+const matCeil = new THREE.MeshStandardMaterial({ color: 0x0b0d16, roughness: 0.8, metalness: 0.2 });
+const matMetal = new THREE.MeshStandardMaterial({ color: 0x3d485c, roughness: 0.45, metalness: 0.9 });
+const matGlass = new THREE.MeshStandardMaterial({ color: 0x6fb0ff, transparent: true, opacity: 0.3, roughness: 0.1, metalness: 0.1 });
+const matGlow = new THREE.MeshBasicMaterial({ color: #00ffa0 });
+const matCircuit = new THREE.MeshBasicMaterial({ color: 0x00ffa0, transparent: true, opacity: 0.9 });
+const matHolo = new THREE.MeshBasicMaterial({ color: 0x00ffa0, transparent: true, opacity: 0.35 });
+
+const colliders = [];
+const brokenPanels = [];
+const debris = [];
+
+function addBox(w, h, d, mat, x, y, z, rx=0, ry=0, rz=0, cast=true, receive=true) {
+  const geo = new THREE.BoxGeometry(w, h, d);
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, y, z);
+  m.rotation.set(rx, ry, rz);
+  m.castShadow = cast;
+  m.receiveShadow = receive;
+  scene.add(m);
+  colliders.push({ mesh: m, box: new THREE.Box3().setFromObject(m) });
+  return m;
+}
+
+const W = 24, H = 7, D = 36;
+
+// Hull shell
+addBox(W, H, D, matWall, 0, H/2, 0);
+addBox(W, 0.5, D, matFloor, 0, 0.05, 0);
+addBox(W, 0.5, D, matCeil, 0, H-0.05, 0);
+addBox(0.5, H, D, matWall, -W/2+0.25, H/2, 0);
+addBox(0.5, H, D, matWall, W/2-0.25, H/2, 0);
+addBox(W, H, 0.5, matWall, 0, H/2, -D/2+0.25);
+addBox(W, H, 0.5, matWall, 0, H/2, D/2-0.25);
+
+// Bulkheads
+addBox(3, H, 0.8, matWall, -8, H/2, -8);
+addBox(3, H, 0.8, matWall, 8, H/2, -2);
+addBox(0.8, H, 7, matWall, 0, H/2, 7);
+
+// Pillars
+for (let i = -1; i <= 1; i += 2) {
+  addBox(0.7, H, 0.7, matMetal, i*7, H/2, -4);
+  addBox(0.7, H, 0.7, matMetal, i*7, H/2, 7);
+  addBox(0.7, H, 0.7, matMetal, i*7, H/2, 18);
+  addBox(0.7, H, 0.7, matMetal, i*7, H/2, 29);
+}
+
+// ---------------- HOLOGRAPHIC CIRCUIT TRACES (unique graphics) ----------------
+function addCircuitWall(x, y, z, ry, w, h) {
+  const group = new THREE.Group();
+  const lines = [];
+  const segments = 22;
+  const geo = new THREE.BufferGeometry();
+  const positions = [];
+  for (let i = 0; i < segments; i++) {
+    const t = i / (segments - 1);
+    const tx = (Math.random() - 0.5) * (w - 0.8);
+    const ty = (Math.random() - 0.5) * (h - 0.8);
+    positions.push(tx, ty, 0.06, tx + (Math.random() - 0.5) * 0.5, ty + (Math.random() - 0.5) * 0.5, 0.06);
+  }
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  const mesh = new THREE.LineSegments(geo, matCircuit);
+  mesh.position.set(x, y, z);
+  mesh.rotation.y = ry;
+  scene.add(mesh);
+  group.add(mesh);
+  return group;
+}
+
+addCircuitWall(-7, 2.4, -7.9, 0, 2.6, 4.2);
+addCircuitWall(7, 2.4, -1.9, 0, 2.6, 4.2);
+addCircuitWall(0, 2.4, 6.9, Math.PI/2, 3.2, 4.2);
+
+// ---------------- BROKEN PANELS ----------------
+function addBrokenPanel(x, y, z, ry, w=2.4, h=2.4) {
+  const hull = new THREE.Group();
+  const hole = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.3), matWallDmg);
+  hole.position.set(0, 0, 0);
+  hull.add(hole);
+
+  // Sparks (reduced count for FPS)
+  const sparkCount = 8;
+  const positions = new Float32Array(sparkCount * 3);
+  const velocities = new Float32Array(sparkCount * 3);
+  for (let i = 0; i < sparkCount; i++) {
+    positions[i*3] = (Math.random() - 0.5) * w;
+    positions[i*3+1] = (Math.random() - 0.5) * h;
+    positions[i*3+2] = 0;
+    velocities[i*3] = (Math.random() - 0.5) * 0.03;
+    velocities[i*3+1] = (Math.random() - 0.5) * 0.04;
+    velocities[i*3+2] = (Math.random() - 0.5) * 0.03;
+  }
+  const sparkGeo = new THREE.BufferGeometry();
+  sparkGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const sparks = new THREE.Points(sparkGeo, new THREE.PointsMaterial({ color: 0xff6600, size: 0.06, transparent: true, opacity: 0.9 }));
+  sparks.userData = { positions, velocities, active: true, lastUpdate: 0 };
+  hull.add(sparks);
+
+  // Glowing exposed wires (innovation: energy arcs)
+  const wireGeo = new THREE.BufferGeometry();
+  const wirePts = [];
+  for (let i = 0; i < 5; i++) {
+    const sx = (Math.random() - 0.5) * (w - 0.6);
+    const sy = (Math.random() - 0.5) * (h - 0.6);
+    wirePts.push(sx, sy, 0.15, sx + (Math.random() - 0.5) * 0.5, sy + (Math.random() - 0.5) * 0.5, 0.15);
+  }
+  wireGeo.setAttribute('position', new THREE.Float32BufferAttribute(wirePts, 3));
+  const wires = new THREE.Line(wireGeo, new THREE.LineBasicMaterial({ color: 0x00ffa0, transparent: true, opacity: 0.8 }));
+  hull.add(wires);
+
+  hull.position.set(x, y, z);
+  hull.rotation.set(0, ry, 0);
+  scene.add(hull);
+
+  const box = new THREE.Box3().setFromObject(hull);
+  brokenPanels.push({ mesh: hull, box, sparks, wires, fixed: false });
+}
+
+addBrokenPanel(-4.5, 2.4, -5.5, 0);        // start
+addBrokenPanel(4, 2.4, 0, 0);              // mid
+addBrokenPanel(0, 2.4, 10, Math.PI/2);     // reactor
+addBrokenPanel(-5, 2.4, 18, 0);            // life support
+addBrokenPanel(6, 2.4, 28, 0);             // final
+
+// ---------------- DETAILS ----------------
+const detailGroup = new THREE.Group();
+scene.add(detailGroup);
+
+function pipe(x, y, z, rx, ry, rz, len, color=0x556078) {
+  const g = new THREE.CylinderGeometry(0.11, 0.11, len, 6);
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.85 }));
+  m.position.set(x, y, z);
+  m.rotation.set(rx, ry, rz);
+  m.castShadow = true; m.receiveShadow = true;
+  detailGroup.add(m);
+}
+pipe(-8, 5.6, -11, 0, 0, Math.PI/2, 14);
+pipe(8, 5.6, 1, 0, 0, Math.PI/2, 16);
+pipe(0, 5.6, 13, Math.PI/2, 0, 0, 5, 0x8b0000);
+pipe(0, 5.6, 25, Math.PI/2, 0, 0, 5, 0x8b0000);
+
+function consoleTable(x, y, z, ry) {
+  const base = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.8, 1.1), matMetal);
+  base.position.set(x, y, z); base.rotation.y = ry;
+  base.castShadow = base.receiveShadow = true;
+  detailGroup.add(base);
+  const top = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.12, 1.3), new THREE.MeshStandardMaterial({ color: 0x161c28 }));
+  top.position.set(x, y + 0.86, z); top.rotation.y = ry;
+  top.castShadow = top.receiveShadow = true;
+  detailGroup.add(top);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.75), matGlow);
+  scr.position.set(x, y + 1.02, z + 0.66); scr.rotation.y = ry;
+  detailGroup.add(scr);
+}
+consoleTable(-5, 0.5, -6, 0);
+consoleTable(5, 0.5, 4, Math.PI);
+consoleTable(-2, 0.5, 14, Math.PI/2);
+consoleTable(6, 0.5, 22, 0);
+
+const win = new THREE.Mesh(new THREE.PlaneGeometry(7, 4.5), matGlass);
+win.position.set(0, 3.2, D/2 - 0.31);
+scene.add(win);
+
+// ---------------- STARS (Instanced for FPS) ----------------
+const starCount = 600;
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount; i++) {
+  starPos[i*3] = (Math.random() - 0.5) * 240;
+  starPos[i*3+1] = (Math.random() - 0.5) * 240;
+  starPos[i*3+2] = (Math.random() - 0.5) * 240 - 60;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.5, transparent: true, opacity: 0.85 }));
+scene.add(stars);
+
+// Nebula (instanced, low cost)
+const nebGeo = new THREE.BufferGeometry();
+const nebPos = new Float32Array(240 * 3);
+for (let i = 0; i < 240; i++) {
+  nebPos[i*3] = (Math.random() - 0.5) * 160;
+  nebPos[i*3+1] = (Math.random() - 0.5) * 160;
+  nebPos[i*3+2] = (Math.random() - 0.5) * 160 - 70;
+}
+nebGeo.setAttribute('position', new THREE.BufferAttribute(nebPos, 3));
+const nebula = new THREE.Points(nebGeo, new THREE.PointsMaterial({ color: 0x1a0a33, size: 2.5, transparent: true, opacity: 0.12 }));
+scene.add(nebula);
+
+// ---------------- FLOATING DEBRIS (Instanced) ----------------
+const debrisCount = 30;
+const debrisGeo = new THREE.IcosahedronGeometry(0.15, 1);
+const debrisMat = new THREE.MeshStandardMaterial({ color: 0x667088, roughness: 0.7, metalness: 0.8 });
+const debrisMesh = new THREE.InstancedMesh(debrisGeo, debrisMat, debrisCount);
+const debrisMats = new THREE.Matrix4();
+const debrisVel = [];
+const debrisPos = [];
+const debrisRot = [];
+const debrisRotVel = [];
+for (let i = 0; i < debrisCount; i++) {
+  debrisPos.push((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40 - 30);
+  debrisVel.push((Math.random() - 0.5) * 0.03, (Math.random() - 0.5) * 0.03, (Math.random() - 0.5) * 0.03);
+  debrisRot.push(Math.random() * Math.PI * 2, Math.random() * Math.PI * 2, Math.random() * Math.PI * 2);
+  debrisRotVel.push((Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02, (Math.random() - 0.5) * 0.02);
+}
+for (let i = 0; i < debrisCount; i++) {
+  debrisMats.setPosition(debrisPos[i*3], debrisPos[i*3+1], debrisPos[i*3+2]);
+  debrisMesh.setMatrixAt(i, debrisMats);
+}
+debrisMesh.instanceMatrix.needsUpdate = true;
+debrisMesh.castShadow = true;
+debrisMesh.receiveShadow = true;
+scene.add(debrisMesh);
+
+// ---------------- MIRA HOLOGRAM (innovation: AI projection) ----------------
+const miraGroup = new THREE.Group();
+const miraCore = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.9, 16), matHolo);
+miraCore.position.y = 1.8;
+miraGroup.add(miraCore);
+
+// Rotating hologram rings
+const ringGeo = new THREE.RingGeometry(0.3, 0.5, 32);
+const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ffa0, transparent: true, opacity: 0.25, side: THREE.DoubleSide });
+const ring1 = new THREE.Mesh(ringGeo, ringMat);
+ring1.rotation.x = Math.PI / 2;
+miraGroup.add(ring1);
+const ring2 = ring1.clone();
+ring2.rotation.z = Math.PI / 4;
+miraGroup.add(ring2);
+
+const miraParticles = new THREE.Points(
+  new THREE.BufferGeometry(),
+  new THREE.PointsMaterial({ color: 0x00ffa0, size: 0.04, transparent: true, opacity: 0.6 })
+);
+const miraPos = new Float32Array(40 * 3);
+for (let i = 0; i < 40; i++) {
+  const r = 0.35 + Math.random() * 0.3;
+  const a = Math.random() * Math.PI * 2;
+  const h = (Math.random() - 0.5) * 1.2;
+  miraPos[i*3] = r * Math.cos(a);
+  miraPos[i*3+1] = h;
+  miraPos[i*3+2] = r * Math.sin(a);
+}
+miraParticles.geometry.setAttribute('position', new THREE.BufferAttribute(miraPos, 3));
+miraGroup.add(miraParticles);
+
+miraGroup.position.set(0, 1.6, -2);
+miraGroup.visible = false;
+scene.add(miraGroup);
+
+// ---------------- AUDIO / AI ----------------
+let synth = window.speechSynthesis;
+let speaking = false;
+function speak(text) {
+  if (!('speechSynthesis' in window)) return;
+  if (speaking) { synth.cancel(); speaking = false; }
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.92; u.pitch = 1.12; u.volume = 0.9;
+  u.onstart = () => { speaking = true; };
+  u.onend = () => { speaking = false; };
+  synth.speak(u);
+}
+
+function setDialogue(index) {
+  if (index < 0 || index >= DIALOGUE.length) return;
+  const d = DIALOGUE[index];
+  document.getElementById('ai-text').textContent = d.text;
+  document.getElementById('ai-cue').textContent = '[' + d.cue + ']';
+  document.getElementById('sector').textContent = d.sector;
+  state.sector = d.sector;
+  speak(d.text);
+  // Show MIRA hologram when speaking
+  miraGroup.visible = true;
+  setTimeout(() => { miraGroup.visible = false; }, 3000);
+}
+function nextDialogue() {
+  state.currentDialogue++;
+  if (state.currentDialogue < DIALOGUE.length) setDialogue(state.currentDialogue);
+}
+
+// ---------------- INPUT ----------------
+const move = { forward: 0, right: 0 };
+let isRunning = false;
+let yaw = 0, pitch = 0;
+let pointerCaptured = false;
+let lookActive = false, lookLast = { x: 0, y: 0 };
+
+function rotateCamera(dx, dy) {
+  if (!state.isPlaying) return;
+  const s = CFG.mouseSensitivity * 120;
+  yaw -= dx * s;
+  pitch -= dy * s;
+  pitch = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitch));
+  camera.rotation.set(pitch, yaw, 0, 'YXZ');
+}
+
+document.addEventListener('mousedown', (e) => {
+  if (!state.isPlaying) return;
+  if (e.clientX > window.innerWidth / 2 && !document.getElementById('joy').contains(e.target) && e.target !== document.getElementById('act')) {
+    pointerCaptured = true;
+    lookLast = { x: e.clientX, y: e.clientY };
+  }
+});
+document.addEventListener('mousemove', (e) => {
+  if (!pointerCaptured) return;
+  rotateCamera(e.movementX, e.movementY);
+});
+document.addEventListener('mouseup', () => { pointerCaptured = false; });
+
+document.addEventListener('touchstart', (e) => {
+  const t = e.touches[0];
+  if (!state.isPlaying) return;
+  if (t.clientX > window.innerWidth / 2 && !document.getElementById('joy').contains(t.target) && t.target !== document.getElementById('act')) {
+    e.preventDefault();
+    lookActive = true;
+    lookLast = { x: t.clientX, y: t.clientY };
+  }
+}, { passive: false });
+document.addEventListener('touchmove', (e) => {
+  if (!lookActive) return;
+  const t = e.touches[0];
+  rotateCamera(t.clientX - lookLast.x, t.clientY - lookLast.y);
+  lookLast = { x: t.clientX, y: t.clientY };
+}, { passive: false });
+document.addEventListener('touchend', () => { lookActive = false; });
+document.addEventListener('touchcancel', () => { lookActive = false; });
+
+// Joystick
+const joyEl = document.getElementById('joy');
+const joyThumb = joyEl.querySelector('.stick-thumb');
+let joyActive = false, joyStart = { x: 0, y: 0 };
+function getTouchPos(e) {
+  const t = e.touches[0] || e.changedTouches[0];
+  const r = joyEl.getBoundingClientRect();
+  return { x: t.clientX - r.left - r.width/2, y: t.clientY - r.top - r.height/2 };
+}
+joyEl.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  joyActive = true;
+  const p = getTouchPos(e);
+  joyStart = p;
+}, { passive: false });
+joyEl.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (!joyActive) return;
+  const p = getTouchPos(e);
+  let dx = p.x - joyStart.x;
+  let dy = p.y - joyStart.y;
+  const dist = Math.hypot(dx, dy);
+  const max = 34;
+  if (dist > max) { dx *= max/dist; dy *= max/dist; }
+  joyThumb.style.transform = `translate(${dx}px, ${dy}px)`;
+  move.forward = -dy / max;
+  move.right = dx / max;
+  isRunning = dist > max * 0.85;
+}, { passive: false });
+function endJoy() {
+  joyActive = false; move.forward = 0; move.right = 0; isRunning = false;
+  joyThumb.style.transform = 'translate(0,0)';
+}
+joyEl.addEventListener('touchend', endJoy);
+joyEl.addEventListener('touchcancel', endJoy);
+
+// Action
+const actEl = document.getElementById('act');
+let actionPressed = false;
+function triggerAction() { actionPressed = true; }
+actEl.addEventListener('touchstart', (e) => { e.preventDefault(); triggerAction(); });
+actEl.addEventListener('click', triggerAction);
+
+// Keyboard
+const keys = {};
+window.addEventListener('keydown', (e) => {
+  keys[e.code] = true;
+  if (e.code === 'Space' || e.code === 'KeyE') triggerAction();
+  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') isRunning = true;
+  if (e.code === 'KeyW') move.forward = 1;
+  if (e.code === 'KeyS') move.forward = -1;
+  if (e.code === 'KeyD') move.right = 1;
+  if (e.code === 'KeyA') move.right = -1;
+});
+window.addEventListener('keyup', (e) => {
+  keys[e.code] = false;
+  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') isRunning = false;
+  if (e.code === 'KeyW' || e.code === 'KeyS') move.forward = 0;
+  if (e.code === 'KeyD' || e.code === 'KeyA') move.right = 0;
+});
+
+// ---------------- INTERACTION ----------------
+const raycaster = new THREE.Raycaster();
+const center = new THREE.Vector2(0, 0);
+const hintEl = document.getElementById('hint');
+let interactTarget = null;
+let repairing = false;
+let repairTimer = 0;
+
+function updateInteract() {
+  raycaster.setFromCamera(center, camera);
+  let nearest = null, nearestDist = 1e9;
+  for (const p of brokenPanels) {
+    if (p.fixed) continue;
+    const hit = raycaster.ray.intersectBox(p.box, new THREE.Vector3());
+    if (!hit) continue;
+    const d = raycaster.ray.origin.distanceTo(hit);
+    if (d < nearestDist && d < CFG.interactDist) { nearestDist = d; nearest = p; }
+  }
+  interactTarget = nearest;
+  if (nearest && !repairing) hintEl.classList.add('show');
+  else hintEl.classList.remove('show');
+}
+
+function startRepair() {
+  if (!interactTarget || repairing) return;
+  repairing = true;
+  repairTimer = 0;
+  setDialogue(2);
+}
+
+function completeRepair(panel) {
+  panel.fixed = true;
+  panel.sparks.material.opacity = 0;
+  panel.sparks.userData.active = false;
+  panel.mesh.scale.setScalar(0.01);
+  state.fixedCount++;
+  state.integrity = Math.min(100, state.integrity + CFG.repairAmount);
+  updatingHUD();
+  nextDialogue();
+  repairing = false;
+  interactTarget = null;
+  hintEl.classList.remove('show');
+}
+
+// ---------------- HUD ----------------
+function updatingHUD() {
+  const pct = Math.round(state.integrity);
+  const crit = pct < 25;
+  const deg = pct < 50;
+  const integEl = document.getElementById('integrity-text');
+  const bar = document.getElementById('integrity-bar');
+  const panel = document.getElementById('panel-integrity');
+  const label = document.getElementById('integrity-label');
+
+  integEl.textContent = pct + '% — ' + (crit ? 'CRITICAL' : deg ? 'DEGRADED' : 'STABLE');
+  bar.style.width = pct + '%';
+  bar.classList.toggle('warn', crit || deg);
+  panel.classList.toggle('critical', crit);
+  label.classList.toggle('warn', crit || deg);
+
+  // Glitch effect scales with damage
+  state.glitchIntensity = crit ? 1 : deg ? 0.4 : 0;
+  document.getElementById('glitch').style.opacity = state.glitchIntensity;
+
+  const m = Math.floor(state.oxygen / 60), s = Math.floor(state.oxygen % 60);
+  document.getElementById('oxygen').textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+
+  const camPos = camera.position;
+  state.objectives.forEach(o => {
+    const el = document.getElementById(o.id);
+    if (!el) return;
+    if (o.id === 'obj-1') o.done = camPos.z > -8;
+    if (o.id === 'obj-2') o.done = state.fixedCount >= 1;
+    if (o.id === 'obj-3') o.done = state.fixedCount >= 3;
+    if (o.id === 'obj-4') o.done = state.fixedCount >= brokenPanels.length;
+    el.classList.toggle('done', o.done);
+  });
+
+  // FPS
+  document.getElementById('fps').textContent = state.fps;
+}
+window.updatingHUD = updatingHUD;
+updatingHUD();
+setDialogue(0);
+
+// ---------------- END GAME ----------------
+function endGame(win) {
+  state.isPlaying = false;
+  pointerCaptured = false;
+  lookActive = false;
+  if (win) {
+    setDialogue(5);
+    document.getElementById('ai-text').textContent = "Final seal engaged. Hull integrity holding. We're going to make it, pilot.";
+    speak("Mission success. Hull integrity holding. We're going to make it, pilot.");
+  } else {
+    document.getElementById('ai-text').textContent = "Integrity collapsed. I'm sorry, pilot. Systems failing...";
+    speak("Integrity collapsed. Systems failing.");
+  }
+  setTimeout(() => {
+    document.getElementById('start').querySelector('h1').textContent = win ? 'MISSION COMPLETE' : 'HULL LOST';
+    document.getElementById('start').querySelector('h1').style.color = win ? '#00ffa0' : '#ff283c';
+    document.getElementById('start').querySelector('p').textContent = win ? 'The ship holds. You and MIRA made it out.' : 'The vessel is lost. Try again.';
+    document.getElementById('start').querySelector('#btn-start').textContent = win ? 'FLY AGAIN' : 'REBOOT';
+    document.getElementById('start').style.display = 'flex';
+    state.integrity = CFG.integrityStart;
+    state.oxygen = 720;
+    state.fixedCount = 0;
+    state.currentDialogue = 0;
+    brokenPanels.forEach(p => {
+      p.fixed = false;
+      p.mesh.scale.setScalar(1);
+      p.sparks.material.opacity = 0.9;
+      p.sparks.userData.active = true;
+    });
+    camera.position.set(0, 1.6, 0);
+    camera.rotation.set(0, 0, 0, 'YXZ');
+    yaw = 0; pitch = 0;
+    updatingHUD();
+  }, 2500);
+}
+
+// ---------------- GAME LOOP ----------------
+let sparkAccum = 0;
+function animate(t) {
+  requestAnimationFrame(animate);
+  const dt = Math.min((t - state.lastTime) / 1000, 0.04);
+  state.lastTime = t;
+
+  // FPS calc
+  state.frames++;
+  state.fpsTime += dt;
+  if (state.fpsTime >= 0.5) {
+    state.fps = Math.round(state.frames / state.fpsTime);
+    state.frames = 0;
+    state.fpsTime = 0;
+  }
+
+  if (!state.isPlaying) {
+    renderer.render(scene, camera);
+    return;
+  }
+
+  // Movement (camera-relative)
+  const speed = isRunning ? CFG.runSpeed : CFG.walkSpeed;
+  const moveSpeed = speed * dt;
+  const camDir = new THREE.Vector3();
+  camera.getWorldDirection(camDir);
+  camDir.y = 0; camDir.normalize();
+  const camRight = new THREE.Vector3().crossVectors(camDir, new THREE.Vector3(0, 1, 0)).normalize();
+  const moveOffset = new THREE.Vector3()
+    .addScaledVector(camDir, -move.forward * moveSpeed)
+    .addScaledVector(camRight, move.right * moveSpeed);
+
+  const nextPos = camera.position.clone().add(moveOffset);
+  nextPos.y = 1.6;
+
+  // Collision AABB
+  let blocked = false;
+  const playerBox = new THREE.Box3(
+    new THREE.Vector3(nextPos.x - 0.3, 0, nextPos.z - 0.3),
+    new THREE.Vector3(nextPos.x + 0.3, 1.6, nextPos.z + 0.3)
+  );
+  for (const c of colliders) {
+    if (playerBox.intersectsBox(c.box)) { blocked = true; break; }
+  }
+  if (!blocked) camera.position.copy(nextPos);
+
+  // MIRA hologram bob
+  if (miraGroup.visible) {
+    const bob = Math.sin(t * 0.003) * 0.06;
+    miraGroup.position.y = 1.6 + bob;
+    miraGroup.rotation.y = t * 0.001;
+    miraCore.material.opacity = 0.25 + Math.sin(t * 0.005) * 0.1;
+    ring1.material.opacity = 0.15 + Math.sin(t * 0.003) * 0.1;
+    ring2.material.opacity = 0.15 + Math.cos(t * 0.004) * 0.1;
+  }
+
+  // Integrity decay near breaches (faster when lower integrity = more panic)
+  const nearBreach = brokenPanels.some(p => !p.fixed && camera.position.distanceTo(p.mesh.position) < 7);
+  const panicMult = state.integrity < 25 ? 2.5 : state.integrity < 50 ? 1.5 : 1;
+  if (nearBreach) {
+    state.integrity = Math.max(0, state.integrity - CFG.integrityDecayBase * dt * panicMult);
+  }
+  state.oxygen = Math.max(0, state.oxygen - 0.2 * dt);
+
+  if (state.integrity <= 0 || state.oxygen <= 0) endGame(false);
+  if (state.fixedCount >= brokenPanels.length) endGame(true);
+
+  updatingHUD();
+
+  // Emergency lights flicker (faster = lower integrity)
+  emergencyLights.forEach(l => {
+    l.flicker += dt * (8 + (1 - state.integrity / 100) * 12);
+    const flick = Math.sin(l.flicker) * 0.5 + Math.sin(l.flicker * 2.1) * 0.3;
+    l.light.intensity = THREE.MathUtils.clamp(flick * 1.4 + 0.2, 0, 1.8);
+  });
+
+  // Debris float
+  for (let i = 0; i < debrisCount; i++) {
+    debrisPos[i*3] += debrisVel[i*3];
+    debrisPos[i*3+1] += debrisVel[i*3+1];
+    debrisPos[i*3+2] += debrisVel[i*3+2];
+    debrisRot[i*3] += debrisRotVel[i*3];
+    debrisRot[i*3+1] += debrisRotVel[i*3+1];
+    debrisRot[i*3+2] += debrisRotVel[i*3+2];
+    debrisMats.identity();
+    debrisMats.rotateX(debrisRot[i*3]);
+    debrisMats.rotateY(debrisRot[i*3+1]);
+    debrisMats.rotateZ(debrisRot[i*3+2]);
+    debrisMats.setPosition(debrisPos[i*3], debrisPos[i*3+1], debrisPos[i*3+2]);
+    debrisMesh.setMatrixAt(i, debrisMats);
+  }
+  debrisMesh.instanceMatrix.needsUpdate = true;
+
+  // Spark animation (throttled)
+  sparkAccum += dt;
+  if (sparkAccum >= 1 / CFG.sparkUpdateHz) {
+    sparkAccum = 0;
+    brokenPanels.forEach(p => {
+      if (!p.fixed && p.sparks.userData.active) {
+        const { positions, velocities } = p.sparks.userData;
+        for (let i = 0; i < positions.length / 3; i++) {
+          positions[i*3+1] += velocities[i*3+1];
+          if (Math.abs(positions[i*3+1]) > 1.0) velocities[i*3+1] *= -1;
+        }
+        p.sparks.geometry.attributes.position.needsUpdate = true;
+        // Wire pulse
+        p.wires.material.opacity = 0.4 + Math.abs(Math.sin(t * 0.01)) * 0.4;
+      }
+    });
+  }
+
+  // Repair progress
+  if (repairing && interactTarget) {
+    repairTimer += dt;
+    const prog = Math.min(1, repairTimer / CFG.fixTime);
+    hintEl.style.opacity = 0.5 + 0.5 * Math.abs(Math.sin(t * 0.01));
+    if (prog >= 1) completeRepair(interactTarget);
+  } else if (!repairing) {
+    hintEl.style.opacity = 1;
+  }
+
+  if (actionPressed) {
+    if (!repairing && interactTarget) startRepair();
+    actionPressed = false;
+  }
+
+  // Subtle chromatic-ish fog shift with integrity
+  const fogColor = new THREE.Color(0x02040a);
+  if (state.integrity < 50) {
+    fogColor.lerp(new THREE.Color(0x330a0a), (50 - state.integrity) / 50);
+  }
+  scene.fog.color.copy(fogColor);
+
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+document.getElementById('btn-start').addEventListener('click', () => {
+  document.getElementById('start').style.display = 'none';
+  document.getElementById('load').style.display = 'none';
+  state.isPlaying = true;
+  state.lastTime = performance.now();
+  pointerCaptured = true;
+  requestAnimationFrame(animate);
+});
+
+document.getElementById('load').style.display = 'none';
+document.getElementById('start').style.display = 'flex';
+
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
