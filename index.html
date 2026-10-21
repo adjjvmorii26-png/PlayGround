@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>HALCYON DRIFT — Free-Roam Space Flight</title>
+<meta name="description" content="Halcyon Drift is a free-roam third-person space flight game. Drift an endless nebula, attune living echoes and wake a sky that remembers you." />
+<meta name="theme-color" content="#02040a" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2302040a'/%3E%3Cpath d='M32 10 40 32 32 54 24 32Z' fill='none' stroke='%237df9ff' stroke-width='2.4'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23ffc978'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body class="loading">
+<canvas id="scene" aria-label="Halcyon Drift flight view" tabindex="0"></canvas>
+
+<div class="fx-grain" aria-hidden="true"></div>
+<div class="fx-vignette" aria-hidden="true"></div>
+<div class="fx-scan" aria-hidden="true"></div>
+
+<div class="fallback" id="fallback" hidden>
+  <h1>WebGL unavailable</h1>
+  <p>Halcyon Drift needs hardware-accelerated WebGL. Try a current desktop browser with graphics acceleration enabled.</p>
+</div>
+
+<div class="boot" aria-hidden="true">
+  <span class="boot-mark"></span>
+  <span>CALIBRATING DRIFT FIELD</span>
+</div>
+
+<section class="start" id="start" aria-label="Halcyon Drift launch screen">
+  <header class="start-top">
+    <div class="wordmark">
+      <span class="wordmark-mark" aria-hidden="true">
+        <svg viewBox="0 0 44 44"><path d="M22 3 29 22 22 41 15 22Z" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="22" cy="22" r="3.4" fill="currentColor"/><path d="M3 22h10M31 22h10" stroke="currentColor" stroke-width="1.5"/></svg>
+      </span>
+      <span class="wordmark-text">HALCYON<em>DRIFT</em></span>
+    </div>
+    <div class="link-status"><i></i>FIELD LINK STABLE</div>
+  </header>
+
+  <div class="start-main">
+    <p class="eyebrow"><i></i>OPEN-WORLD SPACE FLIGHT</p>
+    <h1><span>HALCYON</span><span class="drift">DRIFT</span></h1>
+    <p class="lede">
+      A quiet nebula that never ends. Fly a living interceptor through coral
+      belts, glass planets and creatures that follow curiosity. No rails. No
+      loading screens. Only the dark and the echoes you wake in it.
+    </p>
+
+    <div class="start-stats">
+      <div><b>∞</b><span>CHUNKS AHEAD</span></div>
+      <div><b id="lumaCount">--</b><span>LUMA IN FIELD</span></div>
+      <div><b>06</b><span>ECHO CHORDS</span></div>
+    </div>
+
+    <div class="start-actions">
+      <button class="btn primary" id="startBtn" type="button">
+        <span>BEGIN DRIFT</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button class="btn ghost" id="guideBtn" type="button">FIELD GUIDE</button>
+    </div>
+    <p class="start-hint">MOUSE + KEYBOARD · HEADPHONES RECOMMENDED · NO INSTALL</p>
+  </div>
+
+  <aside class="start-manual" aria-label="Flight controls">
+    <div class="manual-head"><span>FLIGHT MANUAL</span><em>01—07</em></div>
+    <div class="manual-row"><kbd>W</kbd><kbd>S</kbd><span>Thrust / retro</span></div>
+    <div class="manual-row"><kbd>MOUSE</kbd><span>Steer</span></div>
+    <div class="manual-row"><kbd>A</kbd><kbd>D</kbd><span>Roll</span></div>
+    <div class="manual-row"><kbd>SHIFT</kbd><span>Warp burn</span></div>
+    <div class="manual-row"><kbd>E</kbd><span>Attune echo</span></div>
+    <div class="manual-row"><kbd>SPACE</kbd><span>Resonance pulse</span></div>
+    <div class="manual-row"><kbd>P</kbd><span>Photo mode</span></div>
+    <div class="manual-note">Warp burns recharge slowly. Fragments restore them.</div>
+  </aside>
+
+  <footer class="start-foot">
+    <span>SECTOR <b id="sectorReadout">0 : 0 : 0</b></span>
+    <span>HALCYON VEIL / INFINITE</span>
+    <span class="signal-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+  </footer>
+</section>
+
+<div class="hud" id="hud" aria-hidden="true">
+  <header class="hud-top">
+    <div class="wordmark small">
+      <span class="wordmark-mark" aria-hidden="true">
+        <svg viewBox="0 0 44 44"><path d="M22 3 29 22 22 41 15 22Z" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="22" cy="22" r="3.6" fill="currentColor"/></svg>
+      </span>
+      <span class="wordmark-text">HALCYON<em>DRIFT</em></span>
+    </div>
+    <div class="hud-sector"><span>SECTOR</span><b>HALCYON VEIL</b><em id="sectorHud">0 : 0 : 0</em></div>
+    <div class="hud-tools">
+      <button class="icon-btn" id="soundBtn" type="button" aria-label="Toggle sound" title="Toggle sound (M)">
+        <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path class="wave" d="M16 9.5a4 4 0 0 1 0 5M18.5 7a7.5 7.5 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </button>
+      <button class="icon-btn" id="photoBtn" type="button" aria-label="Photo mode" title="Photo mode (P)">
+        <svg viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+      </button>
+      <button class="icon-btn" id="helpBtn" type="button" aria-label="Field guide" title="Field guide (H)">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.6 2.3c-.8.4-1.2.9-1.2 1.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="16.9" r=".9" fill="currentColor"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <aside class="panel objective" aria-label="Resonance objective">
+    <div class="panel-label"><span>RESONANCE</span><em>01</em></div>
+    <h2>Attune the echoes</h2>
+    <p>Fly close to a pale echo and press <kbd>E</kbd>. Every chord re-colors the sky.</p>
+    <div class="chord-row"><b id="chordCount">0 / 6</b><div class="pips" id="chordPips"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+    <div class="data-row"><span>NEAREST ECHO</span><b id="nearestDist">FREE</b></div>
+    <div class="data-row"><span>FRAGMENTS</span><b id="moteCount">000</b></div>
+  </aside>
+
+  <aside class="panel telemetry" aria-label="Flight telemetry">
+    <div class="velocity"><span>VELOCITY</span><b id="speedVal">000</b><em>M/S</em></div>
+    <div class="state-row"><span id="flightMode">DRIFT</span><span id="signalState">STABLE</span></div>
+    <div class="meter"><div class="meter-head"><span>THRUST</span></div><div class="track"><i id="thrustBar"></i></div></div>
+    <div class="meter"><div class="meter-head"><span>WARP CELL</span></div><div class="track warp"><i id="warpBar"></i></div></div>
+  </aside>
+
+  <div class="echo-marker" id="echoMarker" aria-hidden="true">
+    <span>ECHO</span><b id="markerDist">0 M</b>
+  </div>
+
+  <div class="hud-bottom">
+    <div class="compass-shell">
+      <canvas id="compass" width="560" height="72" aria-hidden="true"></canvas>
+    </div>
+    <div class="panel minimap-panel">
+      <div class="panel-label"><span>LOCAL SCAN</span><em>1.7 KM</em></div>
+      <canvas id="minimap" width="300" height="300" aria-hidden="true"></canvas>
+      <div class="coord-line" id="coordLine">X 0.8 · Y 0.8 · Z 0.8 km</div>
+    </div>
+    <div class="hud-hints">
+      <span><kbd>W</kbd><kbd>S</kbd> THRUST</span>
+      <span><kbd>MOUSE</kbd> STEER</span>
+      <span><kbd>SHIFT</kbd> WARP</span>
+      <span><kbd>E</kbd> ATTUNE</span>
+      <span><kbd>SPACE</kbd> PULSE</span>
+      <span><kbd>P</kbd> PHOTO</span>
+    </div>
+  </div>
+
+  <p class="hud-log" id="log" aria-live="polite"></p>
+
+  <button class="attune-prompt" id="attunePrompt" type="button">
+    <span class="prompt-key">E</span>
+    <span class="prompt-copy"><b>ATTUNE ECHO</b><em>The sky is listening</em></span>
+  </button>
+
+  <div class="toast" role="status" aria-live="polite"></div>
+</div>
+
+<section class="help-panel" id="helpPanel" aria-hidden="true" aria-label="Field guide">
+  <div class="help-card">
+    <header>
+      <span>FIELD GUIDE / 01</span>
+      <button class="icon-btn" id="helpClose" type="button" aria-label="Close field guide">×</button>
+    </header>
+    <div class="help-grid">
+      <div>
+        <h2>FLIGHT</h2>
+        <p>You are always moving. <kbd>W</kbd> and <kbd>S</kbd> shape the throttle, the mouse steers, and <kbd>A</kbd>/<kbd>D</kbd> rolls the hull. Hold <kbd>SHIFT</kbd> for a warp burn — the cell drains and slowly recharges.</p>
+        <p>Scroll to pull the chase camera closer or further. <kbd>C</kbd> cycles camera distance.</p>
+      </div>
+      <div>
+        <h2>RESONANCE</h2>
+        <p>Pale echoes hum in the dark. Get close, press <kbd>E</kbd>, and the surrounding nebula shifts to a new palette. Six chords are hidden in the Veil. Your progress is saved locally.</p>
+        <p><kbd>SPACE</kbd> releases a pulse that reveals nearby echoes and makes curious luma scatter. It costs warp energy.</p>
+      </div>
+      <div>
+        <h2>LIFE</h2>
+        <p>Luma are small, curious creatures. They keep a respectful distance until you drift slowly; then they gather. The Chorus is much larger, and it notices when you sing.</p>
+        <p>Golden fragments restore warp. Fly through them.</p>
+      </div>
+      <div>
+        <h2>PHOTO MODE</h2>
+        <p><kbd>P</kbd> freezes the ship and hands you the camera. Drag to orbit and scroll to dolly. The interface falls away. Press <kbd>P</kbd> again to fly.</p>
+        <p>Sound: <kbd>M</kbd>. Help: <kbd>H</kbd>. Pause / release mouse: <kbd>ESC</kbd>.</p>
+      </div>
+    </div>
+    <footer><span>BUILD 1.0 · WEBGL</span><span>DRIFT SLOWLY. WAKE GENTLY.</span></footer>
+  </div>
+</section>
+
+<section class="photo-ui" id="photoUI" aria-label="Photo mode controls">
+  <div class="photo-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <header><span>PHOTO MODE</span><em>HALCYON DRIFT</em></header>
+  <footer>
+    <p>DRAG TO ORBIT · SCROLL TO DOLLY</p>
+    <div class="photo-actions">
+      <button class="btn small primary" id="saveFrameBtn" type="button">SAVE FRAME</button>
+      <button class="btn small ghost" id="exitPhotoBtn" type="button">EXIT [P]</button>
+    </div>
+  </footer>
+</section>
+
+<div class="touch-ui" aria-label="Touch controls">
+  <div class="stick" id="stick"><span id="stickKnob"></span></div>
+  <div class="touch-actions">
+    <button id="touchPulse" type="button">PULSE</button>
+    <button id="touchThrust" type="button">THRUST</button>
+    <button id="touchBoost" type="button">WARP</button>
+  </div>
+</div>
+
+<script type="module" src="js/game.js"></script>
+</body>
+</html>
