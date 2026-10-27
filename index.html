@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REBORN 2K16 — The Park Never Closed</title>
+  <meta name="description" content="Community-run NBA 2K16 online servers for PC and Android. Low ping, updated rosters, active Discord, and a park that never went dark.">
+  <meta name="theme-color" content="#07090d">
+  <meta property="og:title" content="REBORN 2K16 — The Park Never Closed">
+  <meta property="og:description" content="Community-run NBA 2K16 servers for PC and Android. Low ping, current rosters, and an active Discord.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <noscript><style>.reveal{opacity:1;transform:none}.tab-panel[hidden]{display:block}</style></noscript>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23ff6a1a'/%3E%3Cpath d='M32 2v60M2 32h60M10 12c14 12 14 28 0 40M54 12c-14 12-14 28 0 40' stroke='%230b0d12' stroke-width='3' fill='none'/%3E%3C/svg%3E">
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="glow glow-a" aria-hidden="true"></div>
+  <div class="glow glow-b" aria-hidden="true"></div>
+
+  <header class="nav" id="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#top" aria-label="REBORN 2K16 home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 64 64" role="img">
+            <defs>
+              <linearGradient id="ballGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ffb05e"/>
+                <stop offset=".55" stop-color="#ff6a1a"/>
+                <stop offset="1" stop-color="#c93f00"/>
+              </linearGradient>
+            </defs>
+            <circle cx="32" cy="32" r="30" fill="url(#ballGrad)"/>
+            <g stroke="#1a0d05" stroke-width="2.6" fill="none" opacity=".85">
+              <path d="M32 2v60M2 32h60"/>
+              <path d="M10 12c14 12 14 28 0 40"/>
+              <path d="M54 12c-14 12-14 28 0 40"/>
+            </g>
+          </svg>
+        </span>
+        <span class="brand-text">REBORN<span>2K16</span></span>
+      </a>
+
+      <nav class="nav-links" id="navLinks" aria-label="Primary">
+        <a href="#status" data-spy="status">Servers</a>
+        <a href="#connect" data-spy="connect">Connect</a>
+        <a href="#features" data-spy="features">Features</a>
+        <a href="#leaderboard" data-spy="leaderboard">Leaderboard</a>
+        <a href="#discord" data-spy="discord">Discord</a>
+      </nav>
+
+      <div class="nav-actions">
+        <span class="nav-online" title="Players online right now">
+          <span class="dot-live" aria-hidden="true"></span>
+          <strong data-count="12480">12,480</strong> online
+        </span>
+        <a class="btn btn-primary btn-sm" href="#discord">Join Discord</a>
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-court" aria-hidden="true">
+        <svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice">
+          <g fill="none" stroke="currentColor" stroke-width="1.4">
+            <path d="M600 0v600"/>
+            <circle cx="600" cy="300" r="86"/>
+            <path d="M0 60h250v480H0M1200 60H950v480h250"/>
+            <path d="M250 60v480M950 60v480"/>
+            <path d="M0 190h120a120 120 0 0 1 0 220H0M1200 190h-120a120 120 0 0 0 0 220h120"/>
+            <path d="M0 110h60M0 490h60M1200 110h-60M1200 490h-60"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow reveal"><span class="dot-live" aria-hidden="true"></span> Community-run servers · PC + Android</p>
+          <h1 id="hero-title" class="reveal">The park<br><span class="grad-text">never closed.</span></h1>
+          <p class="hero-sub reveal">NBA 2K16 online, rebuilt by the community. Dedicated low-ping servers, current rosters, and a Discord full of people who still run 3v3 at 2am.</p>
+
+          <div class="hero-cta reveal">
+            <a class="btn btn-primary" href="#discord">
+              Join the Discord
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a class="btn btn-ghost" href="#status">Check server status</a>
+          </div>
+
+          <dl class="hero-stats reveal">
+            <div>
+              <dt>Players</dt>
+              <dd><span data-count="12480">12,480</span></dd>
+            </div>
+            <div>
+              <dt>Regions</dt>
+              <dd><span data-count="7">7</span></dd>
+            </div>
+            <div>
+              <dt>Median ping</dt>
+              <dd><span data-count="18">18</span><small>ms</small></dd>
+            </div>
+            <div>
+              <dt>Uptime</dt>
+              <dd><span data-count="99.9" data-decimals="1">99.9</span><small>%</small></dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="hero-visual reveal" id="heroVisual">
+          <div class="orbit orbit-1" aria-hidden="true"></div>
+          <div class="orbit orbit-2" aria-hidden="true"></div>
+          <div class="orbit orbit-3" aria-hidden="true"></div>
+
+          <div class="ball-wrap" aria-hidden="true">
+            <div class="ball-glow"></div>
+            <svg class="ball" viewBox="0 0 220 220" role="img" aria-label="Basketball">
+              <defs>
+                <radialGradient id="heroBall" cx="34%" cy="28%" r="78%">
+                  <stop offset="0" stop-color="#ffc98a"/>
+                  <stop offset=".35" stop-color="#ff8a2b"/>
+                  <stop offset=".78" stop-color="#f45d0b"/>
+                  <stop offset="1" stop-color="#a83100"/>
+                </radialGradient>
+                <linearGradient id="seam" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#2a1206"/>
+                  <stop offset="1" stop-color="#120703"/>
+                </linearGradient>
+              </defs>
+              <circle cx="110" cy="110" r="102" fill="url(#heroBall)"/>
+              <g stroke="url(#seam)" stroke-width="3.4" fill="none" opacity=".9">
+                <path d="M110 8v204M8 110h204"/>
+                <path d="M34 34c40 36 40 116 0 152"/>
+                <path d="M186 34c-40 36-40 116 0 152"/>
+              </g>
+              <ellipse cx="74" cy="58" rx="38" ry="24" fill="#fff" opacity=".22" transform="rotate(-28 74 58)"/>
+              <ellipse cx="164" cy="168" rx="30" ry="16" fill="#4a1c04" opacity=".35" transform="rotate(-24 164 168)"/>
+            </svg>
+          </div>
+
+          <span class="chip chip-pc"><i class="dot-live"></i> PC <b data-ping="pc">18ms</b></span>
+          <span class="chip chip-mobile"><i class="dot-live"></i> Android <b data-ping="android">42ms</b></span>
+          <span class="chip chip-discord"><span class="discord-glyph" aria-hidden="true"></span> 3,204 in voice</span>
+
+          <div class="scorecard" role="group" aria-label="Live match example">
+            <div class="scorecard-top">
+              <span class="live-tag"><i class="dot-live"></i> Live</span>
+              <span class="scorecard-meta">Pro-Am · Q4 · 00:42</span>
+            </div>
+            <div class="score-row">
+              <div class="team">
+                <span class="team-abbr lal">LAL</span>
+                <span class="team-name">Lakers</span>
+              </div>
+              <div class="score"><strong>98</strong><span>–</span><strong>96</strong></div>
+              <div class="team right">
+                <span class="team-abbr gsw">GSW</span>
+                <span class="team-name">Warriors</span>
+              </div>
+            </div>
+            <div class="possession">
+              <span>LAL ball</span>
+              <div class="pos-bar"><i></i></div>
+              <span>63% win prob.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker-track">
+          <span>Dedicated servers</span><b>·</b>
+          <span>Updated 2026 rosters</span><b>·</b>
+          <span>PC + Android</span><b>·</b>
+          <span>No pay-to-win</span><b>·</b>
+          <span>Custom courts</span><b>·</b>
+          <span>Active anti-cheat</span><b>·</b>
+          <span>24/7 uptime</span><b>·</b>
+          <span>Dedicated servers</span><b>·</b>
+          <span>Updated 2026 rosters</span><b>·</b>
+          <span>PC + Android</span><b>·</b>
+          <span>No pay-to-win</span><b>·</b>
+          <span>Custom courts</span><b>·</b>
+          <span>Active anti-cheat</span><b>·</b>
+          <span>24/7 uptime</span><b>·</b>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="status" aria-labelledby="status-title">
+      <div class="section-head">
+        <p class="eyebrow reveal">Network</p>
+        <h2 id="status-title" class="reveal">Seven regions. <span class="muted">One park.</span></h2>
+        <p class="section-sub reveal">Pick the node closest to you. Every server runs the same patch, the same rosters, and the same rulebook.</p>
+      </div>
+
+      <div class="status-layout">
+        <div class="panel status-panel reveal">
+          <div class="panel-head">
+            <div>
+              <span class="panel-label">Global status</span>
+              <h3 class="status-headline"><span class="dot-live" aria-hidden="true"></span> All systems operational</h3>
+            </div>
+            <span class="pill pill-green">Live</span>
+          </div>
+          <ul class="region-list">
+            <li class="region" data-base-ping="18">
+              <span class="region-name"><i class="flag-dot" style="--c:#ff6a1a"></i> NA East <small>Virginia</small></span>
+              <span class="region-bar"><i style="--load:42%"></i></span>
+              <span class="region-players">2,140</span>
+              <span class="region-ping" data-ping>18ms</span>
+            </li>
+            <li class="region" data-base-ping="24">
+              <span class="region-name"><i class="flag-dot" style="--c:#ffb347"></i> NA West <small>Oregon</small></span>
+              <span class="region-bar"><i style="--load:57%"></i></span>
+              <span class="region-players">1,860</span>
+              <span class="region-ping" data-ping>24ms</span>
+            </li>
+            <li class="region" data-base-ping="31">
+              <span class="region-name"><i class="flag-dot" style="--c:#38e8ff"></i> EU West <small>Amsterdam</small></span>
+              <span class="region-bar"><i style="--load:63%"></i></span>
+              <span class="region-players">2,410</span>
+              <span class="region-ping" data-ping>31ms</span>
+            </li>
+            <li class="region" data-base-ping="39">
+              <span class="region-name"><i class="flag-dot" style="--c:#7c8cff"></i> EU East <small>Warsaw</small></span>
+              <span class="region-bar"><i style="--load:38%"></i></span>
+              <span class="region-players">1,120</span>
+              <span class="region-ping" data-ping>39ms</span>
+            </li>
+            <li class="region" data-base-ping="58">
+              <span class="region-name"><i class="flag-dot" style="--c:#38ff9c"></i> Asia <small>Singapore</small></span>
+              <span class="region-bar"><i style="--load:71%"></i></span>
+              <span class="region-players">2,930</span>
+              <span class="region-ping warn" data-ping>58ms</span>
+            </li>
+            <li class="region" data-base-ping="66">
+              <span class="region-name"><i class="flag-dot" style="--c:#ff5f8f"></i> South America <small>São Paulo</small></span>
+              <span class="region-bar"><i style="--load:46%"></i></span>
+              <span class="region-players">1,240</span>
+              <span class="region-ping warn" data-ping>66ms</span>
+            </li>
+            <li class="region" data-base-ping="72">
+              <span class="region-name"><i class="flag-dot" style="--c:#c9a6ff"></i> Oceania <small>Sydney</small></span>
+              <span class="region-bar"><i style="--load:33%"></i></span>
+              <span class="region-players">780</span>
+              <span class="region-ping warn" data-ping>72ms</span>
+            </li>
+          </ul>
+          <div class="panel-foot">
+            <span>Last checked <b id="lastChecked">just now</b></span>
+            <button class="text-btn" id="refreshStatus" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        <aside class="panel activity-panel reveal">
+          <div class="panel-head">
+            <span class="panel-label">Live activity</span>
+            <span class="pill pill-dim">Realtime</span>
+          </div>
+          <ul class="activity" id="activityFeed">
+            <li class="activity-item">
+              <span class="avatar" style="--a:#ff6a1a">SB</span>
+              <div><p><b>SplashBros</b> hit 7 threes in a row</p><small>NA East · 12s ago</small></div>
+            </li>
+            <li class="activity-item">
+              <span class="avatar" style="--a:#38e8ff">PF</span>
+              <div><p><b>PostFadeGod</b> joined EU West</p><small>Amsterdam · 48s ago</small></div>
+            </li>
+            <li class="activity-item">
+              <span class="avatar" style="--a:#38ff9c">GR</span>
+              <div><p><b>GreenRelease</b> won a Pro-Am ring</p><small>Asia · 1m ago</small></div>
+            </li>
+            <li class="activity-item">
+              <span class="avatar" style="--a:#c9a6ff">AB</span>
+              <div><p><b>AnkleBully</b> started a 3v3 run</p><small>NA West · 2m ago</small></div>
+            </li>
+            <li class="activity-item">
+              <span class="avatar" style="--a:#ffb347">RC</span>
+              <div><p><b>RimContest</b> grabbed 20 boards</p><small>EU East · 3m ago</small></div>
+            </li>
+          </ul>
+          <div class="activity-foot">
+            <div class="spark" aria-hidden="true">
+              <i style="--h:30%"></i><i style="--h:48%"></i><i style="--h:36%"></i><i style="--h:62%"></i><i style="--h:55%"></i><i style="--h:74%"></i><i style="--h:66%"></i><i style="--h:88%"></i><i style="--h:70%"></i><i style="--h:95%"></i><i style="--h:82%"></i><i style="--h:100%"></i>
+            </div>
+            <p><b>12,480</b> players online across 7 regions</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="connect" aria-labelledby="connect-title">
+      <div class="section-head">
+        <p class="eyebrow reveal">Get on the court</p>
+        <h2 id="connect-title" class="reveal">Connect in <span class="grad-text">four minutes.</span></h2>
+        <p class="section-sub reveal">Bring your own copy of NBA 2K16. We handle the servers, the matchmaking, and the Discord login.</p>
+      </div>
+
+      <div class="connect-panel reveal">
+        <div class="tabs" role="tablist" aria-label="Platform guide">
+          <button class="tab is-active" role="tab" aria-selected="true" aria-controls="panel-pc" id="tab-pc" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            PC / Steam
+          </button>
+          <button class="tab" role="tab" aria-selected="false" aria-controls="panel-android" id="tab-android" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 18h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Android
+          </button>
+          <span class="tab-glow" aria-hidden="true"></span>
+        </div>
+
+        <div class="tab-body">
+          <div class="tab-panel is-active" id="panel-pc" role="tabpanel" aria-labelledby="tab-pc">
+            <ol class="steps">
+              <li>
+                <span class="step-num">01</span>
+                <div>
+                  <h4>Install your copy</h4>
+                  <p>Own NBA 2K16 on Steam and launch it once so the game files are registered locally.</p>
+                  <div class="chips"><span>Steam</span><span>~50 GB</span><span>Windows 10/11</span></div>
+                </div>
+              </li>
+              <li>
+                <span class="step-num">02</span>
+                <div>
+                  <h4>Add the Reborn launcher</h4>
+                  <p>Drop the launcher into your game folder. It patches matchmaking and points the client at our network.</p>
+                  <div class="code-line"><code>reborn-launcher.exe --region na-east</code><button class="copy-btn" data-copy="reborn-launcher.exe --region na-east" type="button">Copy</button></div>
+                </div>
+              </li>
+              <li>
+                <span class="step-num">03</span>
+                <div>
+                  <h4>Sign in with Discord</h4>
+                  <p>No new password. Your Discord account is your identity, your rank, and your report history.</p>
+                </div>
+              </li>
+              <li>
+                <span class="step-num">04</span>
+                <div>
+                  <h4>Pick a region and run</h4>
+                  <p>Choose the closest node, load into the park, and squad up. Cross-input is allowed and clearly labeled.</p>
+                  <a class="btn btn-primary btn-sm" href="#discord">Get the launcher in Discord</a>
+                </div>
+              </li>
+            </ol>
+          </div>
+
+          <div class="tab-panel" id="panel-android" role="tabpanel" aria-labelledby="tab-android" hidden>
+            <ol class="steps">
+              <li>
+                <span class="step-num">01</span>
+                <div>
+                  <h4>Install NBA 2K16 mobile</h4>
+                  <p>Use the Android build you own, including the OBB data. We never distribute game files.</p>
+                  <div class="chips"><span>Android 9+</span><span>4 GB RAM</span><span>Controller recommended</span></div>
+                </div>
+              </li>
+              <li>
+                <span class="step-num">02</span>
+                <div>
+                  <h4>Install the Reborn Relay</h4>
+                  <p>The relay app routes mobile matchmaking through our regional nodes and adds Discord sign-in.</p>
+                  <div class="code-line"><code>adb install reborn-relay.apk</code><button class="copy-btn" data-copy="adb install reborn-relay.apk" type="button">Copy</button></div>
+                </div>
+              </li>
+              <li>
+                <span class="step-num">03</span>
+                <div>
+                  <h4>Link your Discord</h4>
+                  <p>Approve the relay in Discord, then grant it overlay and network permissions on first launch.</p>
+                </div>
+              </li>
+              <li>
+                <span class="step-num">04</span>
+                <div>
+                  <h4>Choose your node</h4>
+                  <p>Use Wi-Fi for ranked play. Mobile data works, but expect a higher ping and the occasional lag spike.</p>
+                  <a class="btn btn-primary btn-sm" href="#discord">Get the relay in Discord</a>
+                </div>
+              </li>
+            </ol>
+          </div>
+
+          <aside class="connect-aside">
+            <div class="req-card">
+              <span class="panel-label">Before you start</span>
+              <ul class="check-list">
+                <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> A legitimate copy of the game</li>
+                <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> A Discord account</li>
+                <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> 8 GB free on PC, 6 GB on mobile</li>
+                <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> Wired or 5 GHz Wi-Fi</li>
+              </ul>
+            </div>
+            <div class="help-card">
+              <span class="help-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 18h.01M9.1 9a3 3 0 1 1 5.8 1c0 2-3 2.5-3 4.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+              </span>
+              <div>
+                <h4>Stuck on a step?</h4>
+                <p>The setup crew answers in the Discord help channel, usually in under five minutes.</p>
+                <a href="#discord">Open #setup-help</a>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="features" aria-labelledby="features-title">
+      <div class="section-head">
+        <p class="eyebrow reveal">Built for the long run</p>
+        <h2 id="features-title" class="reveal">Everything the <span class="muted">old servers</span> should have been.</h2>
+        <p class="section-sub reveal">A small team of volunteers keeps the lights on, the rosters fresh, and the cheaters out.</p>
+      </div>
+
+      <div class="feature-grid">
+        <article class="feature-card reveal">
+          <span class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <h3>Low-ping dedicated nodes</h3>
+          <p>Bare-metal hardware in seven regions. No peer-to-peer host advantage, no surprise lag switches.</p>
+          <span class="feature-tag">18ms median</span>
+        </article>
+        <article class="feature-card reveal">
+          <span class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 20v-7M10 20V6M16 20v-9M22 20V3" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+          </span>
+          <h3>Rosters that stay current</h3>
+          <p>Opening-night ratings, trades, and signature animations updated every patch. Community-voted changes.</p>
+          <span class="feature-tag">Patch 4.2 live</span>
+        </article>
+        <article class="feature-card reveal">
+          <span class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 2 4 6v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10V6l-8-4Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <h3>Anti-cheat that reports back</h3>
+          <p>Server-side stat checks plus a human review queue. Every ban is logged and appealable.</p>
+          <span class="feature-tag">Human reviewed</span>
+        </article>
+        <article class="feature-card reveal">
+          <span class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 12h3M8.5 10.5v3M15.5 11h.01M18 13h.01" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+          </span>
+          <h3>Cross-input, clearly labeled</h3>
+          <p>Controller and keyboard lobbies are visible before tip-off. Play how you want, with no surprises.</p>
+          <span class="feature-tag">PC + Android</span>
+        </article>
+        <article class="feature-card reveal">
+          <span class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 20 20 4M4 4l16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+          </span>
+          <h3>Custom courts and jerseys</h3>
+          <p>Drop in community court packs and alternate jerseys. Approved packs sync automatically to every player.</p>
+          <span class="feature-tag">1,200+ packs</span>
+        </article>
+        <article class="feature-card reveal">
+          <span class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3.5 2" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <h3>24/7 uptime, 24/7 staff</h3>
+          <p>Rolling restarts happen at 4am local time. Someone is always awake in the staff channel.</p>
+          <span class="feature-tag">99.9% uptime</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="leaderboard" aria-labelledby="leaderboard-title">
+      <div class="section-head">
+        <p class="eyebrow reveal">Season 12</p>
+        <h2 id="leaderboard-title" class="reveal">The park's <span class="grad-text">most wanted.</span></h2>
+        <p class="section-sub reveal">Top Pro-Am players this season, ranked by wins and verified by server logs.</p>
+      </div>
+
+      <div class="leaderboard-wrap reveal">
+        <div class="leaderboard-head">
+          <div class="season-tabs" role="group" aria-label="Leaderboard filter">
+            <button class="season-tab is-active" type="button" data-filter="all">All</button>
+            <button class="season-tab" type="button" data-filter="pc">PC</button>
+            <button class="season-tab" type="button" data-filter="android">Android</button>
+          </div>
+          <span class="pill pill-dim">Resets in 12 days</span>
+        </div>
+
+        <div class="table-scroll">
+          <table class="leaderboard">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Player</th>
+                <th scope="col">Build</th>
+                <th scope="col">Team</th>
+                <th scope="col" class="num">W</th>
+                <th scope="col" class="num">L</th>
+                <th scope="col" class="num">Win %</th>
+                <th scope="col" class="num">Ping</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboardBody">
+              <tr data-platform="pc">
+                <td><span class="rank rank-1">1</span></td>
+                <td><div class="player"><span class="avatar" style="--a:#ff6a1a">SB</span><div><b>SplashBros</b><small>NA East</small></div></div></td>
+                <td><span class="build">Sharpshooter</span></td>
+                <td><span class="team-tag lal">LAL</span></td>
+                <td class="num">214</td>
+                <td class="num">38</td>
+                <td class="num win">84.9%</td>
+                <td class="num mono">17ms</td>
+              </tr>
+              <tr data-platform="pc">
+                <td><span class="rank rank-2">2</span></td>
+                <td><div class="player"><span class="avatar" style="--a:#38e8ff">PF</span><div><b>PostFadeGod</b><small>EU West</small></div></div></td>
+                <td><span class="build">Post Scorer</span></td>
+                <td><span class="team-tag chi">CHI</span></td>
+                <td class="num">198</td>
+                <td class="num">44</td>
+                <td class="num win">81.8%</td>
+                <td class="num mono">29ms</td>
+              </tr>
+              <tr data-platform="android">
+                <td><span class="rank rank-3">3</span></td>
+                <td><div class="player"><span class="avatar" style="--a:#38ff9c">GR</span><div><b>GreenRelease</b><small>Asia</small></div></div></td>
+                <td><span class="build">Shot Creator</span></td>
+                <td><span class="team-tag gsw">GSW</span></td>
+                <td class="num">186</td>
+                <td class="num">51</td>
+                <td class="num win">78.5%</td>
+                <td class="num mono">54ms</td>
+              </tr>
+              <tr data-platform="pc">
+                <td><span class="rank">4</span></td>
+                <td><div class="player"><span class="avatar" style="--a:#c9a6ff">AB</span><div><b>AnkleBully</b><small>NA West</small></div></div></td>
+                <td><span class="build">Playmaker</span></td>
+                <td><span class="team-tag bos">BOS</span></td>
+                <td class="num">171</td>
+                <td class="num">55</td>
+                <td class="num win">75.7%</td>
+                <td class="num mono">22ms</td>
+              </tr>
+              <tr data-platform="android">
+                <td><span class="rank">5</span></td>
+                <td><div class="player"><span class="avatar" style="--a:#ff5f8f">DR</span><div><b>DimeRunner</b><small>South America</small></div></div></td>
+                <td><span class="build">Slasher</span></td>
+                <td><span class="team-tag mia">MIA</span></td>
+                <td class="num">160</td>
+                <td class="num">62</td>
+                <td class="num win">72.1%</td>
+                <td class="num mono">61ms</td>
+              </tr>
+              <tr data-platform="pc">
+                <td><span class="rank">6</span></td>
+                <td><div class="player"><span class="avatar" style="--a:#ffb347">RC</span><div><b>RimContest</b><small>EU East</small></div></div></td>
+                <td><span class="build">Glass Cleaner</span></td>
+                <td><span class="team-tag nyk">NYK</span></td>
+                <td class="num">149</td>
+                <td class="num">67</td>
+                <td class="num win">69.0%</td>
+                <td class="num mono">36ms</td>
+              </tr>
+              <tr data-platform="android">
+                <td><span class="rank">7</span></td>
+                <td><div class="player"><span class="avatar" style="--a:#7c8cff">CB</span><div><b>CornerBaker</b><small>Oceania</small></div></div></td>
+                <td><span class="build">Sharpshooter</span></td>
+                <td><span class="team-tag dal">DAL</span></td>
+                <td class="num">137</td>
+                <td class="num">71</td>
+                <td class="num win">65.9%</td>
+                <td class="num mono">69ms</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="leaderboard-foot">
+          <span>Updated after every ranked match</span>
+          <a href="#discord">View full standings in Discord</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section discord-section" id="discord" aria-labelledby="discord-title">
+      <div class="discord-card reveal">
+        <div class="discord-copy">
+          <p class="eyebrow"><span class="discord-glyph" aria-hidden="true"></span> The locker room</p>
+          <h2 id="discord-title">12,480 players.<br><span class="grad-text">One Discord.</span></h2>
+          <p class="section-sub">Find a squad, join a league, report a cheater, or just argue about ratings. The community is the server.</p>
+
+          <div class="discord-stats">
+            <div><b data-count="12480">12,480</b><span>Members</span></div>
+            <div><b data-count="3204">3,204</b><span>Online now</span></div>
+            <div><b data-count="38">38</b><span>Leagues</span></div>
+          </div>
+
+          <div class="discord-cta">
+            <a class="btn btn-discord" href="https://discord.gg/reborn2k16" target="_blank" rel="noopener">
+              <span class="discord-glyph" aria-hidden="true"></span>
+              Join the Discord
+            </a>
+            <button class="btn btn-ghost copy-invite" data-copy="https://discord.gg/reborn2k16" type="button">Copy invite</button>
+          </div>
+          <p class="fineprint">Free to join. Read the rules, grab a platform role, and say hi in #introductions.</p>
+        </div>
+
+        <div class="discord-mock" aria-label="Discord channel preview">
+          <div class="mock-head">
+            <span class="mock-hash" aria-hidden="true">#</span>
+            <div>
+              <b>park-lfg</b>
+              <small>Find a squad · 428 online</small>
+            </div>
+            <span class="pill pill-green">Active</span>
+          </div>
+          <div class="mock-body">
+            <div class="msg">
+              <span class="avatar" style="--a:#38e8ff">PF</span>
+              <div>
+                <p class="msg-meta"><b>PostFadeGod</b> <span class="role">PC</span> <time>2:14 AM</time></p>
+                <p>anyone running 3v3 pro-am? need a stretch 4, EU West, mic on</p>
+              </div>
+            </div>
+            <div class="msg">
+              <span class="avatar" style="--a:#38ff9c">GR</span>
+              <div>
+                <p class="msg-meta"><b>GreenRelease</b> <span class="role role-mobile">Android</span> <time>2:15 AM</time></p>
+                <p>EU West is clean tonight. 22ms from Singapore, somehow</p>
+              </div>
+            </div>
+            <div class="msg">
+              <span class="avatar" style="--a:#ff6a1a">ST</span>
+              <div>
+                <p class="msg-meta"><b>REBORN Staff</b> <span class="role role-staff">STAFF</span> <time>2:16 AM</time></p>
+                <div class="embed">
+                  <span class="embed-title">Patch 4.2 is live</span>
+                  <p>2026 opening-night rosters, new court pack, latency fixes for Oceania.</p>
+                  <span class="embed-foot">reborn.gg/patchnotes</span>
+                </div>
+              </div>
+            </div>
+            <div class="msg">
+              <span class="avatar" style="--a:#c9a6ff">AB</span>
+              <div>
+                <p class="msg-meta"><b>AnkleBully</b> <span class="role">PC</span> <time>2:18 AM</time></p>
+                <p>joining. give me two minutes <span class="typing" aria-hidden="true"><i></i><i></i><i></i></span></p>
+              </div>
+            </div>
+          </div>
+          <div class="mock-input" aria-hidden="true">Message #park-lfg</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq" aria-labelledby="faq-title">
+      <div class="section-head">
+        <p class="eyebrow reveal">Straight answers</p>
+        <h2 id="faq-title" class="reveal">Questions from the <span class="muted">free-throw line.</span></h2>
+      </div>
+      <div class="faq-list reveal">
+        <details class="faq" open>
+          <summary>Is this an official 2K server?<span class="faq-icon" aria-hidden="true"></span></summary>
+          <div class="faq-body"><p>No. REBORN 2K16 is a volunteer-run community project. It is not affiliated with 2K, Take-Two Interactive, or the NBA. We only run matchmaking infrastructure for players who already own the game.</p></div>
+        </details>
+        <details class="faq">
+          <summary>Do I need to own NBA 2K16?<span class="faq-icon" aria-hidden="true"></span></summary>
+          <div class="faq-body"><p>Yes. We do not distribute game files, APKs, OBB data, or cracks. The launcher and relay only patch networking and add Discord sign-in to a copy you already own.</p></div>
+        </details>
+        <details class="faq">
+          <summary>Does Android play with PC?<span class="faq-icon" aria-hidden="true"></span></summary>
+          <div class="faq-body"><p>Yes, in mixed lobbies. You can also filter to same-platform only. Every lobby shows the input type and platform before the game starts, so nothing is hidden.</p></div>
+        </details>
+        <details class="faq">
+          <summary>Is it really free?<span class="faq-icon" aria-hidden="true"></span></summary>
+          <div class="faq-body"><p>Servers and launchers are free. Donations cover hardware and nothing is pay-to-win. Cosmetic supporter badges exist, but ratings, builds, and matchmaking are identical for everyone.</p></div>
+        </details>
+        <details class="faq">
+          <summary>How do you handle cheaters?<span class="faq-icon" aria-hidden="true"></span></summary>
+          <div class="faq-body"><p>Server-side checks flag impossible stats, then a human reviews the clip and match log. Bans are logged publicly in Discord and can be appealed once. Report tools live in every lobby.</p></div>
+        </details>
+        <details class="faq">
+          <summary>Will my old MyTeam or MyPlayer carry over?<span class="faq-icon" aria-hidden="true"></span></summary>
+          <div class="faq-body"><p>Local MyPlayer and MyTeam saves stay on your device. Online rank and season progress are tied to your Discord account, so they follow you between PC and Android.</p></div>
+        </details>
+      </div>
+    </section>
+
+    <section class="final-cta" aria-labelledby="final-title">
+      <div class="final-inner reveal">
+        <p class="eyebrow">Tip-off is waiting</p>
+        <h2 id="final-title">Your squad is already <span class="grad-text">on the court.</span></h2>
+        <p>Grab a role, pick a region, and run one more game like it's 2016.</p>
+        <div class="hero-cta center">
+          <a class="btn btn-primary" href="https://discord.gg/reborn2k16" target="_blank" rel="noopener">Join the Discord</a>
+          <a class="btn btn-ghost" href="#connect">Read the setup guide</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="#top">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="30" fill="#ff6a1a"/>
+              <g stroke="#0b0d12" stroke-width="2.6" fill="none" opacity=".85">
+                <path d="M32 2v60M2 32h60"/>
+                <path d="M10 12c14 12 14 28 0 40M54 12c-14 12-14 28 0 40"/>
+              </g>
+            </svg>
+          </span>
+          <span class="brand-text">REBORN<span>2K16</span></span>
+        </a>
+        <p>A community-run online revival for the players who never left.</p>
+      </div>
+      <nav class="footer-links" aria-label="Footer">
+        <div>
+          <h4>Play</h4>
+          <a href="#status">Server status</a>
+          <a href="#connect">Setup guide</a>
+          <a href="#leaderboard">Leaderboard</a>
+          <a href="#discord">Discord</a>
+        </div>
+        <div>
+          <h4>Community</h4>
+          <a href="#features">Features</a>
+          <a href="#faq">FAQ</a>
+          <a href="#discord">Report a player</a>
+          <a href="#discord">Leagues</a>
+        </div>
+        <div>
+          <h4>Legal</h4>
+          <a href="#faq">Disclaimer</a>
+          <a href="#faq">Terms of play</a>
+          <a href="#faq">Privacy</a>
+          <a href="#discord">Contact staff</a>
+        </div>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <p>Fan-made project. Not affiliated with 2K, Take-Two Interactive, or the NBA. NBA 2K16 and all related assets belong to their respective owners. You must own a legitimate copy of the game.</p>
+      <p class="footer-year">© <span id="year">2026</span> REBORN 2K16</p>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
