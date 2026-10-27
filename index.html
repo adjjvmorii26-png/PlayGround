@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#04080c" />
+  <meta name="description" content="ECHO-7 is a 360-degree sci-fi escape room with an AI co-pilot named PIP. Restore power, decode the constellation, and open the airlock." />
+  <title>ECHO-7 — A Co-Pilot Escape Room</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23050b10'/%3E%3Ccircle cx='32' cy='32' r='18' fill='none' stroke='%235fe9ff' stroke-width='3'/%3E%3Ccircle cx='32' cy='32' r='7' fill='%235fe9ff'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app">
+    <main id="viewport" aria-label="Escape room view">
+      <canvas id="scene"></canvas>
+      <div id="vignette"></div>
+      <div id="scan-sweep"></div>
+      <div id="markers" class="markers" aria-hidden="true"></div>
+
+      <div id="hud">
+        <div class="hud-top">
+          <div class="brand">
+            <span class="brand-mark"><i></i></span>
+            <div>
+              <strong>ECHO-7</strong>
+              <span>DECK 04 // CRYO BAY</span>
+            </div>
+          </div>
+          <div class="hud-actions">
+            <div class="timer" title="Elapsed time">
+              <span>T+</span><strong id="timer-value">00:00</strong>
+            </div>
+            <button id="scan-btn" class="icon-btn" type="button" aria-label="Scan room" title="Scan room">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path><path d="M11 8v6M8 11h6"></path></svg>
+            </button>
+            <button id="sound-btn" class="icon-btn" type="button" aria-label="Mute sound" title="Mute sound">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l4 3V7L7 10H4Z"></path><path class="sound-wave" d="M15 9.5a4 4 0 0 1 0 5"></path><path class="sound-wave" d="M17.5 7a7.5 7.5 0 0 1 0 10"></path><path class="sound-off" d="m15 9 5 6M20 9l-5 6"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <section class="objectives glass" aria-label="Objectives">
+          <div class="objectives-head">
+            <span>ESCAPE PROTOCOL</span>
+            <span id="obj-progress">0 / 4</span>
+          </div>
+          <div class="objective-bar"><i id="obj-bar-fill"></i></div>
+          <ul id="objective-list">
+            <li data-objective="power"><span class="obj-dot"></span><span class="obj-copy"><strong>Restore auxiliary power</strong><em>Find a fuse for the relay</em></span></li>
+            <li data-objective="code"><span class="obj-dot"></span><span class="obj-copy"><strong>Decode the launch sequence</strong><em>Read the constellation protocol</em></span></li>
+            <li data-objective="unlock"><span class="obj-dot"></span><span class="obj-copy"><strong>Unlock airlock 01</strong><em>Enter the launch code</em></span></li>
+            <li data-objective="escape"><span class="obj-dot"></span><span class="obj-copy"><strong>Step through the airlock</strong><em>Get off this station</em></span></li>
+          </ul>
+        </section>
+
+        <div class="inventory glass" id="inventory" aria-label="Inventory"></div>
+
+        <div class="look-hint" id="look-hint">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12h8M8 12l3-3M8 12l3 3M16 12l-3-3M16 12l-3 3"></path></svg>
+          <span>Drag to look around</span>
+        </div>
+
+        <div class="look-pad">
+          <button id="look-left" class="icon-btn" type="button" aria-label="Look left">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"></path></svg>
+          </button>
+          <button id="look-right" class="icon-btn" type="button" aria-label="Look right">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"></path></svg>
+          </button>
+        </div>
+
+        <div id="toast" class="toast" role="status">
+          <span class="toast-kicker" id="toast-kicker">SYSTEM</span>
+          <strong id="toast-title">Message</strong>
+          <p id="toast-body"></p>
+        </div>
+      </div>
+    </main>
+
+    <aside id="assistant" aria-label="Co-pilot assistant">
+      <header class="assistant-head">
+        <div class="pip-avatar" aria-hidden="true">
+          <span class="pip-core"></span>
+          <span class="pip-ring r1"></span>
+          <span class="pip-ring r2"></span>
+        </div>
+        <div class="assistant-id">
+          <div class="assistant-name-row">
+            <h2>PIP</h2>
+            <span class="live-tag"><i></i> LIVE</span>
+          </div>
+          <p>Personal Interface Pilot // ECHO-7</p>
+        </div>
+        <button id="assistant-toggle" class="icon-btn assistant-toggle" type="button" aria-label="Collapse co-pilot" title="Collapse co-pilot">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"></path></svg>
+        </button>
+      </header>
+
+      <div class="assistant-status">
+        <span class="waveform" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        <span>Neural link stable</span>
+        <span class="assistant-signal">98%</span>
+      </div>
+
+      <div class="chat" id="chat" aria-live="polite"></div>
+
+      <div class="quick-row">
+        <button id="hint-btn" class="chip" type="button"><span>Hint</span><b id="hint-count">0</b></button>
+        <button id="assistant-scan-btn" class="chip" type="button"><span>Scan</span></button>
+        <button id="status-btn" class="chip" type="button"><span>Status</span></button>
+      </div>
+
+      <form id="chat-form" class="chat-form" autocomplete="off">
+        <input id="chat-input" type="text" maxlength="160" placeholder="Ask PIP anything…" aria-label="Ask PIP a question" />
+        <button class="send-btn" type="submit" aria-label="Send message">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"></path></svg>
+        </button>
+      </form>
+      <div class="assistant-foot">PIP is a local co-pilot AI. Mostly.</div>
+    </aside>
+  </div>
+
+  <section id="intro" class="screen intro-screen">
+    <div class="intro-grid">
+      <div class="intro-copy">
+        <p class="eyebrow"><span></span>DEEP RESEARCH STATION // SECTOR 7</p>
+        <h1>ECHO<span class="title-dash">-</span>7</h1>
+        <p class="intro-sub">A CO-PILOT ESCAPE ROOM</p>
+        <p class="intro-lead">The station is dark. The airlock is sealed. Your only ally is a voice in the wall.</p>
+        <div class="intro-features">
+          <div><b>01</b><span>Search a 360°<br />sci-fi room</span></div>
+          <div><b>02</b><span>Solve three<br />linked puzzles</span></div>
+          <div><b>03</b><span>Trust your<br />co-pilot. Maybe.</span></div>
+        </div>
+        <div class="intro-actions">
+          <button id="start-btn" class="start-btn" type="button" aria-label="Start">
+            <span>Start</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"></path></svg>
+          </button>
+          <div class="best-line" id="intro-best">BEST ESCAPE <strong>--:--</strong></div>
+        </div>
+      </div>
+      <div class="intro-side">
+        <div class="intro-pip-card">
+          <div class="intro-pip-orb" aria-hidden="true"><i></i></div>
+          <p class="intro-quote">“You're awake. Good. We have limited air, one sealed airlock, and zero minutes of patience.”</p>
+          <div class="intro-pip-meta"><span>PIP</span><span>CO-PILOT // ONLINE</span></div>
+        </div>
+        <div class="intro-specs">
+          <span><i></i>HEADPHONES RECOMMENDED</span>
+          <span><i></i>ONE ROOM. THREE LOCKS.</span>
+        </div>
+      </div>
+    </div>
+    <div class="intro-footer">
+      <span>ECHO-7 // ESCAPE PROTOCOL v2.4</span>
+      <span>MOVE — LOOK — INTERACT — ESCAPE</span>
+    </div>
+  </section>
+
+  <div id="constellation-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="constellation-title">
+    <div class="modal-card constellation-card">
+      <header class="modal-head">
+        <div>
+          <p class="eyebrow"><span></span>NAV-7 PROJECTOR</p>
+          <h2 id="constellation-title">Constellation Protocol</h2>
+        </div>
+        <button class="icon-btn modal-close" type="button" data-close="constellation-modal" aria-label="Close constellation protocol">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+        </button>
+      </header>
+      <div class="constellation-body">
+        <div class="starmap-wrap">
+          <div id="starmap" class="starmap">
+            <svg id="star-connector" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <polyline id="star-line" points="" vector-effect="non-scaling-stroke"></polyline>
+            </svg>
+            <div class="starmap-grid" aria-hidden="true"></div>
+            <div class="starmap-core" aria-hidden="true"></div>
+          </div>
+          <div class="starmap-legend"><span class="legend-dot red"></span>RED GIANT<span class="legend-dot cyan"></span>TWINS<span class="legend-dot gold"></span>EYE</div>
+        </div>
+        <aside class="constellation-info">
+          <p class="clue-label">CREW PLAQUE // NAV-7</p>
+          <p class="clue-text" id="constellation-clue">No order recovered yet. Find the crew plaque beside the airlock.</p>
+          <div class="sequence-pips" id="sequence-pips">
+            <span class="pip-slot"><b>01</b><em>—</em></span>
+            <span class="pip-slot"><b>02</b><em>—</em></span>
+            <span class="pip-slot"><b>03</b><em>—</em></span>
+            <span class="pip-slot"><b>04</b><em>—</em></span>
+          </div>
+          <div class="status-line" id="constellation-status">AWAITING SEQUENCE</div>
+          <div class="code-reveal" id="code-reveal">
+            <span>LAUNCH CODE</span>
+            <strong id="code-digits">7 3 9 4</strong>
+            <small>Transferred to launch keypad</small>
+          </div>
+          <p class="modal-note">Click the stars in the order described by the plaque. A wrong star resets the sequence.</p>
+        </aside>
+      </div>
+      <footer class="modal-foot">
+        <span>PROJECTOR: <b id="projector-state">ONLINE</b></span>
+        <span>SEQUENCE LOCK: <b id="sequence-lock">ARMED</b></span>
+      </footer>
+    </div>
+  </div>
+
+  <div id="keypad-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="keypad-title">
+    <div class="modal-card keypad-card">
+      <header class="modal-head">
+        <div>
+          <p class="eyebrow"><span></span>AIRLOCK 01 // CONTROL</p>
+          <h2 id="keypad-title">Launch Keypad</h2>
+        </div>
+        <button class="icon-btn modal-close" type="button" data-close="keypad-modal" aria-label="Close launch keypad">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+        </button>
+      </header>
+      <div class="keypad-screen">
+        <span class="keypad-lock-label" id="keypad-lock-label">ENTER 4-DIGIT LAUNCH CODE</span>
+        <strong id="keypad-code">····</strong>
+        <span class="keypad-status" id="keypad-status">LOCKED</span>
+      </div>
+      <div class="keypad-grid" id="keypad-grid"></div>
+      <div class="keypad-actions">
+        <button id="keypad-clear" class="keypad-wide" type="button">CLEAR</button>
+        <button id="keypad-enter" class="keypad-wide accent" type="button">ENTER</button>
+      </div>
+      <p class="keypad-hint" id="keypad-hint">The launch code was recovered from the NAV-7 constellation protocol.</p>
+    </div>
+  </div>
+
+  <section id="ending" class="screen ending-screen" aria-labelledby="ending-title">
+    <div class="ending-card">
+      <p class="eyebrow"><span></span>AIRLOCK 01 // CYCLED // CLEAR</p>
+      <h1 id="ending-title">ESCAPE<br /><span>COMPLETE</span></h1>
+      <div class="ending-rank">
+        <span id="ending-rank">A</span>
+        <em>RANK</em>
+      </div>
+      <div class="ending-stats">
+        <div><span>TIME</span><strong id="ending-time">00:00</strong></div>
+        <div><span>HINTS</span><strong id="ending-hints">0</strong></div>
+        <div><span>CODE</span><strong>7394</strong></div>
+      </div>
+      <p class="ending-quote" id="ending-quote">“Not bad for a human.” <span>— PIP</span></p>
+      <button id="play-again" class="start-btn" type="button"><span>Play Again</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 1-2.2-5.4M20 4v7h-7"></path></svg></button>
+      <p class="ending-fine">ECHO-7 is clear. Tell no one about the cryo pod.</p>
+    </div>
+  </section>
+
+  <div id="flash"></div>
+
+  <script type="module" src="./js/game.js"></script>
+</body>
+</html>
