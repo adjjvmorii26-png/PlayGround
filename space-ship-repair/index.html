@@ -493,6 +493,31 @@ miraGroup.visible = false;
 scene.add(miraGroup);
 
 // ---------------- AUDIO / AI ----------------
+let audioCtx;
+function ensureAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+function playTone(freq, type, duration, vol=0.1, when=0) {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime + when;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + duration);
+  o.connect(g);
+  g.connect(audioCtx.destination);
+  o.start(t);
+  o.stop(t + duration);
+}
+function playBeep(freq=800, dur=0.08) { ensureAudio(); playTone(freq, 'sine', dur, 0.1); }
+function playClick() { ensureAudio(); playTone(1200, 'square', 0.05, 0.08); }
+function playRepair() { ensureAudio(); playTone(600, 'sine', 0.15, 0.12); playTone(1000, 'sine', 0.15, 0.12, 0.1); }
+function playAlarm() { ensureAudio(); for (let i=0;i<3;i++) playTone(220, 'sawtooth', 0.3, 0.15, i*0.35); }
+function playHurt() { ensureAudio(); playTone(150, 'sawtooth', 0.4, 0.2); }
 let synth = window.speechSynthesis;
 let speaking = false;
 function speak(text) {
@@ -608,7 +633,7 @@ joyEl.addEventListener('touchcancel', endJoy);
 // Action
 const actEl = document.getElementById('act');
 let actionPressed = false;
-function triggerAction() { actionPressed = true; }
+function triggerAction() { ensureAudio(); playClick(); actionPressed = true; }
 actEl.addEventListener('touchstart', (e) => { e.preventDefault(); triggerAction(); });
 actEl.addEventListener('click', triggerAction);
 
@@ -657,6 +682,8 @@ function startRepair() {
   if (!interactTarget || repairing) return;
   repairing = true;
   repairTimer = 0;
+  ensureAudio();
+  playRepair();
   setDialogue(2);
 }
 
@@ -667,6 +694,8 @@ function completeRepair(panel) {
   panel.mesh.scale.setScalar(0.01);
   state.fixedCount++;
   state.integrity = Math.min(100, state.integrity + CFG.repairAmount);
+  ensureAudio();
+  playBeep(1400, 0.15);
   updatingHUD();
   nextDialogue();
   repairing = false;
@@ -720,11 +749,16 @@ function endGame(win) {
   state.isPlaying = false;
   pointerCaptured = false;
   lookActive = false;
+  ensureAudio();
   if (win) {
+    playBeep(900, 0.2);
+    playBeep(1200, 0.3);
     setDialogue(5);
     document.getElementById('ai-text').textContent = "Final seal engaged. Hull integrity holding. We're going to make it, pilot.";
     speak("Mission success. Hull integrity holding. We're going to make it, pilot.");
   } else {
+    playAlarm();
+    playHurt();
     document.getElementById('ai-text').textContent = "Integrity collapsed. I'm sorry, pilot. Systems failing...";
     speak("Integrity collapsed. Systems failing.");
   }
@@ -818,6 +852,16 @@ function animate(t) {
   if (state.integrity <= 0 || state.oxygen <= 0) endGame(false);
   if (state.fixedCount >= brokenPanels.length) endGame(true);
 
+  // Critical integrity alarm
+  if (state.integrity < 25) {
+    state.alarmCooldown = (state.alarmCooldown || 0) - dt;
+    if (state.alarmCooldown <= 0) {
+      ensureAudio();
+      playAlarm();
+      state.alarmCooldown = 2.5;
+    }
+  }
+
   updatingHUD();
 
   // Emergency lights flicker (faster = lower integrity)
@@ -894,6 +938,8 @@ window.addEventListener('resize', () => {
 });
 
 document.getElementById('btn-start').addEventListener('click', () => {
+  ensureAudio();
+  playBeep(900, 0.1);
   document.getElementById('start').style.display = 'none';
   document.getElementById('load').style.display = 'none';
   state.isPlaying = true;
