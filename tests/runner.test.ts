@@ -25,8 +25,10 @@ describe("sandbox runner", () => {
       memoryMb: 256,
     });
     expect(result.status).toBe("success");
-    expect(result.stdout).toContain("# pass 4");
-    expect(result.stdout).toContain("# fail 0");
+    // Node 24 changed the default test reporter from TAP (# pass 4) to the spec
+    // reporter (ℹ pass 4), so match the summary text, not the prefix.
+    expect(result.stdout).toMatch(/pass\s+4/);
+    expect(result.stdout).toMatch(/fail\s+0/);
   });
 
   it("rejects a non-runnable file", async () => {
