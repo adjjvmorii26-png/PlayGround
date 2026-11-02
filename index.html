@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -53,7 +53,7 @@
           </ul>
         </section>
 
-        <div class="inventory glass" id="inventory" aria-label="Inventory"></div>
+        <div class="inventory glass" id="inventory" role="group" aria-label="Inventory"></div>
 
         <div class="look-hint" id="look-hint">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 12h8M8 12l3-3M8 12l3 3M16 12l-3-3M16 12l-3 3"></path></svg>
@@ -160,7 +160,7 @@
 
   <div id="constellation-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="constellation-title">
     <div class="modal-card constellation-card">
-      <header class="modal-head">
+      <div class="modal-head">
         <div>
           <p class="eyebrow"><span></span>NAV-7 PROJECTOR</p>
           <h2 id="constellation-title">Constellation Protocol</h2>
@@ -168,7 +168,7 @@
         <button class="icon-btn modal-close" type="button" data-close="constellation-modal" aria-label="Close constellation protocol">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
         </button>
-      </header>
+      </div>
       <div class="constellation-body">
         <div class="starmap-wrap">
           <div id="starmap" class="starmap">
@@ -180,7 +180,7 @@
           </div>
           <div class="starmap-legend"><span class="legend-dot red"></span>RED GIANT<span class="legend-dot cyan"></span>TWINS<span class="legend-dot gold"></span>EYE</div>
         </div>
-        <aside class="constellation-info">
+        <aside class="constellation-info" aria-label="Constellation details">
           <p class="clue-label">CREW PLAQUE // NAV-7</p>
           <p class="clue-text" id="constellation-clue">No order recovered yet. Find the crew plaque beside the airlock.</p>
           <div class="sequence-pips" id="sequence-pips">
@@ -207,7 +207,7 @@
 
   <div id="keypad-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="keypad-title">
     <div class="modal-card keypad-card">
-      <header class="modal-head">
+      <div class="modal-head">
         <div>
           <p class="eyebrow"><span></span>AIRLOCK 01 // CONTROL</p>
           <h2 id="keypad-title">Launch Keypad</h2>
@@ -215,7 +215,7 @@
         <button class="icon-btn modal-close" type="button" data-close="keypad-modal" aria-label="Close launch keypad">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
         </button>
-      </header>
+      </div>
       <div class="keypad-screen">
         <span class="keypad-lock-label" id="keypad-lock-label">ENTER 4-DIGIT LAUNCH CODE</span>
         <strong id="keypad-code">····</strong>
