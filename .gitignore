@@ -1,0 +1,13 @@
+# Local runtime artefacts
+.agents/
+.agentsweb/
+.omgithub-runtime/
+.opencode-ssh/
+.opencode-web/
+
+# Build and test output
+node_modules/
+screenshots/
+__pycache__/
+*.log
+*.pid
