@@ -829,7 +829,7 @@
       <div class="you-corner" id="youCorner">
         <div class="you-bubble" id="youBubble" aria-live="polite"></div>
         <div class="you-prop" id="youProp" aria-hidden="true">
-          <span class="you-prop-emoji" id="youPropEmoji">📻</span>
+          <span class="you-prop-stack" id="youPropStack"></span>
           <span class="you-prop-glow" aria-hidden="true"></span>
         </div>
         <div class="you-avatar" aria-hidden="true">
@@ -860,7 +860,7 @@
           </div>
           <div class="emote-list" id="emoteList"></div>
           <div class="emote-tray-foot">
-            <span class="emote-tray-note">Customize labels, emoji, colors, props, and pets.</span>
+            <span class="emote-tray-note">Customize emotes, up to 3 props, pet coat, and name.</span>
             <button class="emote-customize-btn" id="emoteCustomize" type="button">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
               Sideline kit
@@ -963,13 +963,17 @@
         </div>
 
         <div class="kit-panel" id="kitProps" role="tabpanel" hidden>
-          <p class="kit-hint">Choose one prop for your sideline corner. It shows up in the park.</p>
+          <p class="kit-hint">Pick up to 3 props — they get laid out courtside. <span class="kit-count" id="propCount">0/3 placed</span></p>
           <div class="kit-grid" id="propGrid"></div>
         </div>
 
         <div class="kit-panel" id="kitPets" role="tabpanel" hidden>
-          <p class="kit-hint">Pick a courtside companion. Tap it in the park to say hi.</p>
+          <p class="kit-hint">Pick a courtside companion, then give it a coat and a name.</p>
           <div class="kit-grid kit-grid-pets" id="petGrid"></div>
+          <div class="pet-color-row">
+            <span>Coat</span>
+            <div class="pet-colors" id="petColors" role="group" aria-label="Pet coat color"></div>
+          </div>
           <label class="pet-name-row" for="petName">
             <span>Pet name</span>
             <input id="petName" type="text" maxlength="16" autocomplete="off" spellcheck="false" placeholder="Rex">

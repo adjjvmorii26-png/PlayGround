@@ -36,13 +36,15 @@
   const emoteBubble = $('#youBubble');
 
   const youProp = $('#youProp');
-  const youPropEmoji = $('#youPropEmoji');
+  const youPropStack = $('#youPropStack');
   const youPet = $('#youPet');
   const youPetEmoji = $('#youPetEmoji');
   const youPetName = $('#youPetName');
 
   const propGrid = $('#propGrid');
+  const propCount = $('#propCount');
   const petGrid = $('#petGrid');
+  const petColors = $('#petColors');
   const petNameInput = $('#petName');
   const emoteAdd = $('#emoteAdd');
   const emoteReset = $('#emoteReset');
@@ -119,9 +121,25 @@
     { id: 'none', emoji: '🚫', label: 'No pet', desc: 'Just you and the game', defaultName: '', sound: '' },
   ];
 
+  const PET_COLORS = [
+    { value: '#d79a5b', label: 'Honey' },
+    { value: '#b5622f', label: 'Copper' },
+    { value: '#e7d2ac', label: 'Cream' },
+    { value: '#565b64', label: 'Charcoal' },
+    { value: '#333947', label: 'Midnight' },
+    { value: '#dfe7ee', label: 'Snow' },
+  ];
+
   const EMOTE_KEY = 'reborn2k16.emotes.v2';
-  const KIT_KEY = 'reborn2k16.kit.v1';
-  const DEFAULT_KIT = { prop: 'boombox', pet: 'dog', petName: 'Rex' };
+  const KIT_KEY = 'reborn2k16.kit.v2';
+  const KIT_KEY_LEGACY = 'reborn2k16.kit.v1';
+  const MAX_PROPS = 3;
+  const DEFAULT_KIT = {
+    props: ['boombox', 'cooler'],
+    pet: 'dog',
+    petName: 'Rex',
+    petColor: '#d79a5b',
+  };
 
   function validColor(value) {
     return /^#[0-9a-f]{6}$/i.test(String(value)) ? String(value) : '#ff6a1a';
@@ -148,18 +166,31 @@
     try { localStorage.setItem(EMOTE_KEY, JSON.stringify(emotes)); } catch { /* ignore */ }
   }
 
+  function sanitizeProps(list) {
+    const source = Array.isArray(list) ? list : (typeof list === 'string' ? [list] : []);
+    const out = [];
+    source.forEach((id) => {
+      if (out.length >= MAX_PROPS || out.includes(id)) return;
+      if (id !== 'none' && PROPS.some((prop) => prop.id === id)) out.push(id);
+    });
+    return out;
+  }
+
   function loadKit() {
+    let saved = null;
     try {
-      const saved = JSON.parse(localStorage.getItem(KIT_KEY) || 'null');
-      if (saved) {
-        return {
-          prop: PROPS.some((p) => p.id === saved.prop) ? saved.prop : DEFAULT_KIT.prop,
-          pet: PETS.some((p) => p.id === saved.pet) ? saved.pet : DEFAULT_KIT.pet,
-          petName: String(saved.petName || DEFAULT_KIT.petName).slice(0, 16),
-        };
-      }
+      saved = JSON.parse(localStorage.getItem(KIT_KEY) || 'null');
+      if (!saved) saved = JSON.parse(localStorage.getItem(KIT_KEY_LEGACY) || 'null');
     } catch { /* private mode */ }
-    return { ...DEFAULT_KIT };
+    if (saved) {
+      return {
+        props: sanitizeProps(Array.isArray(saved.props) ? saved.props : saved.prop),
+        pet: PETS.some((item) => item.id === saved.pet) ? saved.pet : DEFAULT_KIT.pet,
+        petName: typeof saved.petName === 'string' ? saved.petName.slice(0, 16) : DEFAULT_KIT.petName,
+        petColor: /^#[0-9a-f]{6}$/i.test(String(saved.petColor || '')) ? saved.petColor : DEFAULT_KIT.petColor,
+      };
+    }
+    return { ...DEFAULT_KIT, props: [...DEFAULT_KIT.props] };
   }
 
   function saveKit() {
@@ -169,6 +200,18 @@
   let emotes = loadEmotes();
   let kit = loadKit();
   let lastEmoteAt = 0;
+
+  const emoteCombo = { count: 0, at: 0 };
+  const petFx = { hop: 0, bubbleAt: 0 };
+  const reactions = [];
+  const COMBO_WINDOW = 1500;
+
+  function bumpEmoteCombo() {
+    const now = performance.now();
+    emoteCombo.count = now - emoteCombo.at <= COMBO_WINDOW ? emoteCombo.count + 1 : 1;
+    emoteCombo.at = now;
+    return emoteCombo.count;
+  }
 
   /* ═══════════════════════════════════════════════════════════════
      Emote toolbar
@@ -208,7 +251,7 @@
     });
   }
 
-  function showBubble(emoji, label, color) {
+  function showBubble(emoji, label, color, combo = 1) {
     emoteBubble.style.setProperty('--bc', color || '#ff6a1a');
     const emojiEl = document.createElement('span');
     emojiEl.className = 'bubble-emoji';
@@ -216,7 +259,15 @@
     const labelEl = document.createElement('span');
     labelEl.className = 'bubble-label';
     labelEl.textContent = label;
-    emoteBubble.replaceChildren(emojiEl, labelEl);
+    const nodes = [emojiEl, labelEl];
+    if (combo > 1) {
+      const chip = document.createElement('span');
+      chip.className = 'bubble-combo';
+      chip.textContent = `×${combo}`;
+      nodes.push(chip);
+    }
+    emoteBubble.replaceChildren(...nodes);
+    emoteBubble.classList.toggle('is-combo', combo > 1);
     emoteBubble.classList.remove('is-live');
     void emoteBubble.offsetWidth;
     emoteBubble.classList.add('is-live');
@@ -229,10 +280,16 @@
     if (now - lastEmoteAt < 550) return;
     lastEmoteAt = now;
 
-    showBubble(emote.emoji, emote.label, emote.color);
-    addFeed(emote.emoji, 'You', `“${emote.label}” from the sideline`, emote.color);
-    spawnEmoteFx(emote.emoji);
-    if (typeof game !== 'undefined') game.hype = Math.min(1.4, game.hype + 0.9);
+    const combo = bumpEmoteCombo();
+    showBubble(emote.emoji, emote.label, emote.color, combo);
+    addFeed(emote.emoji, 'You', combo > 1 ? `“${emote.label}” · ×${combo} combo` : `“${emote.label}” from the sideline`, emote.color);
+    spawnEmoteFx(emote.emoji, combo);
+    spawnReactions(emote.emoji, combo);
+    petFx.hop = 1;
+    if (combo === 3 || combo === 6 || combo === 10) {
+      showToast(`Sideline combo ×${combo} — the park is feeling it`);
+    }
+    if (typeof game !== 'undefined') game.hype = Math.min(1.6, game.hype + 0.55 + combo * 0.12);
 
     if (button) {
       button.classList.add('is-fired');
@@ -244,10 +301,23 @@
      Sideline kit UI — emotes, props, pets
      ═══════════════════════════════════════════════════════════════ */
 
+  function chosenProps() {
+    return kit.props
+      .map((id) => PROPS.find((item) => item.id === id))
+      .filter(Boolean);
+  }
+
   function applyKit() {
-    const prop = PROPS.find((item) => item.id === kit.prop) || PROPS[0];
-    youPropEmoji.textContent = prop.emoji;
-    youProp.style.display = prop.id === 'none' ? 'none' : '';
+    const props = chosenProps();
+    youPropStack.replaceChildren();
+    props.forEach((prop) => {
+      const chip = document.createElement('span');
+      chip.className = 'you-prop-chip';
+      chip.textContent = prop.emoji;
+      chip.title = prop.label;
+      youPropStack.append(chip);
+    });
+    youProp.style.display = props.length ? '' : 'none';
 
     const pet = PETS.find((item) => item.id === kit.pet) || PETS[0];
     if (pet.id === 'none') {
@@ -257,38 +327,63 @@
       youPetEmoji.textContent = pet.emoji;
       const name = (kit.petName || pet.defaultName || pet.label).slice(0, 16);
       youPetName.textContent = name;
+      youPetName.style.boxShadow = `inset 3px 0 0 ${kit.petColor}`;
       youPet.setAttribute('aria-label', `Pet ${name} (${pet.label})`);
     }
     if (petNameInput) petNameInput.value = kit.petName || '';
   }
 
+  function syncPropCount() {
+    if (!propCount) return;
+    propCount.textContent = kit.props.length
+      ? `${kit.props.length}/${MAX_PROPS} placed`
+      : 'none placed';
+  }
+
   function renderPropGrid() {
     propGrid.replaceChildren();
     PROPS.forEach((prop) => {
+      const selected = prop.id === 'none' ? kit.props.length === 0 : kit.props.includes(prop.id);
       const card = document.createElement('button');
       card.type = 'button';
-      card.className = `kit-card${kit.prop === prop.id ? ' is-selected' : ''}`;
+      card.className = `kit-card${selected ? ' is-selected' : ''}`;
+      card.setAttribute('aria-pressed', String(selected));
       card.innerHTML = `
         <span class="kit-card-check"><span class="check-dot">✓</span></span>
         <span class="kit-card-emoji">${prop.emoji}</span>
         <b>${prop.label}</b>
         <small>${prop.desc}</small>`;
       card.addEventListener('click', () => {
-        kit.prop = prop.id;
+        if (prop.id === 'none') {
+          kit.props = [];
+        } else {
+          const index = kit.props.indexOf(prop.id);
+          if (index >= 0) {
+            kit.props.splice(index, 1);
+          } else if (kit.props.length >= MAX_PROPS) {
+            showToast(`Sideline full — ${MAX_PROPS} props max`);
+            return;
+          } else {
+            kit.props.push(prop.id);
+          }
+        }
         saveKit();
         applyKit();
         renderPropGrid();
       });
       propGrid.append(card);
     });
+    syncPropCount();
   }
 
   function renderPetGrid() {
     petGrid.replaceChildren();
     PETS.forEach((pet) => {
+      const selected = kit.pet === pet.id;
       const card = document.createElement('button');
       card.type = 'button';
-      card.className = `kit-card${kit.pet === pet.id ? ' is-selected' : ''}`;
+      card.className = `kit-card${selected ? ' is-selected' : ''}`;
+      card.setAttribute('aria-pressed', String(selected));
       card.innerHTML = `
         <span class="kit-card-check"><span class="check-dot">✓</span></span>
         <span class="kit-card-emoji">${pet.emoji}</span>
@@ -302,6 +397,27 @@
         renderPetGrid();
       });
       petGrid.append(card);
+    });
+  }
+
+  function renderPetColors() {
+    if (!petColors) return;
+    petColors.replaceChildren();
+    PET_COLORS.forEach((color) => {
+      const swatch = document.createElement('button');
+      swatch.type = 'button';
+      swatch.className = `pet-swatch${kit.petColor === color.value ? ' is-selected' : ''}`;
+      swatch.style.setProperty('--sw', color.value);
+      swatch.title = color.label;
+      swatch.setAttribute('aria-label', `${color.label} coat`);
+      swatch.setAttribute('aria-pressed', String(kit.petColor === color.value));
+      swatch.addEventListener('click', () => {
+        kit.petColor = color.value;
+        saveKit();
+        applyKit();
+        renderPetColors();
+      });
+      petColors.append(swatch);
     });
   }
 
@@ -390,6 +506,7 @@
     renderEmoteEditor();
     renderPropGrid();
     renderPetGrid();
+    renderPetColors();
     applyKit();
     setKitTab('emotes');
     setTimeout(() => $('#emoteClose').focus(), 30);
@@ -425,13 +542,14 @@
 
   emoteReset.addEventListener('click', () => {
     emotes = DEFAULT_EMOTES.map((item) => ({ ...item }));
-    kit = { ...DEFAULT_KIT };
+    kit = { ...DEFAULT_KIT, props: [...DEFAULT_KIT.props] };
     saveEmotes();
     saveKit();
     renderEmoteBar();
     renderEmoteEditor();
     renderPropGrid();
     renderPetGrid();
+    renderPetColors();
     applyKit();
     showToast('Sideline kit reset to defaults');
   });
@@ -458,6 +576,22 @@
   });
 
   emoteToggle.addEventListener('click', () => setTray(emoteTray.hidden));
+
+  canvas.addEventListener('click', (event) => {
+    if (!state.open || !state.running || !emoteModal.hidden) return;
+    const rect = canvas.getBoundingClientRect();
+    if (!petHit(event.clientX - rect.left, event.clientY - rect.top)) return;
+    petCelebrate(true);
+  });
+
+  canvas.addEventListener('pointermove', (event) => {
+    if (!state.open || !state.running) {
+      canvas.style.cursor = '';
+      return;
+    }
+    const rect = canvas.getBoundingClientRect();
+    canvas.style.cursor = petHit(event.clientX - rect.left, event.clientY - rect.top) ? 'pointer' : '';
+  });
 
   renderEmoteBar();
   applyKit();
@@ -1583,6 +1717,7 @@
       game.phase = 'scored';
       game.pt = 0;
       game.handler = null;
+      petCelebrate();
 
       if (flight.three) {
         setCommentary(`SPLASH. ${shooter.name} buries it from three.`);
@@ -1914,22 +2049,54 @@
     while (parkFeed.children.length > 5) parkFeed.lastElementChild.remove();
   }
 
-  function spawnEmoteFx(emoji) {
+  const REACTION_EMOJIS = ['🔥', '😂', '👏', '💯', '😤', '🤯', '🫡', '👀'];
+
+  function spawnEmoteFx(emoji, combo = 1) {
     if (!view.w) return;
-    const count = reduceMotion ? 1 : 5;
+    const count = reduceMotion ? 1 : Math.min(16, 5 + combo * 2);
     for (let i = 0; i < count; i += 1) {
       fx.push({
         emoji,
         x: view.w * 0.06 + rand(0, view.w * 0.16),
         y: view.nearY - rand(0, view.unit * 0.5),
-        vx: rand(-14, 20),
-        vy: -rand(32, 74),
-        life: -i * 0.09,
-        max: rand(1.4, 2.1),
+        vx: rand(-22, 26),
+        vy: -rand(34, 82),
+        life: -i * 0.06,
+        max: rand(1.4, 2.2),
         rot: rand(-0.4, 0.4),
-        spin: rand(-0.8, 0.8),
+        spin: rand(-0.9, 0.9),
       });
     }
+  }
+
+  function spawnReactions(emoji, combo = 1) {
+    if (!view.w || reduceMotion) return;
+    const picks = players.slice().sort(() => Math.random() - 0.5).slice(0, Math.min(3, 1 + Math.floor(combo / 2)));
+    picks.forEach((player, index) => {
+      const foot = playerFoot(player);
+      const h = playerHeight(player);
+      reactions.push({
+        emoji: Math.random() < 0.45 ? emoji : pick(REACTION_EMOJIS),
+        x: foot.x + rand(-view.unit * 0.14, view.unit * 0.14),
+        y: foot.y - h - view.unit * 0.16,
+        vx: rand(-7, 7),
+        vy: -view.unit * rand(0.22, 0.4),
+        life: -index * 0.12,
+        max: rand(1.2, 1.8),
+        rot: rand(-0.18, 0.18),
+      });
+    });
+  }
+
+  function petCelebrate(force = false) {
+    const pet = PETS.find((item) => item.id === kit.pet);
+    if (!pet || pet.id === 'none') return;
+    petFx.hop = 1;
+    const now = performance.now();
+    if (!force && now - petFx.bubbleAt < 2600) return;
+    petFx.bubbleAt = now;
+    const name = kit.petName || pet.defaultName || pet.label;
+    if (now - lastEmoteAt > 1200) showBubble(pet.emoji, `${name}: ${pet.sound}`, '#ffb347');
   }
 
   function updateFx(dt) {
@@ -1942,6 +2109,17 @@
       item.rot += item.spin * dt;
       item.vy += 18 * dt;
     }
+
+    for (let i = reactions.length - 1; i >= 0; i -= 1) {
+      const item = reactions[i];
+      item.life += dt;
+      if (item.life > item.max) { reactions.splice(i, 1); continue; }
+      item.x += item.vx * dt;
+      item.y += item.vy * dt;
+      item.vy += view.unit * 0.12 * dt;
+    }
+
+    petFx.hop = Math.max(0, petFx.hop - dt * 2.1);
   }
 
   /* ═══════════════════════════════════════════════════════════════
@@ -2174,6 +2352,275 @@
     void unit;
   }
 
+  /* ── Sideline props, pet & crowd reactions ─────────────────────── */
+
+  function petLayout() {
+    const mobile = view.w < 700;
+    return {
+      x: view.w * (mobile ? 0.76 : 0.86),
+      y: view.nearY - view.unit * (mobile ? 0.50 : 0.34),
+      scale: view.unit * (mobile ? 0.48 : 0.56),
+    };
+  }
+
+  function shade(hex, amount) {
+    const n = parseInt(String(hex).replace('#', ''), 16);
+    if (Number.isNaN(n)) return hex;
+    const r = clamp(((n >> 16) & 255) + amount, 0, 255);
+    const g = clamp(((n >> 8) & 255) + amount, 0, 255);
+    const b = clamp((n & 255) + amount, 0, 255);
+    return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+  }
+
+  function drawSidelineProps(time) {
+    const props = chosenProps();
+    if (!props.length) return;
+    const unit = view.unit;
+
+    props.forEach((prop, index) => {
+      const z = 0.4 - index * 0.085;
+      const base = project(0.028, z);
+      const size = unit * (0.46 + z * 0.34);
+      const bob = Math.sin(time * 1.9 + index * 1.4) * unit * 0.018;
+
+      const glow = ctx.createRadialGradient(base.x, base.y - unit * 0.04, 0, base.x, base.y - unit * 0.04, size * 0.9);
+      glow.addColorStop(0, 'rgba(255, 138, 70, 0.14)');
+      glow.addColorStop(1, 'rgba(255, 138, 70, 0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.ellipse(base.x, base.y - unit * 0.04, size * 0.9, size * 0.5, 0, 0, TAU);
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.42)';
+      ctx.beginPath();
+      ctx.ellipse(base.x, base.y + unit * 0.03, size * 0.34, size * 0.1, 0, 0, TAU);
+      ctx.fill();
+
+      ctx.save();
+      ctx.translate(base.x, base.y - size * 0.55 + bob);
+      ctx.rotate(Math.sin(time * 1.3 + index) * 0.05);
+      ctx.font = `${size}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+      ctx.shadowBlur = size * 0.2;
+      ctx.shadowOffsetY = size * 0.12;
+      ctx.fillText(prop.emoji, 0, 0);
+      ctx.restore();
+    });
+  }
+
+  function drawPet(time) {
+    const pet = PETS.find((item) => item.id === kit.pet);
+    if (!pet || pet.id === 'none') return;
+
+    const layout = petLayout();
+    const s = layout.scale;
+    const coat = kit.petColor || '#d79a5b';
+    const coatDark = shade(coat, -34);
+    const coatLight = shade(coat, 30);
+    const hop = Math.sin(clamp(petFx.hop, 0, 1) * Math.PI) * s * 0.62;
+    const breathe = Math.sin(time * 2.2) * s * 0.035;
+    const x = layout.x;
+    const y = layout.y - hop;
+    const wag = Math.sin(time * (petFx.hop > 0.05 ? 16 : 5)) * 0.5;
+
+    // Ground shadow stays anchored while the pet hops.
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.38)';
+    ctx.beginPath();
+    ctx.ellipse(x, layout.y + s * 0.05, s * (0.9 - hop / (s * 3)), s * 0.2, 0, 0, TAU);
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    if (pet.id === 'parrot') {
+      ctx.strokeStyle = '#8a5a2b';
+      ctx.lineWidth = Math.max(1.5, s * 0.08);
+      ctx.beginPath();
+      ctx.moveTo(0, s * 0.1);
+      ctx.lineTo(0, s * 0.85);
+      ctx.moveTo(-s * 0.3, s * 0.85);
+      ctx.lineTo(s * 0.3, s * 0.85);
+      ctx.stroke();
+
+      ctx.fillStyle = coat;
+      ctx.beginPath();
+      ctx.ellipse(0, -s * 0.5, s * 0.42, s * 0.62, wag * 0.08, 0, TAU);
+      ctx.fill();
+
+      ctx.fillStyle = coatLight;
+      ctx.beginPath();
+      ctx.ellipse(s * 0.25, -s * 0.5, s * 0.17, s * 0.42, -0.2, 0, TAU);
+      ctx.fill();
+
+      ctx.fillStyle = coat;
+      ctx.beginPath();
+      ctx.arc(0, -s * 1.12, s * 0.34, 0, TAU);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffb347';
+      ctx.beginPath();
+      ctx.moveTo(s * 0.25, -s * 1.18);
+      ctx.lineTo(s * 0.62, -s * 1.02);
+      ctx.lineTo(s * 0.25, -s * 0.94);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = coatDark;
+      ctx.lineWidth = Math.max(1, s * 0.05);
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.32, -s * 0.5);
+      ctx.quadraticCurveTo(-s * 0.86, -s * 0.3 + wag * s * 0.25, -s * 0.62, s * 0.1);
+      ctx.stroke();
+    } else {
+      // Legs
+      ctx.strokeStyle = coatDark;
+      ctx.lineWidth = Math.max(2, s * 0.16);
+      const legLift = Math.sin(time * 3.4) * s * 0.07;
+      ctx.beginPath();
+      ctx.moveTo(-s * 0.42, -s * 0.34);
+      ctx.lineTo(-s * 0.46, legLift * 0.4);
+      ctx.moveTo(-s * 0.14, -s * 0.32);
+      ctx.lineTo(-s * 0.1, -legLift * 0.3);
+      ctx.moveTo(s * 0.24, -s * 0.34);
+      ctx.lineTo(s * 0.28, legLift * 0.4);
+      ctx.moveTo(s * 0.5, -s * 0.32);
+      ctx.lineTo(s * 0.54, -legLift * 0.3);
+      ctx.stroke();
+
+      // Tail
+      ctx.strokeStyle = coat;
+      ctx.lineWidth = Math.max(2, s * 0.14);
+      ctx.beginPath();
+      if (pet.id === 'bunny') {
+        ctx.arc(-s * 0.6, -s * 0.58, s * 0.16, 0, TAU);
+      } else {
+        ctx.moveTo(-s * 0.55, -s * 0.55);
+        ctx.quadraticCurveTo(-s * 1.02, -s * (0.72 + wag * 0.22), -s * (0.78 + wag * 0.18), -s * 1.02);
+      }
+      ctx.stroke();
+
+      // Body
+      ctx.fillStyle = coat;
+      ctx.beginPath();
+      if (pet.id === 'turtle') {
+        ctx.ellipse(0, -s * (0.55 + breathe / s), s * 0.72, s * 0.45, 0, 0, TAU);
+      } else {
+        ctx.ellipse(0, -s * (0.56 + breathe / s), s * 0.62, s * 0.37, 0, 0, TAU);
+      }
+      ctx.fill();
+
+      if (pet.id === 'turtle') {
+        ctx.strokeStyle = shade(coat, -55);
+        ctx.lineWidth = Math.max(1, s * 0.05);
+        for (let i = -1; i <= 1; i += 1) {
+          ctx.beginPath();
+          ctx.ellipse(0, -s * 0.55, s * 0.72 * (0.65 + i * 0.18), s * 0.45 * (0.65 + i * 0.18), 0, 0, TAU);
+          ctx.stroke();
+        }
+      }
+
+      // Head
+      const headX = s * 0.55;
+      const headY = -s * 0.95;
+      ctx.fillStyle = coatLight;
+      ctx.beginPath();
+      ctx.arc(headX, headY, s * 0.34, 0, TAU);
+      ctx.fill();
+
+      // Ears
+      ctx.fillStyle = coatDark;
+      if (pet.id === 'bunny') {
+        ctx.beginPath();
+        ctx.ellipse(headX - s * 0.12, headY - s * 0.5, s * 0.1, s * 0.4, -0.12, 0, TAU);
+        ctx.ellipse(headX + s * 0.14, headY - s * 0.48, s * 0.1, s * 0.38, 0.12, 0, TAU);
+        ctx.fill();
+      } else if (pet.id === 'cat') {
+        ctx.beginPath();
+        ctx.moveTo(headX - s * 0.32, headY - s * 0.14);
+        ctx.lineTo(headX - s * 0.18, headY - s * 0.56);
+        ctx.lineTo(headX + s * 0.02, headY - s * 0.26);
+        ctx.moveTo(headX + s * 0.34, headY - s * 0.12);
+        ctx.lineTo(headX + s * 0.2, headY - s * 0.56);
+        ctx.lineTo(headX + s * 0.04, headY - s * 0.26);
+        ctx.fill();
+      } else if (pet.id !== 'turtle') {
+        ctx.beginPath();
+        ctx.ellipse(headX - s * 0.3, headY + s * 0.02, s * 0.14, s * 0.3, -0.3, 0, TAU);
+        ctx.fill();
+      }
+
+      // Face
+      const blink = Math.sin(time * 1.7 + 1) > 0.985 ? 0.16 : 1;
+      ctx.fillStyle = '#191411';
+      ctx.beginPath();
+      ctx.ellipse(headX + s * 0.04, headY - s * 0.02, s * 0.045, s * 0.045 * blink, 0, 0, TAU);
+      ctx.ellipse(headX + s * 0.22, headY - s * 0.02, s * 0.045, s * 0.045 * blink, 0, 0, TAU);
+      ctx.fill();
+
+      ctx.fillStyle = shade(coat, -80);
+      ctx.beginPath();
+      ctx.ellipse(headX + s * 0.34, headY + s * 0.13, s * 0.05, s * 0.04, 0, 0, TAU);
+      ctx.fill();
+
+      // Collar
+      ctx.strokeStyle = '#ff6a1a';
+      ctx.lineWidth = Math.max(1.5, s * 0.08);
+      ctx.beginPath();
+      ctx.arc(headX - s * 0.08, headY + s * 0.26, s * 0.2, 0.2, Math.PI - 0.2);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+
+    // Name tag
+    const name = (kit.petName || pet.defaultName || pet.label).slice(0, 16);
+    if (name) {
+      const fontSize = Math.max(8, s * 0.3);
+      ctx.font = `600 ${fontSize}px ui-monospace, "SF Mono", Menlo, monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const w = ctx.measureText(name).width + fontSize * 1.1;
+      const ty = y - s * 1.85;
+      ctx.fillStyle = 'rgba(8, 11, 16, 0.74)';
+      ctx.beginPath();
+      ctx.roundRect(x - w / 2, ty - fontSize * 0.78, w, fontSize * 1.56, fontSize * 0.78);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(244, 247, 251, 0.92)';
+      ctx.fillText(name, x, ty);
+    }
+  }
+
+  function drawReactions(time) {
+    if (!reactions.length) return;
+    for (const item of reactions) {
+      if (item.life < 0) continue;
+      const alpha = clamp(1 - item.life / item.max, 0, 1);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(item.x, item.y);
+      ctx.rotate(item.rot + Math.sin(time * 3 + item.x) * 0.06);
+      ctx.font = `${Math.max(15, view.unit * 0.34)}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      ctx.shadowBlur = view.unit * 0.08;
+      ctx.fillText(item.emoji, 0, 0);
+      ctx.restore();
+    }
+  }
+
+  function petHit(x, y) {
+    const pet = PETS.find((item) => item.id === kit.pet);
+    if (!pet || pet.id === 'none') return false;
+    const layout = petLayout();
+    const s = layout.scale;
+    return Math.hypot(x - layout.x, y - (layout.y - s * 0.8)) < s * 1.35;
+  }
+
   function drawPlayers(time) {
     const sorted = players.slice().sort((a, b) => a.z - b.z);
     sorted.forEach((player) => drawPlayer(player, time));
@@ -2343,10 +2790,13 @@
     drawCrowd(time);
     drawCourt(time);
     drawHoopBack();
+    drawSidelineProps(time);
     drawPlayers(time);
+    drawPet(time);
     drawBall(time);
     drawRimNet(time);
     drawFx();
+    drawReactions(time);
     drawScoreFlash();
   }
 
