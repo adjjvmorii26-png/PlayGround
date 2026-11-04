@@ -22,6 +22,8 @@ benchmark. A full run is roughly two minutes.
 | Coherence failure | Pass — 17 misses → 0 coherence → decoherence screen |
 | Echo gates | Pass — 2 of 3 echo cells active at revolution 0; inactive tap scored 0 and caused no miss |
 | Mobile layout at 390×844 | Pass — HUD, field, overdrive bar all fit; wave label visible |
+| Landscape layout at 844×390 | Pass — menu compacts to two columns and fits without scrolling; field playable |
+| Export memory sigil as SVG | Pass — `pulse-lattice-sigil-wave05-C-36.svg` downloaded with no console errors |
 | Console exceptions / errors | 0 |
 
 ## Sample runs

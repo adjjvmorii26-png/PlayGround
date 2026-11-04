@@ -7,6 +7,7 @@
 ```
 workforce/        the package (orchestrator, 10 agents, llm, tools, memory, bus, cli)
 ixpansion/        IXPANSION recipe experiment platform (X-01 engine + CLI)
+projects/         themed labs, incl. projects/pulse-lattice/ (playable ritual)
 tests/            offline unit + end-to-end tests
 workspace/        default sandbox for library-only use
 workforce.yaml    workspace connector config (sandbox = repo root)

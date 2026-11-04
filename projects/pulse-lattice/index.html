@@ -123,8 +123,8 @@
   /* ── overlay / panels ─────────────────────────────────── */
   .overlay{
     position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;padding:18px;
-    background:radial-gradient(circle at 50% 40%,rgba(8,16,30,.5),rgba(3,5,11,.9) 72%);
-    backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+    background:radial-gradient(circle at 50% 40%,rgba(8,16,30,.38),rgba(3,5,11,.82) 72%);
+    backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
   }
   .overlay.open{display:flex}
   .panel{
@@ -226,6 +226,32 @@
   @media (prefers-reduced-motion:reduce){
     .od.ready{animation:none}
     .banner.show{animation-duration:.01s;opacity:1}
+  }
+  @media (max-height:560px) and (orientation:landscape){
+    .overlay{padding:10px}
+    .panel{width:min(760px,100%);max-height:calc(100dvh - 20px);padding:16px 22px;border-radius:18px}
+    .title{font-size:clamp(26px,5.2vw,40px);margin-top:7px}
+    .tag{font-size:11px;line-height:1.45;margin-top:8px}
+    .how{grid-template-columns:1fr 1fr;gap:6px 18px;margin-top:12px}
+    .how .row{grid-template-columns:20px 1fr;gap:7px}
+    .how .t{font-size:10.5px;line-height:1.45}
+    .how .n{font-size:8px;padding-top:2px}
+    .fine{display:none}
+    .cta{margin-top:12px;padding:12px 16px;font-size:10.5px}
+    .ghost{padding:10px 14px;margin-top:7px;font-size:9px}
+    .meta{margin-top:9px;font-size:8px}
+    .pauseQuote{font-size:11px;margin-top:10px}
+    .endhead{gap:10px}
+    .endtitle{font-size:26px}
+    .rank{flex-basis:50px;height:50px;border-radius:14px;font-size:22px}
+    .sigil{width:116px;height:116px;margin:8px auto 0}
+    .sigil svg{width:116px;height:116px}
+    .sigil .cap{font-size:6.5px;letter-spacing:.18em}
+    .stats{margin-top:10px}
+    .cell{padding:8px 12px}
+    .cell .v{font-size:15px;margin-top:3px}
+    .cell .k{font-size:7px}
+    .record{margin-top:8px;font-size:7.5px;padding:4px 8px}
   }
 </style>
 </head>
@@ -684,6 +710,7 @@
       ${state.record ? '<div class="record">NEW SIGNAL RECORD</div>' : ''}
       <p class="fine" style="margin-top:16px">${RANKS[rank]}</p>
       <button class="cta" data-action="retry">${win ? 'Pulse again' : 'Re-enter the lattice'}</button>
+      <button class="ghost" data-action="sigil">Save memory sigil (SVG)</button>
       <button class="ghost" data-action="menu">Return to the quiet</button>
     </div>`;
   }
@@ -741,6 +768,29 @@
   function hideOverlay () {
     overlay.classList.remove('open');
     overlay.innerHTML = '';
+  }
+
+  function saveSigil () {
+    const svg = overlay.querySelector('.sigil svg');
+    if (!svg) return;
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    const blob = new Blob([clone.outerHTML], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `pulse-lattice-sigil-wave${pad2(state.wave + 1)}-${state.rank}-${state.score}.svg`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+    const btn = overlay.querySelector('[data-action="sigil"]');
+    if (btn) {
+      btn.textContent = 'Memory sigil saved ✓';
+      window.setTimeout(() => {
+        if (btn.isConnected) btn.textContent = 'Save memory sigil (SVG)';
+      }, 1900);
+    }
   }
 
   function showBanner (kicker, title, sub, ms, tone, mini) {
@@ -1751,6 +1801,7 @@
     btn.blur();
     if (action === 'start' || action === 'retry' || action === 'restart') startGame(0);
     else if (action === 'resume') togglePause(false);
+    else if (action === 'sigil') saveSigil();
     else if (action === 'menu') goMenu();
   });
 

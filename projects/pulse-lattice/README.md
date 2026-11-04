@@ -73,7 +73,8 @@ every quarter-revolution, and a pentatonic note for each cell. No audio files.
   roughly half are asleep each revolution rather than all flipping together.
 - **The body remembers.** Every run builds a **memory sigil** from its hit angles
   and radii: perfect hits become gold points, ordinary hits cyan, and the current
-  constellation shows through as ghosts on a failed run.
+  constellation shows through as ghosts on a failed run. The end screen can export
+  the sigil as a standalone SVG.
 - **Failure is legible.** Low coherence tints the core rose; void windows are red;
   sleeping echo cells are dimmed, dashed, and marked with a small *z*.
 
