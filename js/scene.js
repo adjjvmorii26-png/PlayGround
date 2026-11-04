@@ -30,12 +30,54 @@ const MARKERS = [
   { id: 'starchart', icon: '✦', label: 'Star projector', position: [4.5, 1.86, -1.3] },
   { id: 'keypad', icon: '⌗', label: 'Launch keypad', position: [3.22, 1.2, -4.18] },
   { id: 'door', icon: '⇧', label: 'Airlock 01', position: [0, 2.12, -4.5] },
+  { id: 'reactor', icon: '☢', label: 'Reactor core', position: [0, 1.62, 2.88], hidden: true },
+  { id: 'navtable', icon: '✧', label: 'Nav table', position: [0, 1.32, 2.88], hidden: true },
   { id: 'hologram', icon: '◎', label: 'PIP core', position: [2.0, 1.5, -4.32], minor: true },
   { id: 'window', icon: '◐', label: 'Observation window', position: [0, 1.92, 4.68], minor: true },
   { id: 'crates', icon: '▣', label: 'Cargo crate', position: [-4.15, 1.05, 2.05], minor: true },
   { id: 'server', icon: '▥', label: 'Server rack', position: [4.55, 1.6, 2.0], minor: true },
   { id: 'cryo', icon: '▯', label: 'Cryo pod', position: [-3.5, 1.6, 4.24], minor: true }
 ]
+
+const THEMES = [
+  {
+    id: 'cryo',
+    bg: 0x03070b,
+    fog: 0x03070b,
+    stripOff: 0xff3d4e,
+    stripOn: 0x2bd8ff,
+    panelOff: 0xff3d4e,
+    panelOn: 0xcdefff,
+    door: 0xff4055,
+    accent: 0x2bd8ff,
+    lights: [0xd9eef7, 0xcdefff, 0xcdefff, 0xd8e9f4, 0xffb36a, 0x30dfff, 0x8ed8ff]
+  },
+  {
+    id: 'engineering',
+    bg: 0x0a0603,
+    fog: 0x0a0603,
+    stripOff: 0xff5a1f,
+    stripOn: 0xffb45e,
+    panelOff: 0xff5a1f,
+    panelOn: 0xffd9a0,
+    door: 0xff7a2a,
+    accent: 0xffa53d,
+    lights: [0xffd2a1, 0xffc286, 0xffb36a, 0xffd7ae, 0xffc06a, 0xff9d4d, 0xffd8a8]
+  },
+  {
+    id: 'bridge',
+    bg: 0x05040d,
+    fog: 0x05040d,
+    stripOff: 0x6a55ff,
+    stripOn: 0xb6a9ff,
+    panelOff: 0x5f4bff,
+    panelOn: 0xe6e0ff,
+    door: 0x9d8bff,
+    accent: 0x9d8bff,
+    lights: [0xdcd7ff, 0xcfc8ff, 0xc8c1ff, 0xe1dcff, 0xb9b1ff, 0x9d8bff, 0xd8d2ff]
+  }
+]
+
 
 export class EchoRoom {
   constructor({ canvas, markerLayer, onHotspot }) {
@@ -87,6 +129,8 @@ export class EchoRoom {
     this.renderer.toneMappingExposure = 1.37
     this.renderer.shadowMap.enabled = false
 
+    this.theme = THEMES[0]
+    this.deck = 0
     this.buildMaterials()
     this.buildLights()
     this.buildRoom()
@@ -98,6 +142,8 @@ export class EchoRoom {
     this.buildServerRack()
     this.buildCrates()
     this.buildCryoPod()
+    this.buildEngineeringProps()
+    this.buildBridgeProps()
     this.buildAtmosphere()
     this.buildMarkers()
     this.bindInput()
@@ -490,6 +536,7 @@ export class EchoRoom {
     this.disposables.push(gauntlet.geometry)
 
     const labelMat = new THREE.MeshBasicMaterial({ map: this.textures.label('AIRLOCK 01', { width: 512, height: 96, size: 34 }), transparent: true, toneMapped: false })
+    this.doorLabelMat = labelMat
     const label = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 0.36), labelMat)
     label.position.set(0, 3.04, 0.33)
     label.rotation.x = 0
@@ -974,6 +1021,128 @@ export class EchoRoom {
     this.contactShadow(-3.5, 4.32, 1.3, 1.3, 0.55)
   }
 
+  buildEngineeringProps() {
+    const group = new THREE.Group()
+    group.position.set(0, 0, 2.88)
+    group.visible = false
+    this.scene.add(group)
+    this.engineeringGroup = group
+
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.82, 0.24, 28), this.mats.trimDark)
+    base.position.y = 0.12
+    group.add(base)
+    this.disposables.push(base.geometry)
+
+    const collar = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.05, 8, 40), this.mats.trimLight)
+    collar.rotation.x = Math.PI / 2
+    collar.position.y = 0.32
+    group.add(collar)
+    this.disposables.push(collar.geometry)
+
+    this.reactorCoreMat = new THREE.MeshStandardMaterial({
+      color: 0x321407,
+      emissive: 0xff7a2a,
+      emissiveIntensity: 1.8,
+      metalness: 0.5,
+      roughness: 0.3,
+      transparent: true,
+      opacity: 0.94
+    })
+    const core = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.48, 1.55, 24), this.reactorCoreMat)
+    core.position.y = 1.08
+    group.add(core)
+    this.disposables.push(core.geometry)
+
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.34, 0.22, 20), this.mats.trim)
+    cap.position.y = 1.96
+    group.add(cap)
+    this.disposables.push(cap.geometry)
+
+    this.reactorRings = []
+    for (let i = 0; i < 3; i += 1) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.5 + i * 0.12, 0.022, 6, 40), this.mats.amber)
+      ring.rotation.x = Math.PI / 2
+      ring.position.y = 0.55 + i * 0.5
+      group.add(ring)
+      this.disposables.push(ring.geometry)
+      this.reactorRings.push(ring)
+    }
+
+    for (const side of [-1, 1]) {
+      const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1.6, 12), this.mats.trim)
+      pipe.position.set(side * 0.68, 0.8, -0.12)
+      group.add(pipe)
+      this.disposables.push(pipe.geometry)
+      const elbow = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.07, 8, 20, Math.PI / 2), this.mats.trim)
+      elbow.position.set(side * 0.68, 1.6, -0.12)
+      elbow.rotation.z = side > 0 ? Math.PI : -Math.PI / 2
+      group.add(elbow)
+      this.disposables.push(elbow.geometry)
+    }
+
+    this.reactorGlow = this.addGlow([0, 1.35, 2.9], 2.6, 0xff8a3d, 0.2)
+    this.registerHotspot('reactor', [...group.children], group)
+    this.contactShadow(0, 2.88, 1.8, 1.5, 0.5)
+  }
+
+  buildBridgeProps() {
+    const group = new THREE.Group()
+    group.position.set(0, 0, 2.88)
+    group.visible = false
+    this.scene.add(group)
+    this.bridgeGroup = group
+
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.95, 0.18, 32), this.mats.trimDark)
+    base.position.y = 0.09
+    group.add(base)
+    this.disposables.push(base.geometry)
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.82, 0.035, 8, 48), this.mats.trimLight)
+    rim.rotation.x = Math.PI / 2
+    rim.position.y = 0.19
+    group.add(rim)
+    this.disposables.push(rim.geometry)
+
+    this.navHoloMat = new THREE.MeshBasicMaterial({
+      color: 0x9d8bff,
+      transparent: true,
+      opacity: 0.22,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      toneMapped: false
+    })
+    const holo = new THREE.Mesh(new THREE.CircleGeometry(0.65, 40), this.navHoloMat)
+    holo.rotation.x = -Math.PI / 2
+    holo.position.y = 1.05
+    group.add(holo)
+    this.disposables.push(holo.geometry, this.navHoloMat)
+    this.navHolo = holo
+
+    this.navRings = []
+    for (let i = 0; i < 3; i += 1) {
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.32 + i * 0.17, 0.012, 5, 50), this.projectorRingMat)
+      ring.rotation.x = Math.PI / 2
+      ring.position.y = 1.05
+      group.add(ring)
+      this.disposables.push(ring.geometry)
+      this.navRings.push(ring)
+    }
+
+    const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.34, 0.86, 18), this.mats.trimDark)
+    pedestal.position.y = 0.62
+    group.add(pedestal)
+    this.disposables.push(pedestal.geometry)
+
+    const holoLabel = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.2), new THREE.MeshBasicMaterial({ map: this.textures.label('NAV // 7', { width: 320, height: 80, size: 30 }), transparent: true, toneMapped: false }))
+    holoLabel.position.set(0, 0.36, 0.35)
+    group.add(holoLabel)
+    this.disposables.push(holoLabel.geometry, holoLabel.material)
+
+    this.navGlow = this.addGlow([0, 1.2, 2.9], 2.4, 0x8f7bff, 0.2)
+    this.registerHotspot('navtable', [...group.children], group)
+    this.contactShadow(0, 2.88, 1.9, 1.6, 0.5)
+  }
+
   buildAtmosphere() {
     const random = (() => {
       let s = 71
@@ -1062,6 +1231,59 @@ export class EchoRoom {
       this.relayIndicator.material.emissive.setHex(0x5dffb0)
       this.socketGlow.material.color.setHex(0x2bd8ff)
     }
+  }
+
+  setDoorLabel(text) {
+    if (!this.doorLabelMat) return
+    const previous = this.doorLabelMat.map
+    this.doorLabelMat.map = this.textures.label(text, { width: 512, height: 96, size: 30 })
+    this.doorLabelMat.needsUpdate = true
+    previous?.dispose?.()
+  }
+
+  setDeck(index = 0) {
+    const theme = THEMES[index] || THEMES[0]
+    this.deck = index
+    this.theme = theme
+    this.scene.background = new THREE.Color(theme.bg)
+    this.scene.fog.color.setHex(theme.fog)
+    this.scene.fog.density = index === 1 ? 0.02 : index === 2 ? 0.019 : 0.016
+
+    this.lights.forEach((entry, lightIndex) => {
+      entry.onColor.setHex(theme.lights[lightIndex % theme.lights.length])
+    })
+
+    this.powerOn = index > 0
+    this.powerStartedAt = performance.now()
+    this.powerMix = index > 0 ? 1 : 0
+    this.codeKnown = false
+    this.doorOpen = false
+    this.doorMix = 0
+    this.doorSlab.position.y = 1.47
+    this.doorGlowMat.opacity = 0
+    this.doorHalo.material.opacity = 0.04
+    this.doorRingMat.emissive.setHex(theme.door)
+    this.doorStatus.material.emissive.setHex(theme.door)
+    this.drawerOpen = false
+    this.drawerMix = 0
+    this.drawer.position.z = 0.39
+    this.fuseObject.visible = false
+    this.fuseObject.position.z = 0.55
+    this.fuseGlow.visible = false
+    this.fuseGlow.material.opacity = 0
+    this.engineeringGroup.visible = index === 1
+    this.bridgeGroup.visible = index === 2
+    this.projectorMat.emissive.setHex(theme.accent)
+    this.projectorRingMat.emissive.setHex(theme.accent)
+    this.setDoorLabel(index === 0 ? 'AIRLOCK 01' : index === 1 ? 'DECK 02 HATCH' : 'LAUNCH HELM')
+    this.statusScreen.refresh({ powered: index > 0, codeKnown: false, unlocked: false })
+    this.mapScreen.refresh({ powered: index > 0, solved: false })
+    if (index > 0) {
+      this.relayIndicator.material.color.setHex(0x082016)
+      this.relayIndicator.material.emissive.setHex(0x5dffb0)
+      this.socketGlow.material.color.setHex(theme.accent)
+    }
+    this.pulse()
   }
 
   setCodeKnown() {
@@ -1243,9 +1465,9 @@ export class EchoRoom {
       entry.light.color.copy(entry.offColor).lerp(entry.onColor, p)
       entry.light.intensity = lerp(entry.offIntensity, entry.onIntensity, p) * (p > 0.02 && p < 0.98 ? flicker : 1)
     }
-    this.stripMat.emissive.setHex(0xff3d4e).lerp(_color.setHex(0x2bd8ff), p)
+    this.stripMat.emissive.setHex(this.theme.stripOff).lerp(_color.setHex(this.theme.stripOn), p)
     this.stripMat.emissiveIntensity = lerp(2.0, 3.2, p)
-    this.ceilingPanelMat.emissive.setHex(0xff3d4e).lerp(_color.setHex(0xcdefff), p)
+    this.ceilingPanelMat.emissive.setHex(this.theme.panelOff).lerp(_color.setHex(this.theme.panelOn), p)
     this.ceilingPanelMat.emissiveIntensity = lerp(1.4, 3.0, p)
     this.projectorMat.emissiveIntensity = lerp(0.12, 1.6, p)
     this.projectorMat.opacity = lerp(0.7, 0.94, p)
@@ -1260,9 +1482,9 @@ export class EchoRoom {
     this.projectorStars.material.opacity = lerp(0.2, 0.9, p)
     if (this.projectorStars.material.size !== undefined) this.projectorStars.material.size = lerp(0.012, 0.022, p)
 
-    this.doorStatus.material.emissive.setHex(this.doorOpen ? 0x5dffb0 : p > 0.5 ? 0xff4055 : 0xff4055)
+    this.doorStatus.material.emissive.setHex(this.doorOpen ? 0x5dffb0 : this.theme.door)
     this.doorStatus.material.emissiveIntensity = 1.4 + Math.sin(t * 4.2) * 0.4
-    this.doorStatusGlow.material.color.setHex(this.doorOpen ? 0x5dffb0 : 0xff4055)
+    this.doorStatusGlow.material.color.setHex(this.doorOpen ? 0x5dffb0 : this.theme.door)
 
     this.drawerMix = this.drawerOpen ? Math.min(1, (now - this.drawerOpenedAt) / 700) : 0
     const drawerEase = easeInOut(this.drawerMix)
@@ -1280,13 +1502,31 @@ export class EchoRoom {
     this.doorHalo.material.opacity = 0.04 + doorEase * 0.32
     this.doorRing.scale.setScalar(1 + Math.sin(t * 2.4) * 0.012)
     this.doorRing.material = this.doorRingMat
-    this.doorRingMat.emissive.setHex(this.doorOpen ? 0x5dffb0 : 0xff4055)
+    this.doorRingMat.emissive.setHex(this.doorOpen ? 0x5dffb0 : this.theme.door)
 
     this.relayIndicator.material.emissiveIntensity = p > 0.5 ? 1.3 + Math.sin(t * 3) * 0.4 : 0.7 + Math.sin(t * 5) * 0.6
     this.socketGlow.material.opacity = lerp(0.2 + Math.sin(t * 2.2) * 0.05, 0.12, p)
     this.fuseGlow.material.opacity = this.fuseObject.visible ? 0.32 + Math.sin(t * 3) * 0.1 : 0
     this.keypadGlow.material.opacity = lerp(0.04, 0.16, p) + Math.sin(t * 2) * 0.02
     this.windowGlow.material.opacity = 0.1 + Math.sin(t * 0.8) * 0.03
+
+    if (this.reactorCoreMat) {
+      this.reactorCoreMat.emissiveIntensity = 1.2 + Math.sin(t * 2.6) * 0.35 + this.pulseAmount * 0.8
+      this.reactorGlow.material.opacity = 0.12 + Math.sin(t * 1.7) * 0.04
+      this.reactorRings.forEach((ring, index) => {
+        ring.rotation.z = t * (0.22 + index * 0.16) * (index % 2 ? -1 : 1)
+        ring.scale.setScalar(1 + Math.sin(t * 1.9 + index) * 0.025)
+      })
+    }
+    if (this.navHoloMat) {
+      this.navHoloMat.opacity = 0.16 + Math.sin(t * 1.4) * 0.05
+      this.navHolo.rotation.z = t * 0.14
+      this.navGlow.material.opacity = 0.12 + Math.sin(t * 1.1) * 0.04
+      this.navRings.forEach((ring, index) => {
+        ring.rotation.z = t * (0.3 + index * 0.2) * (index % 2 ? -1 : 1)
+        ring.scale.setScalar(1 + Math.sin(t * 1.6 + index) * 0.02)
+      })
+    }
 
     this.pulseAmount = Math.max(0, this.pulseAmount - dt * 1.4)
     const pipPulse = 1 + this.pulseAmount * 0.35 + Math.sin(t * 2.1) * 0.035

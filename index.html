@@ -19,12 +19,15 @@
 
       <div id="hud">
         <div class="hud-top">
-          <div class="brand">
-            <span class="brand-mark"><i></i></span>
-            <div>
-              <strong>ECHO-7</strong>
-              <span>DECK 04 // CRYO BAY</span>
+          <div class="hud-left">
+            <div class="brand">
+              <span class="brand-mark"><i></i></span>
+              <div>
+                <strong>ECHO-7</strong>
+                <span id="deck-label">DECK 01 // CRYO BAY</span>
+              </div>
             </div>
+            <div class="deck-rail" id="deck-rail" aria-label="Ship deck progress"></div>
           </div>
           <div class="hud-actions">
             <div class="timer" title="Elapsed time">
@@ -41,15 +44,14 @@
 
         <section class="objectives glass" aria-label="Objectives">
           <div class="objectives-head">
-            <span>ESCAPE PROTOCOL</span>
-            <span id="obj-progress">0 / 4</span>
+            <span id="obj-label">DECK 01 // ESCAPE PROTOCOL</span>
+            <span id="obj-progress">0 / 3</span>
           </div>
           <div class="objective-bar"><i id="obj-bar-fill"></i></div>
           <ul id="objective-list">
             <li data-objective="power"><span class="obj-dot"></span><span class="obj-copy"><strong>Restore auxiliary power</strong><em>Find a fuse for the relay</em></span></li>
             <li data-objective="code"><span class="obj-dot"></span><span class="obj-copy"><strong>Decode the launch sequence</strong><em>Read the constellation protocol</em></span></li>
-            <li data-objective="unlock"><span class="obj-dot"></span><span class="obj-copy"><strong>Unlock airlock 01</strong><em>Enter the launch code</em></span></li>
-            <li data-objective="escape"><span class="obj-dot"></span><span class="obj-copy"><strong>Step through the airlock</strong><em>Get off this station</em></span></li>
+            <li data-objective="escape"><span class="obj-dot"></span><span class="obj-copy"><strong>Escape the cryo bay</strong><em>Unlock airlock 01</em></span></li>
           </ul>
         </section>
 
@@ -102,6 +104,16 @@
         <span class="assistant-signal">98%</span>
       </div>
 
+      <section class="pip-loadout" id="pip-loadout" aria-label="Co-pilot skills and gems">
+        <div class="pip-loadout-head">
+          <span class="pip-level">PIP <b>LV <span id="pip-level">1</span></b></span>
+          <span class="gem-readout" title="Gems earned from completed tasks"><i>◆</i><b id="gem-count">0</b></span>
+          <button id="loadout-toggle" class="loadout-toggle" type="button" aria-expanded="true" aria-controls="skill-list">SKILLS</button>
+        </div>
+        <div class="pip-xp" aria-hidden="true"><i id="pip-xp-fill"></i></div>
+        <div class="skill-grid" id="skill-list" role="group" aria-label="Co-pilot skills"></div>
+      </section>
+
       <div class="chat" id="chat" aria-live="polite"></div>
 
       <div class="quick-row">
@@ -126,11 +138,11 @@
         <p class="eyebrow"><span></span>DEEP RESEARCH STATION // SECTOR 7</p>
         <h1>ECHO<span class="title-dash">-</span>7</h1>
         <p class="intro-sub">A CO-PILOT ESCAPE ROOM</p>
-        <p class="intro-lead">The station is dark. The airlock is sealed. Your only ally is a voice in the wall.</p>
+        <p class="intro-lead">The station is dark. Three decks stand between you and the launch bridge. Your only ally is a voice in the wall — and she gets stronger every time you finish a task.</p>
         <div class="intro-features">
-          <div><b>01</b><span>Search a 360°<br />sci-fi room</span></div>
-          <div><b>02</b><span>Solve three<br />linked puzzles</span></div>
-          <div><b>03</b><span>Trust your<br />co-pilot. Maybe.</span></div>
+          <div><b>01</b><span>Escape three<br />connected decks</span></div>
+          <div><b>02</b><span>Solve linked<br />puzzles under pressure</span></div>
+          <div><b>03</b><span>Unlock PIP's skills<br />and collect gems</span></div>
         </div>
         <div class="intro-actions">
           <button id="start-btn" class="start-btn" type="button" aria-label="Start">
@@ -143,12 +155,12 @@
       <div class="intro-side">
         <div class="intro-pip-card">
           <div class="intro-pip-orb" aria-hidden="true"><i></i></div>
-          <p class="intro-quote">“You're awake. Good. We have limited air, one sealed airlock, and zero minutes of patience.”</p>
+          <p class="intro-quote">“You're awake. Good. We have three sealed decks, limited air, and a ship that gets stronger every time you finish a job. Mostly me. I get stronger.”</p>
           <div class="intro-pip-meta"><span>PIP</span><span>CO-PILOT // ONLINE</span></div>
         </div>
         <div class="intro-specs">
           <span><i></i>HEADPHONES RECOMMENDED</span>
-          <span><i></i>ONE ROOM. THREE LOCKS.</span>
+          <span><i></i>THREE DECKS. NINE TASKS. ONE CO-PILOT.</span>
         </div>
       </div>
     </div>
@@ -162,7 +174,7 @@
     <div class="modal-card constellation-card">
       <div class="modal-head">
         <div>
-          <p class="eyebrow"><span></span>NAV-7 PROJECTOR</p>
+          <p class="eyebrow" id="constellation-eyebrow"><span></span>NAV-7 PROJECTOR</p>
           <h2 id="constellation-title">Constellation Protocol</h2>
         </div>
         <button class="icon-btn modal-close" type="button" data-close="constellation-modal" aria-label="Close constellation protocol">
@@ -181,7 +193,7 @@
           <div class="starmap-legend"><span class="legend-dot red"></span>RED GIANT<span class="legend-dot cyan"></span>TWINS<span class="legend-dot gold"></span>EYE</div>
         </div>
         <aside class="constellation-info" aria-label="Constellation details">
-          <p class="clue-label">CREW PLAQUE // NAV-7</p>
+          <p class="clue-label" id="constellation-clue-label">CREW PLAQUE // NAV-7</p>
           <p class="clue-text" id="constellation-clue">No order recovered yet. Find the crew plaque beside the airlock.</p>
           <div class="sequence-pips" id="sequence-pips">
             <span class="pip-slot"><b>01</b><em>—</em></span>
@@ -191,15 +203,15 @@
           </div>
           <div class="status-line" id="constellation-status">AWAITING SEQUENCE</div>
           <div class="code-reveal" id="code-reveal">
-            <span>LAUNCH CODE</span>
+            <span id="code-label">LAUNCH CODE</span>
             <strong id="code-digits">7 3 9 4</strong>
             <small>Transferred to launch keypad</small>
           </div>
-          <p class="modal-note">Click the stars in the order described by the plaque. A wrong star resets the sequence.</p>
+          <p class="modal-note" id="constellation-note">Click the stars in the order described by the plaque. A wrong star resets the sequence.</p>
         </aside>
       </div>
       <footer class="modal-foot">
-        <span>PROJECTOR: <b id="projector-state">ONLINE</b></span>
+        <span><b id="projector-label">PROJECTOR</b>: <b id="projector-state">ONLINE</b></span>
         <span>SEQUENCE LOCK: <b id="sequence-lock">ARMED</b></span>
       </footer>
     </div>
@@ -230,10 +242,65 @@
     </div>
   </div>
 
+  <div id="breaker-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="breaker-title">
+    <div class="modal-card breaker-card">
+      <div class="modal-head">
+        <div>
+          <p class="eyebrow"><span></span>DECK 02 // POWER DISTRIBUTION</p>
+          <h2 id="breaker-title">Reactor Breaker Grid</h2>
+        </div>
+        <button class="icon-btn modal-close" type="button" data-close="breaker-modal" aria-label="Close breaker grid">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+        </button>
+      </div>
+      <div class="breaker-body">
+        <div class="breaker-grid" id="breaker-grid" role="group" aria-label="Breaker grid"></div>
+        <aside class="breaker-info" aria-label="Breaker details">
+          <p class="clue-label">FIELD NOTE // SCC-9</p>
+          <p class="clue-text">Bring every breaker online. A pulse crosses the cell you hit and the four cells beside it. The reactor can force one full reset if PIP has Overdrive online.</p>
+          <div class="breaker-meter" aria-hidden="true"><i id="breaker-meter"></i></div>
+          <div class="status-line" id="breaker-status">GRID UNSTABLE</div>
+          <button id="breaker-reset" class="keypad-wide" type="button">RESET GRID</button>
+          <p class="modal-note">Every lit cell is one working breaker. The hatch magnetic lock disengages when the grid is stable.</p>
+        </aside>
+      </div>
+      <footer class="modal-foot">
+        <span>FEED: <b id="breaker-feed">UNSTABLE</b></span>
+        <span>LOCK: <b>ENGAGED</b></span>
+      </footer>
+    </div>
+  </div>
+
+  <section id="deck-clear" class="screen deck-clear-screen" aria-live="polite">
+    <div class="deck-clear-card">
+      <p class="eyebrow" id="deck-clear-kicker"><span></span>DECK 01 // CLEARED</p>
+      <h2 id="deck-clear-title">CRYO BAY <span>ESCAPED</span></h2>
+      <p class="deck-clear-lead">PIP siphoned the room's telemetry into a new skill. The next deck is unsealed.</p>
+      <div class="deck-clear-rewards">
+        <div class="clear-reward">
+          <span class="clear-reward-label">GEMS EARNED</span>
+          <strong id="deck-clear-gems">+0</strong>
+        </div>
+        <div class="clear-reward skill-reward">
+          <span class="clear-reward-label">SKILL UNLOCKED</span>
+          <strong id="deck-clear-skill">Deep Scan</strong>
+        </div>
+      </div>
+      <div class="deck-clear-next">
+        <span>NEXT DECK UNLOCKED</span>
+        <b id="deck-clear-next-name">ENGINEERING</b>
+      </div>
+      <button id="next-deck-btn" class="start-btn" type="button">
+        <span id="next-deck-label">Enter Deck 02</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"></path></svg>
+      </button>
+    </div>
+  </section>
+
   <section id="ending" class="screen ending-screen" aria-labelledby="ending-title">
     <div class="ending-card">
-      <p class="eyebrow"><span></span>AIRLOCK 01 // CYCLED // CLEAR</p>
-      <h1 id="ending-title">ESCAPE<br /><span>COMPLETE</span></h1>
+      <p class="eyebrow"><span></span>DECK 03 // BRIDGE // LAUNCHED</p>
+      <h1 id="ending-title">ECHO-7<br /><span>LAUNCHED</span></h1>
       <div class="ending-rank">
         <span id="ending-rank">A</span>
         <em>RANK</em>
@@ -241,11 +308,12 @@
       <div class="ending-stats">
         <div><span>TIME</span><strong id="ending-time">00:00</strong></div>
         <div><span>HINTS</span><strong id="ending-hints">0</strong></div>
-        <div><span>CODE</span><strong>7394</strong></div>
+        <div><span>GEMS</span><strong id="ending-gems">0</strong></div>
+        <div><span>SKILLS</span><strong id="ending-skills">0</strong></div>
       </div>
       <p class="ending-quote" id="ending-quote">“Not bad for a human.” <span>— PIP</span></p>
       <button id="play-again" class="start-btn" type="button"><span>Play Again</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 1-2.2-5.4M20 4v7h-7"></path></svg></button>
-      <p class="ending-fine">ECHO-7 is clear. Tell no one about the cryo pod.</p>
+      <p class="ending-fine">Three decks cleared. Nine skills unlocked. One very smug co-pilot.</p>
     </div>
   </section>
 
