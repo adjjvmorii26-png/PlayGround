@@ -12,3 +12,17 @@ node_modules/
 synthhall/node_modules/
 *.log
 agent_memory.json
+
+screenshots/
+
+*.pid
+
+.agents/
+
+.agentsweb/
+
+.omgithub-runtime/
+
+.opencode-ssh/
+
+.opencode-web/
