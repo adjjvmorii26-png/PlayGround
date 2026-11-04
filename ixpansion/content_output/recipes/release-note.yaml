@@ -1,0 +1,9 @@
+name: release-note
+description:
+
+tags: [release, changelog, version, publish, deploy]
+steps:
+  - name: Changelog
+    prompt: "Write a user-facing changelog for these changes: {input}"
+  - name: Checklist
+    prompt: "Produce a release checklist (build, test, tag, publish) for: {prev}"

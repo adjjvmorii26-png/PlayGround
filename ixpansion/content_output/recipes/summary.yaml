@@ -1,0 +1,11 @@
+name: summary
+description:
+
+tags: [summarize, brief, overview, concise]
+steps:
+  - name: Overview
+    prompt: "Summarize the input in at most 3 sentences:\n\n{input}"
+  - name: Key points
+    prompt: "Extract 5 key points from the input:\n\n{prev}"
+  - name: Outcome
+    prompt: "Write a one-paragraph outcome/conclusion based on:\n\n{prev}"
