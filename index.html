@@ -14,6 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="park.css">
   <noscript><style>.reveal{opacity:1;transform:none}.tab-panel[hidden]{display:block}</style></noscript>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23ff6a1a'/%3E%3Cpath d='M32 2v60M2 32h60M10 12c14 12 14 28 0 40M54 12c-14 12-14 28 0 40' stroke='%230b0d12' stroke-width='3' fill='none'/%3E%3C/svg%3E">
 </head>
@@ -58,7 +59,11 @@
           <span class="dot-live" aria-hidden="true"></span>
           <strong data-count="12480">12,480</strong> online
         </span>
-        <a class="btn btn-primary btn-sm" href="#discord">Join Discord</a>
+        <button class="btn btn-primary btn-sm nav-play" data-start-park type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+          Play
+        </button>
+        <a class="btn btn-ghost btn-sm nav-discord" href="#discord">Join Discord</a>
         <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navLinks">
           <span></span><span></span><span></span>
         </button>
@@ -88,12 +93,14 @@
           <p class="hero-sub reveal">NBA 2K16 online, rebuilt by the community. Dedicated low-ping servers, current rosters, and a Discord full of people who still run 3v3 at 2am.</p>
 
           <div class="hero-cta reveal">
-            <a class="btn btn-primary" href="#discord">
-              Join the Discord
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </a>
+            <button class="btn btn-primary btn-start" data-start-park type="button">
+              <span class="start-beacon" aria-hidden="true"></span>
+              Start — auto-join the park
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+            </button>
             <a class="btn btn-ghost" href="#status">Check server status</a>
           </div>
+          <p class="hero-start-note reveal"><span class="dot-live" aria-hidden="true"></span> Best connection picked automatically · Sideline spectator only</p>
 
           <dl class="hero-stats reveal">
             <div>
@@ -700,8 +707,11 @@
         <h2 id="final-title">Your squad is already <span class="grad-text">on the court.</span></h2>
         <p>Grab a role, pick a region, and run one more game like it's 2016.</p>
         <div class="hero-cta center">
-          <a class="btn btn-primary" href="https://discord.gg/reborn2k16" target="_blank" rel="noopener">Join the Discord</a>
-          <a class="btn btn-ghost" href="#connect">Read the setup guide</a>
+          <button class="btn btn-primary" data-start-park type="button">
+            <span class="start-beacon" aria-hidden="true"></span>
+            Enter the park
+          </button>
+          <a class="btn btn-ghost" href="https://discord.gg/reborn2k16" target="_blank" rel="noopener">Join the Discord</a>
         </div>
       </div>
     </section>
@@ -755,6 +765,228 @@
   </footer>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ── The Park · spectator game mode ─────────────────────────────── -->
+  <div class="park" id="parkApp" hidden aria-hidden="true">
+    <div class="park-stage" id="parkStage">
+      <canvas id="parkCanvas" aria-hidden="true"></canvas>
+      <div class="park-vignette" aria-hidden="true"></div>
+      <div class="park-scanlines" aria-hidden="true"></div>
+
+      <header class="park-hud">
+        <div class="hud-left">
+          <button class="hud-icon" id="parkLeave" type="button" aria-label="Leave the park" title="Leave the park">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="hud-conn">
+            <span class="dot-live" aria-hidden="true"></span>
+            <div>
+              <b id="hudRegion">Connecting…</b>
+              <small id="hudPing">probing nodes</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-score" role="status" aria-live="polite">
+          <div class="hud-team">
+            <span class="hud-tag tag-orange">ORL</span>
+            <span class="hud-team-name">Orange</span>
+          </div>
+          <div class="hud-scoreline">
+            <b id="hudScoreA">0</b><i>–</i><b id="hudScoreB">0</b>
+            <div class="hud-meta"><span id="hudQuarter">Q1</span><span class="hud-dot">·</span><span id="hudClock">3:00</span><span class="hud-shot" id="hudShot">12</span></div>
+          </div>
+          <div class="hud-team right">
+            <span class="hud-team-name">Blacktop</span>
+            <span class="hud-tag tag-dark">BLK</span>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <span class="sideline-badge"><i aria-hidden="true"></i> Sideline cam</span>
+          <button class="hud-icon" id="parkFeedToggle" type="button" aria-label="Toggle park feed" title="Toggle park feed">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="spectator-ribbon">
+        <span class="ribbon-lock" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+        </span>
+        You're watching from the sideline. Camera locked — no player control.
+      </div>
+
+      <div class="park-side">
+        <div class="park-commentary" aria-live="polite">
+          <span class="feed-label"><i class="dot-live" aria-hidden="true"></i> Park feed</span>
+          <p id="commentaryText">The park is live. Best connection found — settling in courtside.</p>
+        </div>
+        <ul class="park-feed" id="parkFeed" aria-label="Park activity"></ul>
+      </div>
+
+      <div class="you-corner" id="youCorner">
+        <div class="you-bubble" id="youBubble" aria-live="polite"></div>
+        <div class="you-prop" id="youProp" aria-hidden="true">
+          <span class="you-prop-emoji" id="youPropEmoji">📻</span>
+          <span class="you-prop-glow" aria-hidden="true"></span>
+        </div>
+        <div class="you-avatar" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <circle cx="32" cy="22" r="11" fill="#f0b98d"/>
+            <path d="M20 22a12 12 0 0 1 24 0c0-8-4-13-12-13s-12 5-12 13Z" fill="#241a17"/>
+            <path d="M12 60c0-13 9-22 20-22s20 9 20 22Z" fill="#ff6a1a"/>
+            <path d="M25 38h14v9H25z" fill="#f4f6fa"/>
+            <path d="M32 38v9" stroke="#d8dde7" stroke-width="2"/>
+          </svg>
+        </div>
+        <button class="you-pet" id="youPet" type="button" aria-label="Pet your courtside companion">
+          <span class="you-pet-emoji" id="youPetEmoji" aria-hidden="true">🐕</span>
+          <span class="you-pet-name" id="youPetName">Rex</span>
+        </button>
+        <div class="you-meta">
+          <b>You</b>
+          <small>Sideline · <span id="youRegion">NA East</span></small>
+        </div>
+        <span class="you-live"><i class="dot-live" aria-hidden="true"></i> watching</span>
+      </div>
+
+      <div class="emote-dock" id="emoteDock">
+        <div class="emote-tray" id="emoteTray" hidden>
+          <div class="emote-tray-head">
+            <span>Your emotes</span>
+            <span class="emote-hint">Keys 1–8 · saved on this device</span>
+          </div>
+          <div class="emote-list" id="emoteList"></div>
+          <div class="emote-tray-foot">
+            <span class="emote-tray-note">Customize labels, emoji, colors, props, and pets.</span>
+            <button class="emote-customize-btn" id="emoteCustomize" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              Sideline kit
+            </button>
+          </div>
+        </div>
+        <button class="emote-toggle" id="emoteToggle" type="button" aria-expanded="false" aria-controls="emoteTray">
+          <span class="emote-toggle-emoji" aria-hidden="true">😤</span>
+          <span class="emote-toggle-label">Emote bar</span>
+          <kbd>E</kbd>
+          <svg class="emote-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+
+      <div class="park-toast" id="parkToast" role="status" aria-live="polite"></div>
+    </div>
+
+    <!-- Loading / auto server selection -->
+    <div class="park-loader" id="parkLoader">
+      <div class="loader-grid" aria-hidden="true"></div>
+      <div class="loader-inner">
+        <div class="loader-brand">
+          <span class="loader-brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="30" fill="#ff6a1a"/>
+              <g stroke="#1a0d05" stroke-width="2.6" fill="none" opacity=".85">
+                <path d="M32 2v60M2 32h60"/>
+                <path d="M10 12c14 12 14 28 0 40M54 12c-14 12-14 28 0 40"/>
+              </g>
+            </svg>
+          </span>
+          <span>REBORN <b>2K16</b></span>
+          <em>The Park</em>
+        </div>
+
+        <div class="loader-orbit" aria-hidden="true"><i></i><i></i><i></i></div>
+
+        <h2 id="loaderTitle">Finding your best connection…</h2>
+        <p class="loader-sub" id="loaderSub">Probing regional nodes for the lowest ping</p>
+
+        <ul class="loader-nodes" id="loaderNodes" aria-label="Regional server latency"></ul>
+
+        <div class="loader-best" id="loaderBest" hidden>
+          <span class="loader-best-tag">Best connection</span>
+          <b id="loaderBestName">NA East</b>
+          <span id="loaderBestPing">17ms</span>
+        </div>
+
+        <div class="loader-progress" aria-hidden="true"><i id="loaderBar"></i></div>
+        <p class="loader-step" id="loaderStep">Auto-join is on. Nothing to configure.</p>
+
+        <button class="loader-skip" id="loaderSkip" type="button">Skip probe →</button>
+      </div>
+    </div>
+
+    <!-- Final -->
+    <div class="park-final" id="parkFinal" hidden>
+      <div class="park-final-card">
+        <p class="eyebrow">Final · The Park</p>
+        <h2>Ball don't lie.</h2>
+        <div class="park-final-score">
+          <span>Orange</span>
+          <b id="finalA">0</b>
+          <i>–</i>
+          <b id="finalB">0</b>
+          <span>Blacktop</span>
+        </div>
+        <p id="finalLine">Great run. The sideline approves.</p>
+        <div class="park-final-actions">
+          <button class="btn btn-primary" id="parkAgain" type="button">Run it back</button>
+          <button class="btn btn-ghost" id="parkExit" type="button">Leave the park</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sideline kit: emotes, props, pets -->
+    <div class="emote-modal" id="emoteModal" hidden>
+      <div class="emote-modal-card" role="dialog" aria-modal="true" aria-labelledby="emoteModalTitle">
+        <header class="emote-modal-head">
+          <div>
+            <p class="eyebrow">Sideline kit</p>
+            <h2 id="emoteModalTitle">Make the sideline yours</h2>
+            <p>Emotes, props, and a courtside pet — saved on this device.</p>
+          </div>
+          <button class="hud-icon" id="emoteClose" type="button" aria-label="Close sideline kit">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </header>
+
+        <div class="kit-tabs" role="tablist" aria-label="Sideline kit sections">
+          <button class="kit-tab is-active" type="button" role="tab" aria-selected="true" data-kit="emotes" aria-controls="kitEmotes">Emotes</button>
+          <button class="kit-tab" type="button" role="tab" aria-selected="false" data-kit="props" aria-controls="kitProps">Props</button>
+          <button class="kit-tab" type="button" role="tab" aria-selected="false" data-kit="pets" aria-controls="kitPets">Pets</button>
+        </div>
+
+        <div class="kit-panel" id="kitEmotes" role="tabpanel">
+          <p class="kit-hint">Pick the emoji, name, and color. Slots 1–8 match your keyboard.</p>
+          <div class="emote-editor" id="emoteEditor"></div>
+        </div>
+
+        <div class="kit-panel" id="kitProps" role="tabpanel" hidden>
+          <p class="kit-hint">Choose one prop for your sideline corner. It shows up in the park.</p>
+          <div class="kit-grid" id="propGrid"></div>
+        </div>
+
+        <div class="kit-panel" id="kitPets" role="tabpanel" hidden>
+          <p class="kit-hint">Pick a courtside companion. Tap it in the park to say hi.</p>
+          <div class="kit-grid kit-grid-pets" id="petGrid"></div>
+          <label class="pet-name-row" for="petName">
+            <span>Pet name</span>
+            <input id="petName" type="text" maxlength="16" autocomplete="off" spellcheck="false" placeholder="Rex">
+          </label>
+        </div>
+
+        <footer class="emote-modal-foot">
+          <button class="text-btn emote-add" id="emoteAdd" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Add emote
+          </button>
+          <button class="text-btn" id="emoteReset" type="button">Reset all</button>
+          <button class="btn btn-primary btn-sm" id="emoteDone" type="button">Done</button>
+        </footer>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
+  <script src="park.js"></script>
 </body>
 </html>
