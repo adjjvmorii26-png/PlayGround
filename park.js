@@ -13,7 +13,7 @@
   if (!park) return;
 
   const canvas = $('#parkCanvas');
-  const ctx = canvas.getContext('2d');
+  let ctx = canvas.getContext('2d');
   const parkStage = $('#parkStage');
 
   const loader = $('#parkLoader');
@@ -23,6 +23,10 @@
   const loaderBest = $('#loaderBest');
   const loaderBestName = $('#loaderBestName');
   const loaderBestPing = $('#loaderBestPing');
+  const loaderPort = $('#loaderPort');
+  const loaderPortServer = $('#loaderPortServer');
+  const loaderPortName = $('#loaderPortName');
+  const loaderPortPing = $('#loaderPortPing');
   const loaderBar = $('#loaderBar');
   const loaderStep = $('#loaderStep');
   const loaderSkip = $('#loaderSkip');
@@ -56,6 +60,7 @@
   const hudQuarter = $('#hudQuarter');
   const hudRegion = $('#hudRegion');
   const hudPing = $('#hudPing');
+  const hudFps = $('#hudFps');
   const youRegion = $('#youRegion');
   const commentaryText = $('#commentaryText');
   const parkSide = $('.park-side');
@@ -79,6 +84,21 @@
     { id: 'sa', name: 'South America', city: 'São Paulo', base: 66, color: '#ff5f8f' },
     { id: 'oceania', name: 'Oceania', city: 'Sydney', base: 72, color: '#c9a6ff' },
   ];
+
+  /* The park handshake runs on a small set of relay ports. We probe them all
+     after the region is locked and keep the lowest-latency one. */
+  const PORTS = [
+    { port: 10000, proto: 'UDP', base: 2 },
+    { port: 3659, proto: 'UDP', base: 4 },
+    { port: 443, proto: 'TCP', base: 7 },
+    { port: 8443, proto: 'TCP', base: 10 },
+    { port: 27015, proto: 'UDP', base: 13 },
+  ];
+
+  const IS_ANDROID = /Android/i.test(navigator.userAgent);
+  const SERVER_LABEL = IS_ANDROID ? 'Android server' : 'Desktop server';
+  const TARGET_FPS = 60;
+  const STEP = 1 / TARGET_FPS;
 
   /* ═══════════════════════════════════════════════════════════════
      Sideline kit data — emotes, props, pets
@@ -466,13 +486,18 @@
     running: false,
     paused: false,
     best: null,
+    bestPort: null,
     loaderToken: 0,
     lastFocus: null,
     raf: 0,
     last: 0,
+    acc: 0,
+    renderScale: 1,
+    fps: TARGET_FPS,
+    qualityAt: 0,
   };
 
-  const probe = { measured: [], best: null };
+  const probe = { measured: [], best: null, ports: [], bestPort: null };
   let pingTimer = 0;
 
   let parkToastTimer = 0;
@@ -505,8 +530,10 @@
     loaderTitle.textContent = 'Finding your best connection…';
     loaderSub.textContent = 'Probing regional nodes for the lowest ping';
     loaderBest.hidden = true;
+    loaderPort.hidden = true;
+    loaderPortServer.textContent = SERVER_LABEL;
     loaderBar.style.width = '6%';
-    loaderStep.textContent = 'Auto-join is on. Nothing to configure.';
+    loaderStep.textContent = `${SERVER_LABEL} · ${TARGET_FPS}fps target · auto-join on`;
     buildLoaderNodes();
   }
 
@@ -514,6 +541,13 @@
     return REGIONS.map((region) => ({
       ...region,
       ping: Math.max(8, Math.round(region.base + rand(-2, 5))),
+    }));
+  }
+
+  function measurePorts(region) {
+    return PORTS.map((entry) => ({
+      ...entry,
+      ping: Math.max(4, Math.round(region.ping + entry.base + rand(-1, 4))),
     }));
   }
 
@@ -535,6 +569,23 @@
     loaderBestPing.textContent = `${best.ping}ms`;
   }
 
+  function markBestPort(bestPort) {
+    loaderPort.hidden = false;
+    loaderPortServer.textContent = SERVER_LABEL;
+    loaderPortName.textContent = `${bestPort.proto} :${bestPort.port}`;
+    const delta = Math.max(0, bestPort.ping - (probe.best ? probe.best.ping : 0));
+    loaderPortPing.textContent = `+${delta}ms`;
+  }
+
+  function chooseBestPort(region) {
+    const ports = measurePorts(region);
+    probe.ports = ports;
+    const bestPort = ports.reduce((lowest, entry) => (entry.ping <= lowest.ping ? entry : lowest));
+    probe.bestPort = bestPort;
+    markBestPort(bestPort);
+    return bestPort;
+  }
+
   async function runProbe(token) {
     const measured = measureRegions();
     probe.measured = measured;
@@ -553,14 +604,21 @@
     loaderTitle.textContent = 'Best connection locked.';
     loaderSub.textContent = `${best.name} · ${best.city} — lowest latency in the park`;
     loaderBar.style.width = '62%';
-    loaderStep.textContent = 'Auto-join on · no region picker needed';
-    await sleep(720);
+    loaderStep.textContent = 'Probing relay ports for the best handshake…';
+    await sleep(600);
+    if (token !== state.loaderToken) return;
+
+    const bestPort = chooseBestPort(best);
+    loaderSub.textContent = `${best.name} · ${best.city} — ${SERVER_LABEL}`;
+    loaderBar.style.width = '78%';
+    loaderStep.textContent = `Best port ${bestPort.proto} :${bestPort.port} · ${TARGET_FPS}fps target`;
+    await sleep(680);
     if (token !== state.loaderToken) return;
 
     loaderTitle.textContent = 'Entering The Park…';
     loaderSub.textContent = 'Syncing rosters, court pack, and your sideline kit';
     loaderBar.style.width = '93%';
-    loaderStep.textContent = `Joining ${best.name} · ${best.ping}ms`;
+    loaderStep.textContent = `Joining ${best.name} · ${bestPort.proto} :${bestPort.port}`;
     await sleep(920);
     if (token !== state.loaderToken) return;
 
@@ -572,20 +630,22 @@
 
   function enterGame() {
     const best = probe.best || { ...REGIONS[0], ping: REGIONS[0].base };
+    const bestPort = probe.bestPort || chooseBestPort(best) || { ...PORTS[0], ping: best.ping + PORTS[0].base };
     state.best = best;
+    state.bestPort = bestPort;
     state.running = true;
     state.paused = false;
 
     loader.classList.add('is-done');
     loaderSkip.disabled = true;
     hudRegion.textContent = best.name;
-    hudPing.textContent = `${best.ping}ms · best connection`;
-    youRegion.textContent = best.name;
+    hudPing.textContent = `${best.ping}ms · ${bestPort.proto} :${bestPort.port}`;
+    youRegion.textContent = `${best.name} · :${bestPort.port}`;
 
     resetGame();
     startPingJitter();
-    showToast(`Joined ${best.name} · ${best.ping}ms — best connection`);
-    addFeed('🛰️', 'You', `connected to ${best.name} · ${best.ping}ms`, '#38ff9c');
+    showToast(`Joined ${best.name} · ${bestPort.proto} :${bestPort.port} — best port`);
+    addFeed('🛰️', 'You', `connected to ${best.name} · ${bestPort.proto.toLowerCase()} :${bestPort.port}`, '#38ff9c');
     addFeed('🏀', 'Park', 'ORANGE vs BLACKTOP · sideline view', '#ff6a1a');
   }
 
@@ -594,7 +654,8 @@
     pingTimer = setInterval(() => {
       if (!state.open || !state.running || !state.best) return;
       const jitter = Math.round(rand(-2, 2));
-      hudPing.textContent = `${Math.max(6, state.best.ping + jitter)}ms · best connection`;
+      const link = state.bestPort ? ` · ${state.bestPort.proto} :${state.bestPort.port}` : '';
+      hudPing.textContent = `${Math.max(6, state.best.ping + jitter)}ms${link}`;
     }, 4400);
   }
 
@@ -615,8 +676,12 @@
     loader.classList.remove('is-done');
     probe.measured = [];
     probe.best = null;
+    probe.ports = [];
+    probe.bestPort = null;
     resetLoaderUI();
 
+    state.renderScale = 1;
+    state.acc = 0;
     resizeCanvas();
     resetGame();
     render(performance.now() / 1000);
@@ -650,6 +715,7 @@
     if (state.raf) cancelAnimationFrame(state.raf);
     state.raf = 0;
     state.last = 0;
+    state.acc = 0;
 
     if (state.lastFocus && typeof state.lastFocus.focus === 'function') state.lastFocus.focus();
   }
@@ -675,6 +741,7 @@
       probe.best = best;
       markBest(best);
     }
+    if (!probe.bestPort) chooseBestPort(probe.best);
     loaderBar.style.width = '100%';
     loaderSkip.disabled = true;
     enterGame();
@@ -726,6 +793,8 @@
 
   const bgCanvas = document.createElement('canvas');
   const bgCtx = bgCanvas.getContext('2d');
+  const courtCanvas = document.createElement('canvas');
+  const courtCtx = courtCanvas.getContext('2d');
 
   function project(x, z) {
     const spread = 0.84 + 0.16 * z;
@@ -739,7 +808,8 @@
     const rect = parkStage.getBoundingClientRect();
     const w = Math.max(1, rect.width);
     const h = Math.max(1, rect.height);
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const cap = IS_ANDROID ? 1.5 : 2;
+    const dpr = Math.max(0.7, Math.min(window.devicePixelRatio || 1, cap) * state.renderScale);
 
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
@@ -747,6 +817,9 @@
     bgCanvas.width = canvas.width;
     bgCanvas.height = canvas.height;
     bgCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    courtCanvas.width = canvas.width;
+    courtCanvas.height = canvas.height;
+    courtCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     view.w = w;
     view.h = h;
@@ -765,6 +838,7 @@
     buildCrowd();
     buildSpecks();
     buildBackdrop();
+    buildCourtLayer();
   }
 
   function buildStars() {
@@ -2311,13 +2385,24 @@
     ctx.stroke();
   }
 
+  function buildCourtLayer() {
+    const live = ctx;
+    try {
+      ctx = courtCtx;
+      ctx.clearRect(0, 0, view.w, view.h);
+      drawCourt(0);
+      drawHoopBack();
+    } finally {
+      ctx = live;
+    }
+  }
+
   function render(time) {
     if (!view.w || !view.h) return;
     ctx.clearRect(0, 0, view.w, view.h);
     ctx.drawImage(bgCanvas, 0, 0, view.w, view.h);
     drawCrowd(time);
-    drawCourt(time);
-    drawHoopBack();
+    ctx.drawImage(courtCanvas, 0, 0, view.w, view.h);
     drawPlayers(time);
     drawBall(time);
     drawRimNet(time);
@@ -2328,16 +2413,54 @@
   function startLoop() {
     if (state.raf) cancelAnimationFrame(state.raf);
     state.last = performance.now();
+    state.acc = 0;
+
+    let frames = 0;
+    let fpsAt = state.last;
 
     const frame = (now) => {
       if (!state.open) { state.raf = 0; return; }
-      const dt = Math.min((now - (state.last || now)) / 1000, 0.05);
+      let dt = (now - (state.last || now)) / 1000;
       state.last = now;
-      const time = now / 1000;
+      if (dt > 0.25) dt = 0.25;
+      state.acc += dt;
 
-      if (state.running && !state.paused && !game.ended) updateGame(dt);
-      updateFx(dt);
-      render(time);
+      // Fixed 60Hz simulation: gameplay stays identical at any refresh rate.
+      let steps = 0;
+      while (state.acc >= STEP && steps < 6) {
+        if (state.running && !state.paused && !game.ended) updateGame(STEP);
+        updateFx(STEP);
+        state.acc -= STEP;
+        steps += 1;
+      }
+      if (state.acc > STEP * 6) state.acc = 0;
+
+      render(now / 1000);
+      frames += 1;
+
+      const span = now - fpsAt;
+      if (span >= 500) {
+        const fps = Math.max(1, Math.min(240, Math.round((frames * 1000) / span)));
+        state.fps = fps;
+        frames = 0;
+        fpsAt = now;
+
+        if (hudFps) {
+          hudFps.textContent = `${fps} FPS`;
+          hudFps.classList.toggle('is-warn', fps < 55 && fps >= 40);
+          hudFps.classList.toggle('is-low', fps < 40);
+        }
+
+        // Hold the 60fps target by stepping resolution down, never up
+        // (avoids oscillation), at most once every 2.5s.
+        if (state.running && !state.paused && fps < 50
+          && state.renderScale > 0.7 && now - state.qualityAt > 2500) {
+          state.renderScale = Math.max(0.7, state.renderScale - 0.1);
+          state.qualityAt = now;
+          resizeCanvas();
+        }
+      }
+
       state.raf = requestAnimationFrame(frame);
     };
 

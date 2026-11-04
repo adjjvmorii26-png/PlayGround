@@ -100,7 +100,7 @@
             </button>
             <a class="btn btn-ghost" href="#status">Check server status</a>
           </div>
-          <p class="hero-start-note reveal"><span class="dot-live" aria-hidden="true"></span> Best connection picked automatically · Sideline spectator only</p>
+          <p class="hero-start-note reveal"><span class="dot-live" aria-hidden="true"></span> Best region + port auto-picked · 60 FPS target · sideline spectator only</p>
 
           <dl class="hero-stats reveal">
             <div>
@@ -803,6 +803,7 @@
         </div>
 
         <div class="hud-right">
+          <span class="hud-fps" id="hudFps" title="Render rate" aria-live="off">60 FPS</span>
           <span class="sideline-badge"><i aria-hidden="true"></i> Sideline cam</span>
           <button class="hud-icon" id="parkFeedToggle" type="button" aria-label="Toggle park feed" title="Toggle park feed">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -906,6 +907,12 @@
           <span class="loader-best-tag">Best connection</span>
           <b id="loaderBestName">NA East</b>
           <span id="loaderBestPing">17ms</span>
+        </div>
+
+        <div class="loader-port" id="loaderPort" hidden>
+          <span class="loader-port-label"><i class="dot-live" aria-hidden="true"></i> <span id="loaderPortServer">Android server</span></span>
+          <b id="loaderPortName">UDP :10000</b>
+          <span id="loaderPortPing">+6ms</span>
         </div>
 
         <div class="loader-progress" aria-hidden="true"><i id="loaderBar"></i></div>
