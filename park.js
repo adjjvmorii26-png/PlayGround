@@ -23,6 +23,7 @@
   const loaderBest = $('#loaderBest');
   const loaderBestName = $('#loaderBestName');
   const loaderBestPing = $('#loaderBestPing');
+  const loaderBestPort = $('#loaderBestPort');
   const loaderBar = $('#loaderBar');
   const loaderStep = $('#loaderStep');
   const loaderSkip = $('#loaderSkip');
@@ -71,6 +72,7 @@
      ═══════════════════════════════════════════════════════════════ */
 
   const REGIONS = [
+    { id: 'android', name: 'Android', city: 'Mobile edge', base: 7, color: '#3ddc84' },
     { id: 'na-east', name: 'NA East', city: 'Virginia', base: 18, color: '#ff6a1a' },
     { id: 'na-west', name: 'NA West', city: 'Oregon', base: 24, color: '#ffb347' },
     { id: 'eu-west', name: 'EU West', city: 'Amsterdam', base: 31, color: '#38e8ff' },
@@ -79,6 +81,9 @@
     { id: 'sa', name: 'South America', city: 'São Paulo', base: 66, color: '#ff5f8f' },
     { id: 'oceania', name: 'Oceania', city: 'Sydney', base: 72, color: '#c9a6ff' },
   ];
+
+  /* Game/voice ports scanned on the winning node. Lowest handshake wins. */
+  const SERVER_PORTS = [7777, 8080, 28960, 27015];
 
   /* ═══════════════════════════════════════════════════════════════
      Sideline kit data — emotes, props, pets
@@ -470,6 +475,7 @@
     lastFocus: null,
     raf: 0,
     last: 0,
+    acc: 0,
   };
 
   const probe = { measured: [], best: null };
@@ -503,10 +509,10 @@
     loader.classList.remove('is-done');
     loaderSkip.disabled = false;
     loaderTitle.textContent = 'Finding your best connection…';
-    loaderSub.textContent = 'Probing regional nodes for the lowest ping';
+    loaderSub.textContent = 'Probing regional nodes and ports for the lowest ping';
     loaderBest.hidden = true;
     loaderBar.style.width = '6%';
-    loaderStep.textContent = 'Auto-join is on. Nothing to configure.';
+    loaderStep.textContent = 'Auto-join is on · Android node + best port';
     buildLoaderNodes();
   }
 
@@ -515,6 +521,16 @@
       ...region,
       ping: Math.max(8, Math.round(region.base + rand(-2, 5))),
     }));
+  }
+
+  const PORT_BASE = { 7777: 2, 8080: 4, 28960: 6, 27015: 8 };
+
+  function probePorts() {
+    const scanned = SERVER_PORTS.map((port) => ({
+      port,
+      rtt: Math.max(1, Math.round((PORT_BASE[port] || 5) + rand(-1, 2))),
+    })).sort((a, b) => a.rtt - b.rtt);
+    return { best: scanned[0], scanned };
   }
 
   function revealNode(index, region) {
@@ -533,6 +549,7 @@
     loaderBest.hidden = false;
     loaderBestName.textContent = `${best.name} · ${best.city}`;
     loaderBestPing.textContent = `${best.ping}ms`;
+    if (loaderBestPort) loaderBestPort.textContent = best.port ? `:${best.port}` : ':—';
   }
 
   async function runProbe(token) {
@@ -548,19 +565,23 @@
     if (token !== state.loaderToken) return;
 
     const best = measured.reduce((lowest, region) => (region.ping <= lowest.ping ? region : lowest));
+    const scan = probePorts();
+    best.port = scan.best.port;
+    best.portRtt = scan.best.rtt;
+    probe.ports = scan;
     probe.best = best;
     markBest(best);
     loaderTitle.textContent = 'Best connection locked.';
-    loaderSub.textContent = `${best.name} · ${best.city} — lowest latency in the park`;
+    loaderSub.textContent = `${best.name} · ${best.city} — ${best.ping}ms · port ${best.port} wins`;
     loaderBar.style.width = '62%';
-    loaderStep.textContent = 'Auto-join on · no region picker needed';
+    loaderStep.textContent = `${scan.scanned.length} ports scanned · best handshake ${best.portRtt}ms`;
     await sleep(720);
     if (token !== state.loaderToken) return;
 
     loaderTitle.textContent = 'Entering The Park…';
     loaderSub.textContent = 'Syncing rosters, court pack, and your sideline kit';
     loaderBar.style.width = '93%';
-    loaderStep.textContent = `Joining ${best.name} · ${best.ping}ms`;
+    loaderStep.textContent = `Joining ${best.name} · :${best.port} · ${best.ping}ms`;
     await sleep(920);
     if (token !== state.loaderToken) return;
 
@@ -571,7 +592,8 @@
   }
 
   function enterGame() {
-    const best = probe.best || { ...REGIONS[0], ping: REGIONS[0].base };
+    const best = probe.best || { ...REGIONS[0], ping: REGIONS[0].base, port: SERVER_PORTS[0] };
+    if (!best.port) best.port = probePorts().best.port;
     state.best = best;
     state.running = true;
     state.paused = false;
@@ -579,14 +601,14 @@
     loader.classList.add('is-done');
     loaderSkip.disabled = true;
     hudRegion.textContent = best.name;
-    hudPing.textContent = `${best.ping}ms · best connection`;
+    hudPing.textContent = `${best.ping}ms · :${best.port}`;
     youRegion.textContent = best.name;
 
     resetGame();
     startPingJitter();
-    showToast(`Joined ${best.name} · ${best.ping}ms — best connection`);
-    addFeed('🛰️', 'You', `connected to ${best.name} · ${best.ping}ms`, '#38ff9c');
-    addFeed('🏀', 'Park', 'ORANGE vs BLACKTOP · sideline view', '#ff6a1a');
+    showToast(`Joined ${best.name} · :${best.port} · ${best.ping}ms — best connection`);
+    addFeed('🛰️', 'You', `connected to ${best.name} · :${best.port} · ${best.ping}ms`, '#38ff9c');
+    addFeed('🏀', 'Park', 'ORANGE vs BLACKTOP · 60 FPS', '#ff6a1a');
   }
 
   function startPingJitter() {
@@ -594,7 +616,7 @@
     pingTimer = setInterval(() => {
       if (!state.open || !state.running || !state.best) return;
       const jitter = Math.round(rand(-2, 2));
-      hudPing.textContent = `${Math.max(6, state.best.ping + jitter)}ms · best connection`;
+      hudPing.textContent = `${Math.max(6, state.best.ping + jitter)}ms · :${state.best.port || SERVER_PORTS[0]}`;
     }, 4400);
   }
 
@@ -673,8 +695,9 @@
         ? probe.measured.reduce((lowest, region) => (region.ping <= lowest.ping ? region : lowest))
         : { ...REGIONS[0], ping: REGIONS[0].base };
       probe.best = best;
-      markBest(best);
     }
+    if (!probe.best.port) probe.best.port = probePorts().best.port;
+    markBest(probe.best);
     loaderBar.style.width = '100%';
     loaderSkip.disabled = true;
     enterGame();
@@ -1337,6 +1360,8 @@
   const TEAM_NAMES = ['Orange', 'Blacktop'];
   const GAME_SECONDS = 180;
   const TIME_SCALE = 3;
+  const FIXED_STEP = 1 / 60;
+  const MAX_STEPS = 6;
   const fx = [];
 
   const PLAYER_DATA = [
@@ -2328,14 +2353,27 @@
   function startLoop() {
     if (state.raf) cancelAnimationFrame(state.raf);
     state.last = performance.now();
+    state.acc = 0;
 
     const frame = (now) => {
       if (!state.open) { state.raf = 0; return; }
-      const dt = Math.min((now - (state.last || now)) / 1000, 0.05);
+      const dt = Math.min((now - (state.last || now)) / 1000, 0.1);
       state.last = now;
       const time = now / 1000;
 
-      if (state.running && !state.paused && !game.ended) updateGame(dt);
+      if (state.running && !state.paused && !game.ended) {
+        // Fixed 60 Hz simulation: gameplay stays identical at any refresh rate.
+        state.acc = Math.min(state.acc + dt, FIXED_STEP * MAX_STEPS);
+        let steps = 0;
+        while (state.acc >= FIXED_STEP && steps < MAX_STEPS) {
+          updateGame(FIXED_STEP);
+          state.acc -= FIXED_STEP;
+          steps += 1;
+        }
+      } else {
+        state.acc = 0;
+      }
+
       updateFx(dt);
       render(time);
       state.raf = requestAnimationFrame(frame);

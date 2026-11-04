@@ -270,6 +270,38 @@ body.park-open {
   box-shadow: 0 0 10px var(--orange);
 }
 
+.fps-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 255, 156, 0.24);
+  background: rgba(8, 16, 13, 0.62);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  font-family: var(--mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--green);
+  white-space: nowrap;
+}
+
+.fps-badge i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 9px var(--green);
+  animation: fpsPulse 2s infinite;
+}
+
+@keyframes fpsPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(56, 255, 156, 0.5), 0 0 9px var(--green); }
+  70% { box-shadow: 0 0 0 5px rgba(56, 255, 156, 0), 0 0 9px var(--green); }
+}
+
 .spectator-ribbon {
   position: absolute;
   top: 92px;
@@ -864,7 +896,19 @@ body.park-open {
 }
 
 .loader-best b { font-size: 11.5px; font-weight: 700; }
-.loader-best span:last-child { font-family: var(--mono); font-size: 10px; color: var(--orange-2); }
+.loader-best-ping { font-family: var(--mono); font-size: 10px; color: var(--orange-2); }
+
+.loader-best-port {
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(56, 232, 255, 0.3);
+  background: rgba(56, 232, 255, 0.08);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #7fefff;
+}
 
 .loader-progress {
   margin: 20px auto 0;

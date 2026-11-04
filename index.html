@@ -100,7 +100,7 @@
             </button>
             <a class="btn btn-ghost" href="#status">Check server status</a>
           </div>
-          <p class="hero-start-note reveal"><span class="dot-live" aria-hidden="true"></span> Best connection picked automatically · Sideline spectator only</p>
+          <p class="hero-start-note reveal"><span class="dot-live" aria-hidden="true"></span> Best Android port picked automatically · 60 FPS · Sideline spectator only</p>
 
           <dl class="hero-stats reveal">
             <div>
@@ -803,6 +803,7 @@
         </div>
 
         <div class="hud-right">
+          <span class="fps-badge" title="Target 60 FPS · fixed 60 Hz simulation"><i aria-hidden="true"></i>60 FPS</span>
           <span class="sideline-badge"><i aria-hidden="true"></i> Sideline cam</span>
           <button class="hud-icon" id="parkFeedToggle" type="button" aria-label="Toggle park feed" title="Toggle park feed">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -898,14 +899,15 @@
         <div class="loader-orbit" aria-hidden="true"><i></i><i></i><i></i></div>
 
         <h2 id="loaderTitle">Finding your best connection…</h2>
-        <p class="loader-sub" id="loaderSub">Probing regional nodes for the lowest ping</p>
+        <p class="loader-sub" id="loaderSub">Probing regional nodes and ports for the lowest ping</p>
 
         <ul class="loader-nodes" id="loaderNodes" aria-label="Regional server latency"></ul>
 
         <div class="loader-best" id="loaderBest" hidden>
           <span class="loader-best-tag">Best connection</span>
           <b id="loaderBestName">NA East</b>
-          <span id="loaderBestPing">17ms</span>
+          <span class="loader-best-ping" id="loaderBestPing">17ms</span>
+          <span class="loader-best-port" id="loaderBestPort">:7777</span>
         </div>
 
         <div class="loader-progress" aria-hidden="true"><i id="loaderBar"></i></div>
