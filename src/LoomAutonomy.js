@@ -36,7 +36,7 @@ export const DREAM_LIBRARY = [
   { fn: 'garden',    word: 'flower garden',          icon: '🌸', name: 'flower garden',   tags: ['cozy', 'nature'] },
   { fn: 'ufo',       word: 'curious UFO',            icon: '🛸', name: 'curious UFO',     tags: ['sky', 'wild'] },
   { fn: 'golem',     word: 'friendly moss golem',    icon: '🪨', name: 'moss golem',      tags: ['cozy', 'wild'] },
-  { fn: 'bridge',    word: 'light bridge',           icon: '🌉', name: 'light bridge',    tags: ['sky', 'wild'] },
+  { fn: 'bridge',    word: 'bridge',                 icon: '🌉', name: 'light bridge',    tags: ['sky', 'wild'] },
   { fn: 'orb',       word: 'wild dream orb',         icon: '🔮', name: 'wild dream orb',  tags: ['glow', 'wild'] },
 ];
 
@@ -334,6 +334,14 @@ export class LoomAutonomy {
       journal: this.journal.slice(0, 8),
       seenCount: this.seen.size,
       totalTypes: DREAM_LIBRARY.length,
+      unlocked: {
+        dream: true,
+        tidy: true,
+        scout: this.level >= 2,
+        tend: this.level >= 3,
+        swarm: this.level >= 3,
+        excavate: this.level >= 5,
+      },
     };
   }
 
@@ -430,7 +438,7 @@ export class LoomAutonomy {
 
     const clutter = ctx.clutter || {};
     if ((clutter.removable || 0) > 0) {
-      offer('tidy', 0.42 + this.drives.order * 1.15, { mode: 'auto' });
+      offer('tidy', 0.62 + this.drives.order * 1.35, { mode: 'auto' });
     }
 
     const canDream = (ctx.ink || 0) >= (ctx.dreamFloor == null ? 20 : ctx.dreamFloor)
@@ -457,8 +465,8 @@ export class LoomAutonomy {
 
     if (!candidates.length) return null;
 
-    // Critical mess beats everything else; otherwise utility with a dash of whim.
-    if ((clutter.score || 0) > 0.72 && (clutter.removable || 0) > 0) {
+    // A visible mess beats everything else; otherwise utility with a dash of whim.
+    if (((clutter.score || 0) > 0.68 || (clutter.lint || 0) >= 8) && (clutter.removable || 0) > 0) {
       const urgent = candidates.find((c) => c.type === 'tidy');
       if (urgent) return urgent;
     }
@@ -582,6 +590,12 @@ export class LoomAutonomy {
       this.mode = 'waking';
       this.thought = 'Waiting for the dream to begin.';
       return null;
+    }
+    // As soon as the dream starts, settle into an observing stance instead of
+    // leaving the HUD stuck on "waking" until the first planned action.
+    if (this.mode === 'waking') {
+      this.mode = 'observing';
+      this.thought = this._idleThought(ctx);
     }
 
     this._clock += Math.min(0.1, Math.max(0, dt || 0));

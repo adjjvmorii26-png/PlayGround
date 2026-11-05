@@ -1598,7 +1598,8 @@ function updateStatus(){
   const spot=biomeAt(player.position.x,player.position.z);
   const ab=$('#stAuto');
   if(ab&&loomAutonomy){const m=loomAutonomy.summary();
-    ab.querySelector('b').textContent=m.auto?(m.mode==='observing'?'managing':m.mode):'paused';
+    const liveMode=(m.auto&&$('#intro').classList.contains('hide')&&m.mode==='waking')?'observing':m.mode;
+    ab.querySelector('b').textContent=m.auto?(liveMode==='observing'?'managing':liveMode):'paused';
     ab.title=m.thought||'Loom is watching the sandbox';
     ab.className='statPill'+(m.auto?'':' warn');}
   const eb=$('#stBiome');if(spot){eb.querySelector('b').textContent=STAGES[spot.b.stage][1]+' '+Math.round(spot.b.bio*100)+'%';
@@ -1731,6 +1732,13 @@ function saveWorld(){
     loomMind:loomAutonomy?loomAutonomy.serialize():prev.loomMind
   })});
 }
+let mindSaveTimer=null;
+function saveMindSoon(){
+  if(mindSaveTimer)return;
+  mindSaveTimer=setTimeout(()=>{mindSaveTimer=null;try{ if(loomAutonomy)saveWorld(); }catch(e){}},420);
+}
+// flush debounced learning when the tab is closed or backgrounded
+addEventListener('pagehide',()=>{try{if(loomAutonomy)saveWorld();}catch(e){}});
 function loadWorld(){try{const w=(readSave()&&readSave().world)||{};
   // restore seals FIRST so the hidden-layer unlock stays consistent with 3/3
   if(Array.isArray(w.artifacts))w.artifacts.forEach(i=>{const s=makeSeal(i);if(s)sealPop(s);});
@@ -1772,7 +1780,7 @@ const loomLines={
   idle:["If you leave me bored, I WILL decorate. Fair warning. 🦊","Dream-ink refills when we wander… let's explore?","Tap any dream to remix it. I dare you to Candy-fy the volcano."],
   night:["Shhh… nightmare-night. The crystals sing louder. Don't be scared — I'm glowing."],
 };
-let loomMoodState='happy', lastAuto=performance.now(), lastIdleLine=performance.now();
+let loomMoodState='happy', lastIdleLine=performance.now();
 function loomMood(m){loomMoodState=m;}
 const loomMemories=[];
 function loomSay(kind){const line=pick(loomLines[kind]||loomLines.happy);say(line);return line;}
@@ -1780,8 +1788,23 @@ function loomSay(kind){const line=pick(loomLines[kind]||loomLines.happy);say(lin
 /* ============ dreaming ============ */
 function dreamSpot(byLoom=false){
   // forward from camera yaw: (sin yaw, cos yaw) is where player faces / camera looks
+  if(byLoom){
+    // Loom places its own dreams to the sides and picks the most open spot,
+    // so autonomous dreams never grow into the player's centre view.
+    let best=null,bestClear=-1;
+    for(let k=0;k<4;k++){
+      const a=yaw+(Math.random()<.5?-1:1)*rand(.55,1.55);
+      const d=rand(10,18);
+      const x=clamp(player.position.x+Math.sin(a)*d,-70,70);
+      const z=clamp(player.position.z+Math.cos(a)*d,-80,80);
+      let clear=1e9;
+      for(const g of selectable){const dd=Math.hypot(g.position.x-x,g.position.z-z);if(dd<clear)clear=dd;}
+      if(clear>bestClear){bestClear=clear;best=new THREE.Vector3(x,groundY(x,z),z);}
+    }
+    if(best)return best;
+  }
   const a=yaw+rand(-.35,.35);
-  const d=byLoom?rand(6,12):rand(7,13);
+  const d=rand(7,13);
   const x=clamp(player.position.x+Math.sin(a)*d,-70,70);
   const z=clamp(player.position.z+Math.cos(a)*d,-80,80);
   return new THREE.Vector3(x,groundY(x,z),z);
@@ -1811,7 +1834,7 @@ function doDream(raw,byLoom=false){
     if(hasSkill('bloom')&&parsed.fn==='garden')g.scale.multiplyScalar(1.3);
     // ecosystem: the island you build on remembers
     const near=nearestIsland(at.x,at.z);
-    if(!byLoom&&loomAutonomy)loomAutonomy.observeDream({fn:parsed.fn,island:near.d<islands[near.i].r+26?near.i:undefined,byLoom:false});
+    if(!byLoom&&loomAutonomy){loomAutonomy.observeDream({fn:parsed.fn,island:near.d<islands[near.i].r+26?near.i:undefined,byLoom:false});saveMindSoon();}
     if(near.d<islands[near.i].r+26&&biomeOf(near.i)){
       const b=biomeOf(near.i);
       b.total++;b.mood=Math.min(1,b.mood+.12);b.bio=Math.min(1,b.bio+.06);b.moisture=Math.min(1,b.moisture+.05);
@@ -1869,7 +1892,7 @@ renderer.domElement.addEventListener('pointerup',e=>{
   // 💜 pet Loom himself (heartbond boosts it)
   const pet=ray.intersectObject(loom,true);
   if(pet.length){const amt=hasSkill('heartbond')?15:4;gainXP(amt,'petting Loom 💜');popSnd();
-    lastPlayerTouch=performance.now();if(loomAutonomy)loomAutonomy.observePet();
+    lastPlayerTouch=performance.now();if(loomAutonomy){loomAutonomy.observePet();saveMindSoon();}
     burst(loom.position.clone().add(new THREE.Vector3(0,1.6,0)),0xff6b9d,hasSkill('heartbond')?30:12);
     say(pick(["Purrr… *fox purring intensifies*","Hehe! That tickles my tails!","*happy fox noises* Best. Pet. Ever."]));return;}
   const hits=ray.intersectObjects(selectable,true);
@@ -1883,27 +1906,28 @@ renderer.domElement.addEventListener('pointerup',e=>{
 });
 function select(g){if(!g)return;selected=g;selRing.visible=true;
   lastPlayerTouch=performance.now();
-  if(loomAutonomy&&g.userData.fn)loomAutonomy.observeFocus(g.userData.fn);
+  if(loomAutonomy&&g.userData.fn){loomAutonomy.observeFocus(g.userData.fn);saveMindSoon();}
   const box=new THREE.Box3().setFromObject(g);const s=Math.max(box.getSize(new THREE.Vector3()).length()/2,1.4);
   selRing.scale.set(s/1.6,s/1.6,1);selRing.position.copy(g.position);selRing.position.y+=.35;
   $('#editPanel').classList.add('show');
   say(`Ooh, “${g.userData.label}”! Grow it? Candy-fy it? Your paws, your rules.`,3500);}
 function deselect(){selected=null;selRing.visible=false;$('#editPanel').classList.remove('show');}
 $('#eClose').onclick=deselect;
-function noteRemix(){if(!selected)return;lastPlayerTouch=performance.now();if(loomAutonomy&&selected.userData.fn)loomAutonomy.observeRemix(selected.userData.fn);}
+function noteRemix(){if(!selected)return;lastPlayerTouch=performance.now();if(loomAutonomy&&selected.userData.fn){loomAutonomy.observeRemix(selected.userData.fn);saveMindSoon();}}
 $('#eGrow').onclick=()=>{if(!selected)return;noteRemix();markShadowDirty(2);selected.scale.multiplyScalar(clamp(selected.scale.x*(hasSkill('overgrowth')?2:hasSkill('sprout')?1.5:1.25),.3,6));popSnd();stats.remixes++;gainXP(hasSkill('loop')?12:8,'remix bonus');if(hasSkill('recursion')&&Math.random()<.3){gainXP(10,'recursion echo');toast('♾️ recursion echo! +XP');}renderQuests();saveDreams();};
 $('#eShrink').onclick=()=>{if(!selected)return;noteRemix();markShadowDirty(2);selected.scale.multiplyScalar(clamp(selected.scale.x*.8,.3,6));popSnd();stats.remixes++;gainXP(hasSkill('loop')?12:8,'remix bonus');renderQuests();saveDreams();};
 $('#eCandy').onclick=()=>{if(!selected)return;noteRemix();markShadowDirty(2);candyfy(selected);dreamChord();stats.remixes++;gainXP(hasSkill('loop')?12:8,'remix bonus');renderQuests();saveDreams();
   say(pick(["CANDY-FIED! My teeth hurt looking at it. 🍬","Sugar-rush makeover complete!","So shiny! The golems are jealous."]));};
 $('#eCopy').onclick=()=>{if(!selected)return;noteRemix();
+  selected.userData.hasClones=true;
   const c=selected.clone();c.position.x+=3;c.position.z+=3;c.position.y=groundY(c.position.x,c.position.z);
   c.userData.label=selected.userData.label;c.userData.fn=selected.userData.fn;c.userData.isEcho=true;c.userData.sharedResources=true;c.userData.createdAt=Date.now();c.traverse(o=>{o.userData.rootRef=c;});selectable.push(c);dreamGroup.add(c);
   if(hasSkill('loop')||hasSkill('echo')){const n=hasSkill('echo')?2:1;for(let i=0;i<n;i++){const m=c.clone();m.position.x+=2.5+i*1.5;m.position.z-=2.5;m.scale.multiplyScalar(.55);m.userData.isEcho=true;m.userData.sharedResources=true;m.userData.createdAt=Date.now();m.traverse(o=>{o.userData.rootRef=m;});selectable.push(m);dreamGroup.add(m);}toast(hasSkill('echo')?'🔊 echo(): TWO bonus mini-copies!':'⧉ loop(3): bonus mini-copy!');}
   markShadowDirty(2);burst(c.position.clone().add(new THREE.Vector3(0,2,0)),0x67e8f9);dreamChord();gainXP(10,'duplicate bonus');saveDreams();toast('⧉ Duplicated!');};
-$('#eBanish').onclick=()=>{if(!selected)return;lastPlayerTouch=performance.now();if(loomAutonomy&&selected.userData.fn)loomAutonomy.observeBanish(selected.userData.fn);
+$('#eBanish').onclick=()=>{if(!selected)return;lastPlayerTouch=performance.now();if(loomAutonomy&&selected.userData.fn){loomAutonomy.observeBanish(selected.userData.fn);saveMindSoon();}
   burst(selected.position.clone().add(new THREE.Vector3(0,1.5,0)),0xffffff);
   // clones share geometry/material with their original — only unique dreams may dispose
-  if(!selected.userData.sharedResources)selected.traverse(o=>{if(o.isMesh||o.isPoints||o.isLine){if(o.geometry)o.geometry.dispose();
+  if(!selected.userData.sharedResources&&!selected.userData.hasClones)selected.traverse(o=>{if(o.isMesh||o.isPoints||o.isLine){if(o.geometry)o.geometry.dispose();
     if(o.material){(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose&&m.dispose());}}});
   dreamGroup.remove(selected);
   const i=selectable.indexOf(selected);if(i>-1)selectable.splice(i,1);
@@ -1993,6 +2017,7 @@ $('#photoBtn').onclick=()=>{
 $('#helpBtn').onclick=()=>{ $('#intro').classList.remove('hide'); };
 $('#startBtn').onclick=()=>{ $('#intro').classList.add('hide'); ac(); initSoundscape(); initAmbience();
   loomSay('greet'); dreamChord(); buzz(14); toast('💭 Type a dream below to begin!');
+  if($('#pane-auto')&&$('#pane-auto').classList.contains('on'))renderAutoPane();
   checkOrientation(); if(coachStep<COACH.length)setTimeout(()=>coachShow(coachStep),700); };
 $('#questToggle').addEventListener('click',()=>{if(innerWidth<=760)$('#questCard').classList.toggle('open');});
 
@@ -2002,6 +2027,7 @@ $('#questToggle').addEventListener('click',()=>{if(innerWidth<=760)$('#questCard
 let loomRoam=null;
 const dreamLint=[];
 let lintTimer=8;
+let loomCtxCache=null,loomCtxTick=0;
 
 function spawnLint(n=1){
   for(let k=0;k<n;k++){
@@ -2036,20 +2062,23 @@ function measureClutter(){
   const echoes=selectable.filter(g=>g.userData.isEcho).length;
   const autos=selectable.filter(g=>g.userData.byLoom&&!g.userData.isEcho).length;
   const planks=bridgePlanks.length;
+  const plankMess=swarmJob==='bridge'?0:Math.max(0,planks-10);
   const lint=dreamLint.length;
   const floraLoad=flora.length/Math.max(1,FLORA_MAX);
   const total=selectable.length;
-  const removable=Math.max(0,echoes-3)+Math.max(0,autos-8)+Math.max(0,planks-10)+lint
-    +Math.max(0,flora.length-Math.floor(FLORA_MAX*.9));
+  // thresholds mirror what loomTidy() actually keeps, so Loom never reports
+  // "spotless" while believing there is something to sweep.
+  const removable=Math.max(0,echoes-4)+Math.max(0,autos-10)+plankMess+lint
+    +Math.max(0,flora.length-Math.floor(FLORA_MAX*.92));
   const score=clamp(
-    Math.max(0,echoes-3)*.07+Math.max(0,autos-8)*.07+Math.max(0,planks-10)*.04
-    +lint*.045+Math.max(0,floraLoad-.88)*1.2+Math.max(0,total-26)*.035,0,1);
+    Math.max(0,echoes-4)*.07+Math.max(0,autos-10)*.07+plankMess*.04
+    +lint*.045+Math.max(0,floraLoad-.92)*1.2,0,1);
   return {score,removable,echoes,autos,planks,lint,flora:flora.length,floraMax:FLORA_MAX,total};
 }
 function removeDreamObject(g,dispose){
   if(!g)return false;
   const p=g.position.clone().add(new THREE.Vector3(0,.8,0));
-  if(dispose&&!g.userData.sharedResources){
+  if(dispose&&!g.userData.sharedResources&&!g.userData.hasClones){
     g.traverse(o=>{if(o.isMesh||o.isPoints||o.isLine){
       if(o.geometry)o.geometry.dispose();
       if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose&&m.dispose());}});
@@ -2203,14 +2232,14 @@ function applyLoomResult(r){
   if(r.log)logDream(r.log);
   if(r.toast)toast(r.toast);
   if(r.xp)gainXP(r.xp,'Loom autonomy');
+  if($('#pane-auto').classList.contains('on')&&$('#consolePanel').classList.contains('show'))renderAutoPane();
+  saveMindSoon();
 }
 function doMindForce(type){
   if(!loomAutonomy)return;
   const r=loomAutonomy.force(type,buildLoomContext());
   if(!r)return;
   applyLoomResult(r);
-  if(r.ok&&type==='tidy'){if(!stats.loomTidies)stats.loomTidies=1;renderQuests();}
-  if(r.ok&&type==='dream')stats.loomDreams++;
   if(!r.ok&&r.message)toast('🦊 '+r.message);
   saveWorld();updateStatus();
   if($('#pane-auto').classList.contains('on'))renderAutoPane();
@@ -2224,6 +2253,9 @@ function renderAutoPane(){
     ? s.traits.map(t=>`<span class="traitChip">${t.icon} ${t.label} ${(Math.round(t.value*10)/10)}</span>`).join('')
     : '<span style="opacity:.6;font-size:11.5px">No taste learned yet — dream something or teach Loom below.</span>';
   const fav=s.favorite?`${s.favorite.icon} ${s.favorite.name}`:'still deciding';
+  const running=$('#intro').classList.contains('hide');
+  const shownMode=(s.auto&&running&&s.mode==='waking')?'observing':s.mode;
+  const shownThought=(s.auto&&running&&s.mode==='waking')?'On watch. The sandbox is ours to mind.':(s.thought||'…');
   const journal=s.journal.length?s.journal.map(j=>{
     const age=Math.max(0,Math.round((Date.now()-(j.t||Date.now()))/1000));
     const rel=age<60?age+'s ago':Math.round(age/60)+'m ago';
@@ -2232,8 +2264,8 @@ function renderAutoPane(){
 
   p.innerHTML=`<h4>🦊 Loom's Autonomy</h4>
     <p class="d">Loom watches what you dream, learns your taste, and quietly runs the sandbox: tidying loose dream-stuff, tending fading islands, scouting, excavating memories and directing the Loomings. It never removes your newest work.</p>
-    <div class="metric">Mode<div style="flex:1;margin-left:8px"></div><b>${s.auto?s.mode.toUpperCase():'PAUSED'}</b></div>
-    <div class="metric">Current thought<div style="flex:1;margin-left:8px"></div><b style="font-size:11px;max-width:60%;text-align:right;white-space:normal">${s.thought||'…'}</b></div>
+    <div class="metric">Mode<div style="flex:1;margin-left:8px"></div><b>${s.auto?shownMode.toUpperCase():'PAUSED'}</b></div>
+    <div class="metric">Current thought<div style="flex:1;margin-left:8px"></div><b style="font-size:11px;max-width:60%;text-align:right;white-space:normal">${shownThought}</b></div>
     <div class="metric">Learning<div style="flex:1;margin-left:8px">${bar(s.progress,'bio')}</div><b>Lv ${s.level} · ${Math.floor(s.insights)}/${s.insightNeed}</b></div>
     <div class="metric">Tidiness<div style="flex:1;margin-left:8px">${bar(s.tidiness)}</div><b>${Math.round(s.tidiness*100)}%</b></div>
     <div class="metric">Curiosity<div style="flex:1;margin-left:8px">${bar(s.drives.curiosity)}</div><b>${Math.round(s.drives.curiosity*100)}%</b></div>
@@ -2245,9 +2277,9 @@ function renderAutoPane(){
       <button class="${s.auto?'on':''}" id="mindAuto">${s.auto?'⏸ Pause autonomy':'▶ Resume autonomy'}</button>
       <button id="mindDream">💭 Dream now</button>
       <button id="mindTidy">🧹 Tidy now</button>
-      <button id="mindTend">🌿 Tend world</button>
-      <button id="mindScout">🧭 Scout isle</button>
-      <button id="mindSwarm">🐝 Loomings</button>
+      <button id="mindTend" ${s.unlocked.tend?'':'disabled title="Loom learns this at Understanding Lv 3"'}>${s.unlocked.tend?'🌿 Tend world':'🔒 Tend (Lv 3)'}</button>
+      <button id="mindScout" ${s.unlocked.scout?'':'disabled title="Loom learns this at Understanding Lv 2"'}>${s.unlocked.scout?'🧭 Scout isle':'🔒 Scout (Lv 2)'}</button>
+      <button id="mindSwarm" ${s.unlocked.swarm?'':'disabled title="Loom learns this at Understanding Lv 3"'}>${s.unlocked.swarm?'🐝 Loomings':'🔒 Loomings (Lv 3)'}</button>
     </div>
     <p class="d" style="margin-top:6px;margin-bottom:2px"><b>Teach Loom what you love:</b></p>
     <div class="btnRow">${Object.entries(TRAITS).map(([key,t])=>`<button data-teach="${key}">${t.icon} ${t.label}</button>`).join('')}</div>
@@ -2293,6 +2325,7 @@ loomAutonomy=new LoomAutonomy({
     toast(`🧠 Loom learned "${info.title}"!`);
     say(`New understanding: ${info.title}! ${info.desc} 🧠`);
     logDream(`🧠 <b>Loom grew</b> — ${info.title}: ${info.desc}`);
+    saveMindSoon();
     if($('#pane-auto').classList.contains('on'))renderAutoPane();
     updateStatus();
   }
@@ -2300,6 +2333,7 @@ loomAutonomy=new LoomAutonomy({
 try{const w=(readSave()&&readSave().world)||{};if(w.loomMind)loomAutonomy.restore(w.loomMind);}catch(e){}
 saveWorld();
 window.loomAutonomy=loomAutonomy; // handy for console experiments and capture tests
+window.loomSandbox={spawnLint,loomTidy,loomTend,loomScout,measureClutter,buildLoomContext};
 
 function openAutoPanel(){
   renderPane('auto');
@@ -2356,17 +2390,25 @@ function tick(){
   camera.position.lerp(camTarget,1-Math.pow(.0001,dt));
   camera.lookAt(player.position.x,player.position.y+1.6,player.position.z);
   // loom follow (springy companion) — stays front-left so it's always visible
+  if(loomRoam&&performance.now()>loomRoam.until)loomRoam=null;
   const fwx=Math.sin(player.rotation.y),fwz=Math.cos(player.rotation.y);
   const rtx=Math.sin(player.rotation.y-Math.PI/2),rtz=Math.cos(player.rotation.y-Math.PI/2);
   const want2=new THREE.Vector3(
     player.position.x+fwx*2.2+rtx*1.8,0,
     player.position.z+fwz*2.2+rtz*1.8);
-  want2.y=groundY(want2.x,want2.z);
-  if(flying)want2.y=player.position.y+.4;
+  if(loomRoam){
+    // stay above the waterline while crossing to a scouted island
+    want2.set(loomRoam.x,Math.max(groundY(loomRoam.x,loomRoam.z),1.1),loomRoam.z);
+    if(Math.random()<dt*7)emitTrail(loom.position.clone().add(new THREE.Vector3(rand(-.4,.4),rand(.2,1.2),rand(-.4,.4))),0x67e8f9,.8,1.1);
+  }else{
+    want2.y=groundY(want2.x,want2.z);
+    if(flying)want2.y=player.position.y+.4;
+  }
   // hop
   const hop=Math.abs(Math.sin(t*6))*.28*(ml>.1?1:.3);
   loom.position.lerp(new THREE.Vector3(want2.x,want2.y+hop+.1,want2.z),1-Math.pow(.01,dt));
-  loom.lookAt(player.position.x,loom.position.y,player.position.z);
+  if(loomRoam)loom.lookAt(loomRoam.x,loom.position.y,loomRoam.z);
+  else loom.lookAt(player.position.x,loom.position.y,player.position.z);
   loomTail.rotation.z=Math.sin(t*7)*.5; loomTail.material.emissiveIntensity=1+Math.sin(t*3)*.4;
   loomEarL.rotation.z=Math.sin(t*2.2)*.14;loomEarR.rotation.z=-Math.sin(t*2.2)*.14;
   loomGlow.intensity=(night?(hasSkill('heartbond')?16:12):(hasSkill('loomgod')?10:6))+Math.sin(t*4)*1.2;
@@ -2390,15 +2432,14 @@ function tick(){
   sunSpr.material.opacity=night?.5:.95;
   // ink regen by wandering (inkwell / stardrape / mastery scale it)
   setInk(ink+dt*(ml>.1?1.6:.7)*regenMultiplier(night));
-  // loom autonomy (skyweave + timeloop + mastery stack)
-  const autoMs=autoIntervalMs();
-  if(t*1000-(lastAuto)>autoMs&&ink>34&&$('#intro').classList.contains('hide')){
-    lastAuto=performance.now();
-    const ideas=['mushroom forest','crystal field','flower garden','lanterns','rainbow bridge','cozy house','windmill','floating jellyfish','tree','lake'];
-    const idea=pick(ideas);
-    say(pick(loomLines.auto)+` (dreaming “${idea}”…)`);
-    setTimeout(()=>doDream(idea,true),1400);
+  // Loom's learned autonomy: decide, act, tidy, tend, scout, manage
+  if(loomAutonomy){
+    loomCtxTick+=dt;
+    if(!loomCtxCache||loomCtxTick>.45){loomCtxTick=0;loomCtxCache=buildLoomContext();}
+    const out=loomAutonomy.update(dt,loomCtxCache);
+    if(out&&out.result)applyLoomResult(out.result);
   }
+  updateLint(dt,t);                               // loose dream-lint Loom can sweep
   // idle chatter (timeloop turns chatter into XP)
   if(performance.now()-lastIdleLine>45000&&$('#intro').classList.contains('hide')){
     lastIdleLine=performance.now();loomSay('idle');if(hasSkill('timeloop'))gainXP(6,'timeloop daydream');}
