@@ -67,6 +67,20 @@
   const courtControls = $('#courtControls');
   const courtShoot = $('#courtShoot');
   const moveButtons = $$('[data-move]');
+  const courtStats = $('#courtStats');
+  const courtStreak = $('#courtStreak');
+  const courtMakes = $('#courtMakes');
+  const courtAttempts = $('#courtAttempts');
+  const hudTeamAName = $('#hudTeamAName');
+  const hudTeamBName = $('#hudTeamBName');
+  const hudTagA = $('#hudTagA');
+  const hudTagB = $('#hudTagB');
+  const finalTeamA = $('#finalTeamA');
+  const finalTeamB = $('#finalTeamB');
+  const youRole = $('#youRole');
+  const youState = $('#youState');
+  const camLabel = $('#camLabel');
+  const finalEyebrow = $('#finalEyebrow');
 
   const TAU = Math.PI * 2;
   const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
@@ -747,7 +761,8 @@
     startPingJitter();
     showToast(`Joined ${best.name} · :${best.port} · ${best.ping}ms — best connection`);
     addFeed('🛰️', 'You', `connected to ${best.name} · :${best.port} · ${best.ping}ms`, '#38ff9c');
-    addFeed('🏀', 'Park', 'ORANGE vs BLACKTOP · 60 FPS', '#ff6a1a');
+    if (game.mode === 'mycourt') addFeed('🏀', 'MyCourt', 'shoot-around live · 90 seconds', '#38ff9c');
+    else addFeed('🏀', 'Park', 'ORANGE vs BLACKTOP · 60 FPS', '#ff6a1a');
   }
 
   function startPingJitter() {
@@ -778,6 +793,10 @@
     probe.best = null;
     resetLoaderUI();
 
+    game.mode = 'mycourt';
+    clearCourtInput();
+    applyModeUI();
+
     resizeCanvas();
     resetGame();
     render(performance.now() / 1000);
@@ -799,6 +818,7 @@
     state.running = false;
     state.paused = false;
     state.loaderToken += 1;
+    clearCourtInput();
     clearInterval(pingTimer);
 
     park.hidden = true;
@@ -820,10 +840,43 @@
   $('#parkExit').addEventListener('click', leavePark);
   $('#parkAgain').addEventListener('click', () => {
     resetGame();
-    showToast('Run it back — tip-off');
+    showToast(game.mode === 'mycourt' ? 'MyCourt reset — fresh 90 seconds' : 'Run it back — tip-off');
   });
   $('#parkFeedToggle').addEventListener('click', () => {
     parkSide.classList.toggle('is-hidden');
+  });
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => setMode(button.dataset.gameMode));
+  });
+
+  if (courtShoot) {
+    courtShoot.addEventListener('click', (event) => {
+      event.preventDefault();
+      shootMyCourt();
+    });
+  }
+
+  moveButtons.forEach((button) => {
+    const direction = button.dataset.move;
+    if (!direction) return;
+    const press = (event) => {
+      event.preventDefault();
+      courtInput[direction] = true;
+      button.classList.add('is-held');
+      if (button.setPointerCapture && event.pointerId !== undefined) {
+        try { button.setPointerCapture(event.pointerId); } catch { /* ignore */ }
+      }
+    };
+    const release = () => {
+      courtInput[direction] = false;
+      button.classList.remove('is-held');
+    };
+    button.addEventListener('pointerdown', press);
+    button.addEventListener('pointerup', release);
+    button.addEventListener('pointercancel', release);
+    button.addEventListener('lostpointercapture', release);
+    button.addEventListener('contextmenu', (event) => event.preventDefault());
   });
 
   loaderSkip.addEventListener('click', () => {
@@ -854,6 +907,27 @@
       return;
     }
     if (typing) return;
+    if (!emoteModal.hidden) return;
+
+    const moveKeys = {
+      KeyW: 'up', ArrowUp: 'up',
+      KeyS: 'down', ArrowDown: 'down',
+      KeyA: 'left', ArrowLeft: 'left',
+      KeyD: 'right', ArrowRight: 'right',
+    };
+    if (game.mode === 'mycourt' && moveKeys[event.code]) {
+      courtInput[moveKeys[event.code]] = true;
+      event.preventDefault();
+      return;
+    }
+    if (event.code === 'Space' || event.key === ' ') {
+      if (game.mode === 'mycourt') {
+        event.preventDefault();
+        if (!event.repeat) shootMyCourt();
+        return;
+      }
+    }
+
     if (event.key === 'e' || event.key === 'E') {
       event.preventDefault();
       setTray(emoteTray.hidden);
@@ -865,6 +939,18 @@
       event.preventDefault();
     }
   });
+
+  document.addEventListener('keyup', (event) => {
+    const moveKeys = {
+      KeyW: 'up', ArrowUp: 'up',
+      KeyS: 'down', ArrowDown: 'down',
+      KeyA: 'left', ArrowLeft: 'left',
+      KeyD: 'right', ArrowRight: 'right',
+    };
+    if (moveKeys[event.code]) courtInput[moveKeys[event.code]] = false;
+  });
+
+  window.addEventListener('blur', clearCourtInput);
 
   window.addEventListener('resize', () => {
     if (state.open) resizeCanvas();
@@ -1493,15 +1579,41 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     The 3v3 park simulation (spectator only)
+     The park simulation — MyCourt shoot-around + spectator 3v3
      ═══════════════════════════════════════════════════════════════ */
 
   const TEAM_NAMES = ['Orange', 'Blacktop'];
   const GAME_SECONDS = 180;
+  const MYCOURT_SECONDS = 90;
   const TIME_SCALE = 3;
   const FIXED_STEP = 1 / 60;
   const MAX_STEPS = 6;
+  const MYCOURT_BEST_KEY = 'reborn2k16.mycourt.best';
   const fx = [];
+
+  function loadMyCourtBest() {
+    try {
+      const value = Number(localStorage.getItem(MYCOURT_BEST_KEY));
+      return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  function saveMyCourtBest(value) {
+    try { localStorage.setItem(MYCOURT_BEST_KEY, String(Math.floor(value))); } catch { /* private mode */ }
+  }
+
+  let myCourtBest = loadMyCourtBest();
+  const courtInput = { up: false, down: false, left: false, right: false };
+  const myCourt = {
+    makes: 0,
+    attempts: 0,
+    streak: 0,
+    bestStreak: 0,
+    cooldown: 0,
+    queued: false,
+  };
 
   const PLAYER_DATA = [
     { name: 'SplashBros', num: 3, team: 0, skin: '#a86f47', hair: '#171310', agility: 1.06 },
@@ -1526,6 +1638,7 @@
   }));
 
   const game = {
+    mode: 'mycourt',
     poss: 0,
     score: [0, 0],
     quarter: 1,
@@ -1709,6 +1822,10 @@
   }
 
   function resolveShot(flight) {
+    if (flight.mycourt) {
+      resolveMyCourtShot(flight);
+      return;
+    }
     const shooter = flight.shooter;
     game.flight = null;
     if (shooter) shooter.shoot = 0;
@@ -1887,6 +2004,11 @@
   function updateGame(dt) {
     if (game.ended) return;
 
+    if (game.mode === 'mycourt') {
+      updateMyCourt(dt);
+      return;
+    }
+
     game.clock -= dt * TIME_SCALE;
     if (game.clock <= 0) {
       handleQuarterEnd();
@@ -1958,23 +2080,335 @@
     syncHud(true);
   }
 
-  function resetGame() {
+  function applyModeUI() {
+    const isCourt = game.mode === 'mycourt';
+    park.classList.toggle('is-mycourt', isCourt);
+    modeButtons.forEach((button) => {
+      const active = button.dataset.gameMode === game.mode;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
+    if (modeHint) {
+      modeHint.textContent = isCourt
+        ? 'MyCourt is live — run the court yourself.'
+        : 'Sideline cam — watching the 3v3 run.';
+    }
+    courtControls.hidden = !isCourt;
+    courtStats.hidden = !isCourt;
+    if (hudTeamAName) hudTeamAName.textContent = isCourt ? 'You' : TEAM_NAMES[0];
+    if (hudTeamBName) hudTeamBName.textContent = isCourt ? 'Your best' : TEAM_NAMES[1];
+    if (hudTagA) hudTagA.textContent = isCourt ? 'YOU' : 'ORL';
+    if (hudTagB) hudTagB.textContent = isCourt ? 'PB' : 'BLK';
+    if (finalTeamA) finalTeamA.textContent = isCourt ? 'You' : TEAM_NAMES[0];
+    if (finalTeamB) finalTeamB.textContent = isCourt ? 'Best' : TEAM_NAMES[1];
+    if (youRole) youRole.textContent = isCourt ? 'MyCourt' : 'Sideline';
+    if (youState) youState.textContent = isCourt ? 'hooping' : 'watching';
+    if (camLabel) camLabel.textContent = isCourt ? 'MyCourt cam' : 'Sideline cam';
+    if (finalEyebrow) finalEyebrow.textContent = isCourt ? 'MyCourt · Final' : 'Final · The Park';
+  }
+
+  function setMode(mode) {
+    const next = mode === 'spectator' ? 'spectator' : 'mycourt';
+    if (next === game.mode && state.running) {
+      applyModeUI();
+      return;
+    }
+    game.mode = next;
+    clearCourtInput();
+    applyModeUI();
+    resetGame();
+    if (next === 'mycourt') {
+      showToast('MyCourt — your ball, your run');
+      setCommentary('MyCourt is open. Move with WASD or the arrows, shoot with Space.');
+    } else {
+      showToast('Sideline cam — 3v3 tipped off');
+      setCommentary('Tip-off. You are courtside — camera locked to the sideline.');
+    }
+  }
+
+  function clearCourtInput() {
+    courtInput.up = false;
+    courtInput.down = false;
+    courtInput.left = false;
+    courtInput.right = false;
+    moveButtons.forEach((button) => button.classList.remove('is-held'));
+  }
+
+  function syncMyCourtStats() {
+    if (courtStreak) courtStreak.textContent = String(myCourt.streak);
+    if (courtMakes) courtMakes.textContent = String(myCourt.makes);
+    if (courtAttempts) courtAttempts.textContent = String(myCourt.attempts);
+    if (courtStats) courtStats.classList.toggle('is-hot', myCourt.streak >= 3);
+  }
+
+  function shootMyCourt() {
+    if (game.mode !== 'mycourt' || !state.running || state.paused || game.ended) return;
+    if (game.phase !== 'mycourt' || myCourt.cooldown > 0) {
+      if (game.phase === 'shot' || game.phase === 'scored' || game.phase === 'retrieve') {
+        myCourt.queued = true;
+      }
+      return;
+    }
+    myCourt.queued = false;
+
+    const shooter = players[0];
+    const distance = Math.hypot(0.94 - shooter.x, (0.5 - shooter.z) * 0.72);
+    const layup = distance < 0.22;
+    const three = distance > 0.47;
+    let chance = layup ? 0.85 : three ? 0.46 : 0.64;
+    if (shooter.run < 0.22) chance += 0.05;
+    else if (shooter.run > 0.6) chance -= 0.07;
+    chance += Math.min(0.06, myCourt.streak * 0.012);
+    chance = clamp(chance, 0.18, 0.94);
+    const make = Math.random() < chance;
+
+    game.phase = 'shot';
+    game.pt = 0;
+    game.flight = {
+      type: 'shot',
+      from: shooter,
+      shooter,
+      t: 0,
+      dur: layup ? 0.56 : 0.92,
+      make,
+      three,
+      layup,
+      points: three ? 3 : 2,
+      mycourt: true,
+    };
+    shooter.shoot = 1;
+    myCourt.cooldown = 0.32;
+
+    if (three) setCommentary('Deep range… let it fly.');
+    else if (layup) setCommentary('Attack the rim… finish it.');
+    else setCommentary('Pull-up from the elbow…');
+    syncHud(true);
+  }
+
+  function resolveMyCourtShot(flight) {
+    const shooter = flight.shooter;
+    game.flight = null;
+    if (shooter) shooter.shoot = 0;
+    myCourt.attempts += 1;
+
+    if (flight.make) {
+      game.score[0] += flight.points;
+      myCourt.makes += 1;
+      myCourt.streak += 1;
+      myCourt.bestStreak = Math.max(myCourt.bestStreak, myCourt.streak);
+      game.hype = Math.min(1.5, game.hype + (flight.three ? 1.15 : 0.8));
+      game.netSway = 1;
+      game.scoreFlash = 1;
+      game.lastScorer = shooter;
+      game.phase = 'scored';
+      game.pt = 0;
+      game.handler = null;
+
+      if (myCourt.streak === 3) showToast('3 in a row — heating up');
+      else if (myCourt.streak === 5) showToast('5 straight — the park is watching');
+      else if (myCourt.streak === 8) showToast('8 straight — MyCourt is yours');
+
+      if (flight.three) setCommentary(`SPLASH. ${flight.points} points from deep.`);
+      else if (flight.layup) setCommentary('Bucket at the rim. And one for the run.');
+      else setCommentary('Knocks down the jumper. Keep it rolling.');
+      addFeed(
+        flight.three ? '💦' : '🏀',
+        'You',
+        flight.three ? 'splash a three from deep' : flight.layup ? 'finish at the rim' : 'bury the jumper',
+        '#ff6a1a',
+      );
+      petCelebrate();
+      flashHud();
+    } else {
+      myCourt.streak = 0;
+      game.hype = Math.min(1.1, game.hype + 0.25);
+      game.phase = 'retrieve';
+      game.pt = 0;
+      game.handler = null;
+      game.loose = {
+        x: clamp(0.84 + rand(-0.08, 0.05), 0.5, 0.9),
+        z: clamp(0.5 + rand(-0.24, 0.24), 0.12, 0.9),
+      };
+      setCommentary('Off the iron. Grab it and go again.');
+      addFeed('🧱', 'You', 'miss — ball back on the floor', '#ffb347');
+    }
+
+    syncMyCourtStats();
+    syncHud(true);
+  }
+
+  function updateMyCourt(dt) {
+    const player = players[0];
+
+    game.clock -= dt;
+    if (game.clock <= 0) {
+      endMyCourt();
+      return;
+    }
+
+    game.hype = Math.max(0, game.hype - dt * 0.85);
+    game.netSway = Math.max(0, game.netSway - dt * 1.7);
+    game.scoreFlash = Math.max(0, game.scoreFlash - dt * 2.2);
+    myCourt.cooldown = Math.max(0, myCourt.cooldown - dt);
+
+    if (game.phase === 'mycourt') {
+      const dx = (courtInput.right ? 1 : 0) - (courtInput.left ? 1 : 0);
+      const dz = (courtInput.down ? 1 : 0) - (courtInput.up ? 1 : 0);
+      const length = Math.hypot(dx, dz);
+
+      if (length > 0) {
+        const speed = 0.52;
+        player.x = clamp(player.x + (dx / length) * speed * dt, 0.07, 0.9);
+        player.z = clamp(player.z + (dz / length) * speed * dt * 0.9, 0.08, 0.94);
+        player.run = Math.min(1, player.run + dt * 8);
+      } else {
+        player.run = Math.max(0, player.run - dt * 6);
+      }
+
+      player.tx = player.x;
+      player.tz = player.z;
+      player.face = 1;
+      player.shoot = Math.max(0, player.shoot - dt * 1.7);
+    } else {
+      player.run = Math.max(0, player.run - dt * 6);
+      player.shoot = Math.max(0, player.shoot - dt * 1.7);
+    }
+
+    if (game.phase === 'shot') {
+      updateFlight(dt);
+    } else if (game.phase === 'scored') {
+      game.pt += dt;
+      if (game.pt > 0.7) {
+        game.phase = 'retrieve';
+        game.pt = 0;
+        game.loose = {
+          x: clamp(player.x + rand(-0.06, 0.06), 0.35, 0.88),
+          z: clamp(rand(0.24, 0.78), 0.14, 0.86),
+        };
+      }
+    } else if (game.phase === 'retrieve') {
+      game.pt += dt;
+      if (game.pt > 0.4) {
+        game.phase = 'mycourt';
+        game.pt = 0;
+        game.loose = null;
+        game.handler = player;
+        if (myCourt.queued) {
+          myCourt.queued = false;
+          shootMyCourt();
+        } else {
+          setCommentary('Ball back in your hands. Let it fly.');
+        }
+      }
+    }
+
+    if (!game.handler && game.phase === 'mycourt') game.handler = player;
+    syncHud();
+  }
+
+  function endMyCourt() {
+    game.ended = true;
+    game.phase = 'final';
+    game.handler = null;
+    game.flight = null;
+    game.loose = null;
+    clearCourtInput();
+    myCourt.queued = false;
+
+    const points = game.score[0];
+    const makes = myCourt.makes;
+    const attempts = myCourt.attempts;
+    const pct = attempts ? Math.round((makes / attempts) * 100) : 0;
+    const isRecord = points > myCourtBest;
+
+    if (isRecord) {
+      myCourtBest = points;
+      saveMyCourtBest(points);
+    }
+    game.score[1] = myCourtBest;
+
+    $('#finalA').textContent = points;
+    $('#finalB').textContent = myCourtBest;
+    $('#finalLine').textContent = isRecord
+      ? `New MyCourt best — ${points} points on ${makes}/${attempts} shooting (${pct}%). The park noticed.`
+      : `${points} points on ${makes}/${attempts} shooting (${pct}%). Best streak ${myCourt.bestStreak}. Personal best ${myCourtBest}.`;
+    parkFinal.hidden = false;
+
+    addFeed('🏁', 'MyCourt', `Run over — ${points} points · ${makes}/${attempts} FG`, '#ff6a1a');
+    setCommentary(isRecord ? 'New MyCourt best. The sideline is on its feet.' : 'Run over. Reset and chase your best.');
+    showToast(isRecord ? `New MyCourt best — ${points} points` : `MyCourt run — ${points} points`);
+    syncHud(true);
+    syncMyCourtStats();
+  }
+
+  function resetMyCourt() {
+    game.score = [0, myCourtBest];
+    game.quarter = 1;
+    game.clock = MYCOURT_SECONDS;
+    game.shotClock = 0;
+    game.phase = 'mycourt';
+    game.pt = 0;
+    game.poss = 0;
+    game.handler = players[0];
+    game.flight = null;
+    game.loose = null;
+    game.ended = false;
+    game.lastScorer = null;
+    myCourt.makes = 0;
+    myCourt.attempts = 0;
+    myCourt.streak = 0;
+    myCourt.bestStreak = 0;
+    myCourt.cooldown = 0;
+    myCourt.queued = false;
+
+    const player = players[0];
+    player.x = 0.5;
+    player.z = 0.5;
+    player.tx = player.x;
+    player.tz = player.z;
+    player.run = 0;
+    player.shoot = 0;
+    player.face = 1;
+
+    players.slice(1).forEach((other, index) => {
+      other.x = 0.16 + index * 0.06;
+      other.z = 0.9;
+      other.tx = other.x;
+      other.tz = other.z;
+      other.run = 0;
+      other.shoot = 0;
+    });
+
+    clearCourtInput();
+    syncMyCourtStats();
+    setCommentary('MyCourt is open. Move with WASD or the arrows, shoot with Space.');
+  }
+
+  function resetSpectator() {
     game.score = [0, 0];
     game.quarter = 1;
     game.clock = GAME_SECONDS;
     game.shotClock = 14;
+    game.phase = 'inbound';
+    game.pt = 0;
+    game.poss = 0;
+    game.handler = null;
+    game.flight = null;
+    game.loose = null;
+    game.reboundTarget = null;
+    game.passTarget = null;
+    game.ended = false;
+    game.lastScorer = null;
+    setupPossession(0, true);
+    setCommentary('Tip-off. You are courtside — camera locked to the sideline.');
+  }
+
+  function resetGame() {
     game.hype = 0;
     game.netSway = 0;
     game.scoreFlash = 0;
     game.ended = false;
-    game.phase = 'inbound';
-    game.pt = 0;
-    game.flight = null;
-    game.handler = null;
-    game.loose = null;
-    game.reboundTarget = null;
     game.lastScorer = null;
-    game.passTarget = null;
 
     fx.length = 0;
     parkFinal.hidden = true;
@@ -1985,14 +2419,17 @@
       player.mark = null;
     });
 
-    setupPossession(0, true);
+    if (game.mode === 'mycourt') resetMyCourt();
+    else resetSpectator();
+
+    applyModeUI();
     syncHud(true);
-    setCommentary('Tip-off. You are courtside — camera locked to the sideline.');
+    syncMyCourtStats();
   }
 
   /* ── HUD, commentary & feed ─────────────────────────────────── */
 
-  let lastHud = { a: -1, b: -1, clock: '', quarter: 0, shot: -1 };
+  let lastHud = { a: -1, b: -1, clock: '', quarter: 0, shot: -1, mode: '' };
 
   function formatClock(seconds) {
     const total = Math.max(0, Math.ceil(seconds));
@@ -2008,9 +2445,10 @@
     const clock = formatClock(game.clock);
     if (force || clock !== lastHud.clock) { hudClock.textContent = clock; lastHud.clock = clock; }
 
-    if (force || game.quarter !== lastHud.quarter) {
-      hudQuarter.textContent = `Q${game.quarter}`;
+    if (force || game.quarter !== lastHud.quarter || game.mode !== lastHud.mode) {
+      hudQuarter.textContent = game.mode === 'mycourt' ? 'MYC' : `Q${game.quarter}`;
       lastHud.quarter = game.quarter;
+      lastHud.mode = game.mode;
     }
 
     const shot = Math.max(0, Math.ceil(game.shotClock));
@@ -2076,7 +2514,8 @@
 
   function spawnReactions(emoji, combo = 1) {
     if (!view.w || reduceMotion) return;
-    const picks = players.slice().sort(() => Math.random() - 0.5).slice(0, Math.min(3, 1 + Math.floor(combo / 2)));
+    const pool = game.mode === 'mycourt' ? [players[0]] : players.slice();
+    const picks = pool.sort(() => Math.random() - 0.5).slice(0, Math.min(3, 1 + Math.floor(combo / 2)));
     picks.forEach((player, index) => {
       const foot = playerFoot(player);
       const h = playerHeight(player);
@@ -2344,6 +2783,23 @@
     ctx.stroke();
 
     ctx.restore();
+
+    // MyCourt ownership marker — keeps your player easy to track.
+    if (game.mode === 'mycourt' && player === players[0]) {
+      const markerY = foot.y - h - view.unit * 0.12 + Math.sin(time * 3.2) * view.unit * 0.03;
+      ctx.fillStyle = 'rgba(56, 255, 156, 0.95)';
+      ctx.beginPath();
+      ctx.moveTo(foot.x, markerY + view.unit * 0.09);
+      ctx.lineTo(foot.x - view.unit * 0.068, markerY - view.unit * 0.035);
+      ctx.lineTo(foot.x + view.unit * 0.068, markerY - view.unit * 0.035);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(56, 255, 156, 0.35)';
+      ctx.lineWidth = Math.max(1, view.unit * 0.014);
+      ctx.beginPath();
+      ctx.arc(foot.x, foot.y + h * 0.02, h * 0.38, 0, TAU);
+      ctx.stroke();
+    }
 
     // Soft glow under the rim light
     if (player === game.lastScorer && game.hype > 0.8) {
@@ -2627,7 +3083,8 @@
   }
 
   function drawPlayers(time) {
-    const sorted = players.slice().sort((a, b) => a.z - b.z);
+    const roster = game.mode === 'mycourt' ? [players[0]] : players;
+    const sorted = roster.slice().sort((a, b) => a.z - b.z);
     sorted.forEach((player) => drawPlayer(player, time));
   }
 
@@ -2683,7 +3140,7 @@
       }
     }
 
-    if (game.loose && (game.phase === 'rebound' || game.phase === 'loose')) {
+    if (game.loose && (game.phase === 'rebound' || game.phase === 'loose' || game.phase === 'retrieve')) {
       const spot = project(game.loose.x, game.loose.z);
       const bounce = Math.abs(Math.sin(time * 8.5)) * unit * 0.16;
       return { x: spot.x, y: spot.y - unit * 0.08 - bounce, z: game.loose.z, r: unit * 0.075, rot: time * 7 };

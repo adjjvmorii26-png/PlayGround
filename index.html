@@ -789,22 +789,22 @@
 
         <div class="hud-score" role="status" aria-live="polite">
           <div class="hud-team">
-            <span class="hud-tag tag-orange">ORL</span>
-            <span class="hud-team-name">Orange</span>
+            <span class="hud-tag tag-orange" id="hudTagA">ORL</span>
+            <span class="hud-team-name" id="hudTeamAName">Orange</span>
           </div>
           <div class="hud-scoreline">
             <b id="hudScoreA">0</b><i>–</i><b id="hudScoreB">0</b>
             <div class="hud-meta"><span id="hudQuarter">Q1</span><span class="hud-dot">·</span><span id="hudClock">3:00</span><span class="hud-shot" id="hudShot">12</span></div>
           </div>
           <div class="hud-team right">
-            <span class="hud-team-name">Blacktop</span>
-            <span class="hud-tag tag-dark">BLK</span>
+            <span class="hud-team-name" id="hudTeamBName">Blacktop</span>
+            <span class="hud-tag tag-dark" id="hudTagB">BLK</span>
           </div>
         </div>
 
         <div class="hud-right">
           <span class="fps-badge" title="Target 60 FPS · fixed 60 Hz simulation"><i aria-hidden="true"></i>60 FPS</span>
-          <span class="sideline-badge"><i aria-hidden="true"></i> Sideline cam</span>
+          <span class="sideline-badge"><i aria-hidden="true"></i> <span id="camLabel">Sideline cam</span></span>
           <button class="hud-icon" id="parkFeedToggle" type="button" aria-label="Toggle park feed" title="Toggle park feed">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
@@ -829,6 +829,12 @@
         </div>
         <button type="button" class="court-shoot" id="courtShoot"><span>SHOOT</span><small>Space</small></button>
         <span class="court-key-hint">Move <kbd>WASD</kbd> / <kbd>←↑↓→</kbd> · Shoot <kbd>Space</kbd></span>
+      </div>
+
+      <div class="court-stats" id="courtStats" hidden aria-live="polite">
+        <span class="court-stat"><b id="courtStreak">0</b><small>streak</small></span>
+        <span class="court-stat"><b id="courtMakes">0</b><small>makes</small></span>
+        <span class="court-stat"><b id="courtAttempts">0</b><small>shots</small></span>
       </div>
 
       <div class="park-side">
@@ -860,9 +866,9 @@
         </button>
         <div class="you-meta">
           <b>You</b>
-          <small>Sideline · <span id="youRegion">NA East</span></small>
+          <small><span id="youRole">Sideline</span> · <span id="youRegion">NA East</span></small>
         </div>
-        <span class="you-live"><i class="dot-live" aria-hidden="true"></i> watching</span>
+        <span class="you-live"><i class="dot-live" aria-hidden="true"></i> <span id="youState">watching</span></span>
       </div>
 
       <div class="emote-dock" id="emoteDock">
@@ -933,14 +939,14 @@
     <!-- Final -->
     <div class="park-final" id="parkFinal" hidden>
       <div class="park-final-card">
-        <p class="eyebrow">Final · The Park</p>
+        <p class="eyebrow" id="finalEyebrow">Final · The Park</p>
         <h2>Ball don't lie.</h2>
         <div class="park-final-score">
-          <span>Orange</span>
+          <span id="finalTeamA">Orange</span>
           <b id="finalA">0</b>
           <i>–</i>
           <b id="finalB">0</b>
-          <span>Blacktop</span>
+          <span id="finalTeamB">Blacktop</span>
         </div>
         <p id="finalLine">Great run. The sideline approves.</p>
         <div class="park-final-actions">
