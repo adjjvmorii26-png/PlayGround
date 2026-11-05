@@ -811,11 +811,24 @@
         </div>
       </header>
 
-      <div class="spectator-ribbon">
-        <span class="ribbon-lock" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
-        </span>
-        You're watching from the sideline. Camera locked — no player control.
+      <div class="spectator-ribbon" aria-label="Choose a game mode">
+        <span class="ribbon-lock" aria-hidden="true">🏀</span>
+        <span class="mode-hint" id="modeHint">Run the court yourself or watch the 3v3.</span>
+        <div class="mode-switch" role="group" aria-label="Game mode">
+          <button type="button" class="mode-button is-active" data-game-mode="mycourt" aria-pressed="true">MyCourt</button>
+          <button type="button" class="mode-button" data-game-mode="spectator" aria-pressed="false">Watch 3v3</button>
+        </div>
+      </div>
+
+      <div class="court-controls" id="courtControls" hidden aria-label="MyCourt controls">
+        <div class="court-pad" aria-label="Move your player">
+          <button type="button" data-move="up" aria-label="Move up">▲</button>
+          <button type="button" data-move="left" aria-label="Move left">◀</button>
+          <button type="button" data-move="down" aria-label="Move down">▼</button>
+          <button type="button" data-move="right" aria-label="Move right">▶</button>
+        </div>
+        <button type="button" class="court-shoot" id="courtShoot"><span>SHOOT</span><small>Space</small></button>
+        <span class="court-key-hint">Move <kbd>WASD</kbd> / <kbd>←↑↓→</kbd> · Shoot <kbd>Space</kbd></span>
       </div>
 
       <div class="park-side">

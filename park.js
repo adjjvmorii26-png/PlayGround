@@ -62,6 +62,11 @@
   const youRegion = $('#youRegion');
   const commentaryText = $('#commentaryText');
   const parkSide = $('.park-side');
+  const modeButtons = $$('[data-game-mode]');
+  const modeHint = $('#modeHint');
+  const courtControls = $('#courtControls');
+  const courtShoot = $('#courtShoot');
+  const moveButtons = $$('[data-move]');
 
   const TAU = Math.PI * 2;
   const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
